@@ -1,0 +1,9 @@
+{
+    "rootDir": "/media/jimnarey/HDD_Data_A/Backup/Dropbox/Consoles/Roms/GBA Full Set/",
+    "targetDir": "/media/jimnarey/HDD_Data_B/Romsets/Output/GBA",
+    "summaryFilePath": "/media/jimnarey/HDD_Data_B/Romsets/Output/gba_summary.txt",
+    "okDumpCodes": ["!", "o", "a", "f", "hIR"],
+    "okRoCodes": ["JUE", "UE", "JE", "JU", "E", "U", "UK", "A", "4", "W", "Beta"],
+    "writeSummary": true,
+    "writeFiles": true
+}

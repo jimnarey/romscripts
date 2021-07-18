@@ -1,0 +1,57 @@
+{
+    "rootDir": "/media/jimnarey/HDD_Data_B/Romsets - Temp/script_testing/rename/Amiga/",
+    "executeRenames": false,
+    "targetDir": "/media/jimnarey/HDD_Data_B/Romsets/Renamed/Amiga Games - LT4096/",
+    "writeSummary": true,
+    "summaryFilePath": "/media/jimnarey/HDD_Data_B/Romsets - Temp/script_testing/rename/amiga_rename_summary.txt",
+    "multiFilesPerGame": false,
+    "illegalStrings": [",", ":", "+", "?", "=", "|", "/", "*"],
+    "removeBracketedText": false,
+    "replaceInAll": [
+        {
+            "pattern": "disk",
+            "replacement": "D",
+            "caseSensitive": false
+
+        }
+    ],
+    "shortenNames": true,
+    "maxFileNameLength": 42,
+    "replaceToShorten" : [
+        {
+            "pattern": "the ",
+            "replacement": "",
+            "caseSensitive": false
+        },
+        {
+            "pattern": ", the",
+            "replacement": "",
+            "caseSensitive": false
+        },
+        {
+            "pattern": " in ",
+            "replacement": " ",
+            "caseSensitive": false
+        },
+        {
+            "pattern": " of ",
+            "replacement": " ",
+            "caseSensitive": false
+        },
+        {
+            "pattern": " for ",
+            "replacement": " ",
+            "caseSensitive": false
+        },
+        {
+            "pattern": " and ",
+            "replacement": " ",
+            "caseSensitive": false
+        }
+    ],
+    "subtitleCompressSpec" : {
+        "subtitleMark": " - ",
+        "preserveSuffix": "_D[0-9]{0,2}"
+    }
+
+}
