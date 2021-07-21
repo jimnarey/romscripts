@@ -19,6 +19,12 @@ REGION_MATCHES = {
 
 class ArchivedRom:
 
+    def __str__(self):
+        return self.entry_name
+
+    def __repr__(self):
+        return self.entry_name
+
     def __init__(self, entry_name):
         self.entry_name = entry_name
         self.other_codes = []
@@ -39,11 +45,13 @@ class ArchivedRom:
 
 
 class MultiRomArchive:
-    regexes = {
+
+    category_regexes = {
         'Hacks': re.compile("^%s[0-9]{0,2}" % 'h'),
         'Trainers': re.compile("^%s[0-9]{0,2}" % 't'),
         'Translations': re.compile("^T ?[+-]{1}.*")
     }
+    alt_dump_regexes = [re.compile("^%s[0-9]{0,2}" % code) for code in ["a", "o", "f"]]
 
     def __init__(self, file_path):
         self.file_path = file_path
@@ -71,6 +79,21 @@ class MultiRomArchive:
                     selection.add(rom)
         self.selections[region] = selection
 
+    def prune_region_selection(self, region):
+        for rom in self.selections[region]:
+            if '!' in rom.dump_codes:
+                self.selections[region] = [rom]
+                return
+        for rom in self.selections[region]:
+            if len(rom.dump_codes) == 0:
+                self.selections[region] = [rom]
+                return
+        for rom in self.selections[region]:
+            for code in rom.dump_codes:
+                if any(re.match(regex, code) for regex in MultiRomArchive.alt_dump_regexes):
+                    self.selections[region] = [rom]
+                    return
+
     def filter_others(self):
         self.selections['Hacks'] = set()
         self.selections['Trainers'] = set()
@@ -84,7 +107,7 @@ class MultiRomArchive:
                     self.selections['Betas'].add(rom)
             for code in rom.dump_codes:
                 for cat in ['Hacks', 'Trainers', 'Translations']:
-                    if re.match(MultiRomArchive.regexes[cat], code):
+                    if re.match(MultiRomArchive.category_regexes[cat], code):
                         self.selections[cat].add(rom)
 
     def get_all_codes(self, code_type):
@@ -133,12 +156,10 @@ class RomRootFolder:
 
     def make_selections(self, regions):
         for archive in self.valid_7z_archive_paths:
-            # archive.filter_hacks()
-            # archive.filter_trainers()
-            # archive.filter_translations()
             archive.filter_others()
             for region in regions:
                 archive.filter_by_region(region)
+                archive.prune_region_selection(region)
             # pprint(archive.selections['Hacks'])
             # print(len(archive.selections['Trainers']))
             pprint(archive.selections)
@@ -162,7 +183,7 @@ def get_dump_code_regexes(ok_dump_codes):
     return regexes
 
 
-ok_dump_codes = [re.compile("^%s[0-9]{0,2}" % code) for code in ["!", "o", "a", "f"]]
+
 
 
 def process(prefs):
