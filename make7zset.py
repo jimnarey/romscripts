@@ -5,14 +5,15 @@ import json
 from pathlib import Path
 from optparse import OptionParser
 from pprint import pprint
+
 # from py7zr import Bad7zFile
 
 # TO DO - change cross_ref etc to catch translations
 
 REGION_MATCHES = {
-    'U': ['W', 'JUE', 'UE', 'JU', 'U'],
-    'E': ['W', 'JUE', 'UE', 'JE', 'E', 'UK'],
-    'J': ['W', 'JUE', 'JU', 'JE', 'J']
+    'US': ['W', 'JUE', 'UE', 'JU', 'U'],
+    'Europe': ['W', 'JUE', 'UE', 'JE', 'E', 'UK'],
+    'Japan': ['W', 'JUE', 'JU', 'JE', 'J']
 }
 
 
@@ -38,10 +39,11 @@ class ArchivedRom:
 
 
 class MultiRomArchive:
-
-    hack_code_regex = re.compile("^%s[0-9]{0,2}" % 'h')
-    trainer_code_regex = re.compile("^%s[0-9]{0,2}" % 't')
-    translation_code_regex = re.compile("^T ?[+-]{1}.*")
+    regexes = {
+        'Hacks': re.compile("^%s[0-9]{0,2}" % 'h'),
+        'Trainers': re.compile("^%s[0-9]{0,2}" % 't'),
+        'Translations': re.compile("^T ?[+-]{1}.*")
+    }
 
     def __init__(self, file_path):
         self.file_path = file_path
@@ -69,32 +71,21 @@ class MultiRomArchive:
                     selection.add(rom)
         self.selections[region] = selection
 
-    def filter_hacks(self):
-        selection = set()
+    def filter_others(self):
+        self.selections['Hacks'] = set()
+        self.selections['Trainers'] = set()
+        self.selections['Translations'] = set()
+        self.selections['Betas'] = set()
         for rom in self.contents:
             for code in rom.other_codes:
                 if 'hack' in code.lower():
-                    selection.add(rom)
+                    self.selections['Hacks'].add(rom)
+                if 'beta' in code.lower():
+                    self.selections['Betas'].add(rom)
             for code in rom.dump_codes:
-                if re.match(MultiRomArchive.hack_code_regex, code):
-                    selection.add(rom)
-        self.selections['Hacks'] = selection
-
-    def filter_trainers(self):
-        selection = set()
-        for rom in self.contents:
-            for code in rom.dump_codes:
-                if re.match(MultiRomArchive.trainer_code_regex, code):
-                    selection.add(rom)
-        self.selections['Trainers'] = selection
-
-    def filter_translations(self):
-        selection = set()
-        for rom in self.contents:
-            for code in rom.dump_codes:
-                if re.match(MultiRomArchive.translation_code_regex, code):
-                    selection.add(rom)
-        self.selections['Translations'] = selection
+                for cat in ['Hacks', 'Trainers', 'Translations']:
+                    if re.match(MultiRomArchive.regexes[cat], code):
+                        self.selections[cat].add(rom)
 
     def get_all_codes(self, code_type):
         codes = []
@@ -142,14 +133,15 @@ class RomRootFolder:
 
     def make_selections(self, regions):
         for archive in self.valid_7z_archive_paths:
-            archive.filter_hacks()
-            archive.filter_trainers()
-            archive.filter_translations()
+            # archive.filter_hacks()
+            # archive.filter_trainers()
+            # archive.filter_translations()
+            archive.filter_others()
             for region in regions:
                 archive.filter_by_region(region)
             # pprint(archive.selections['Hacks'])
-            print(len(archive.selections['Trainers']))
-            # pprint(archive.selections)
+            # print(len(archive.selections['Trainers']))
+            pprint(archive.selections)
 
     def extract_matches(self, target_path):
         for arch in self.valid_7z_archive_paths:
@@ -170,9 +162,12 @@ def get_dump_code_regexes(ok_dump_codes):
     return regexes
 
 
+ok_dump_codes = [re.compile("^%s[0-9]{0,2}" % code) for code in ["!", "o", "a", "f"]]
+
+
 def process(prefs):
     root = RomRootFolder(prefs['rootDir'])
-    root.make_selections(['U', 'E', 'J'])
+    root.make_selections(['US', 'Europe', 'Japan'])
     # ok_dump_regexes = get_dump_code_regexes(prefs['okDumpCodes'])
     # root.sort(ok_dump_regexes, prefs['okRoCodes'])
 
