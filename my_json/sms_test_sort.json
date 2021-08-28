@@ -1,9 +1,0 @@
-{
-    "rootDir": "/media/jimnarey/HDD_Data_B/Romsets - Temp/script_testing/sort/SMS/",
-    "targetDir": "/media/jimnarey/HDD_Data_B/Romsets - Temp/script_testing/sort/Output/SMS",
-    "summaryFilePath": "/media/jimnarey/HDD_Data_B/Romsets - Temp/script_testing/sort/Output/sms_summary.txt",
-    "okDumpCodes": ["!", "o", "a", "f"],
-    "okRoCodes": ["JUE", "UE", "JE", "JU", "E", "U", "UK", "A", "4", "W", "B", "Beta", "SG-1000"],
-    "writeSummary": true,
-    "writeFiles": true
-}
