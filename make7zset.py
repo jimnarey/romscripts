@@ -2,6 +2,7 @@ import os
 import re
 import py7zr
 import json
+import shutil
 from pathlib import Path
 from optparse import OptionParser
 from pprint import pprint
@@ -122,6 +123,19 @@ class MultiRomArchive:
         with py7zr.SevenZipFile(self.file_path, 'r') as arch:
             arch.extract(path=target_path, targets=[entry_name])
 
+    def extract_all(self, target_root):
+        extracted = {}
+        for key in self.selections:
+            target_path = os.path.join(target_root, key)
+            if not os.path.exists(target_path):
+                os.makedirs(target_path)
+            for rom in self.selections[key]:
+                if rom.entry_name in extracted:
+                    shutil.copyfile(os.path.join(extracted[rom.entry_name], rom.entry_name), os.path.join(target_path, rom.entry_name))
+                else:
+                    self.extract_entry(target_path, rom.entry_name)
+                    extracted[rom.entry_name] = target_path
+
 
 class RomRootFolder:
 
@@ -166,8 +180,7 @@ class RomRootFolder:
 
     def extract_matches(self, target_path):
         for arch in self.valid_7z_archive_paths:
-            if arch.matches:
-                arch.extract_best_match(target_path)
+            arch.extract_all(target_path)
 
 
 def get_prefs(json_path):
@@ -183,18 +196,12 @@ def get_dump_code_regexes(ok_dump_codes):
     return regexes
 
 
-
-
-
 def process(prefs):
     root = RomRootFolder(prefs['rootDir'])
     root.make_selections(['US', 'Europe', 'Japan'])
-    # ok_dump_regexes = get_dump_code_regexes(prefs['okDumpCodes'])
-    # root.sort(ok_dump_regexes, prefs['okRoCodes'])
-
+    root.extract_matches(prefs['targetDir'])
     if prefs['writeSummary'] is True:
         pass
-        # root.write_summary(prefs['summaryFilePath'])
     if prefs['writeFiles'] is True:
         if not os.path.isdir(prefs['targetDir']):
             target_path = Path(prefs['targetDir'])
