@@ -11,6 +11,10 @@ from pprint import pprint
 
 # TO DO - change cross_ref etc to catch translations
 
+# TO DO - prune duplicates in betas
+
+# TO DO - progress output (it's very slow)
+
 REGION_MATCHES = {
     'US': ['W', 'JUE', 'UE', 'JU', 'U'],
     'Europe': ['W', 'JUE', 'UE', 'JE', 'E', 'UK'],
