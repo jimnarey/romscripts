@@ -245,8 +245,8 @@ class Rom:
         self.is_pd = False
         self._set_region()
         self._set_types()
-        if self._region == 'Unk':
-            print(self.rom_name, self.paren_codes)
+        # if self._region == 'Unk':
+        #     print(self.rom_name, self.paren_codes)
 
     def _set_region(self):
         poss_matches = [code for code in self.paren_codes if len(code) < 4 and not contains_digit(code) and code.isupper() and code not in non_region_paren_codes]
@@ -273,6 +273,7 @@ class Rom:
             if re.match(type_regexes['trainer'], code):
                 self.is_trainer = True
             if re.match(type_regexes['translation'], code):
+                print(code)
                 self.is_translation = True
 
 
