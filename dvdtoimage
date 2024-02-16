@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ "$1" = "" ]
+then
+	echo "No file name passed"
+	exit 1
+else
+	echo "$1"
+fi
+
+echo "Check DVD not mounted:"
+umount /dev/sr0
+blocks=$(isosize -d 2048 /dev/sr0)
+echo "Blocks: $blocks"
+
+dd if=/dev/sr0 bs=2048 of=./$1 count=$blocks status=progress
