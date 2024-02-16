@@ -1,1 +1,6 @@
 testing/*
+.idea
+.vscode
+*.pyc
+**/__pycache__
+.mypy_cache
