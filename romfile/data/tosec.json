@@ -1,0 +1,693 @@
+{
+    "system": {
+        "(+2)": {
+            "value": "Sinclair ZX Spectrum"
+        },
+        "(+2a)": {
+            "value": "Sinclair ZX Spectrum"
+        },
+        "(+3)": {
+            "value": "Sinclair ZX Spectrum"
+        },
+        "(130XE)": {
+            "value": "Atari 8-bit"
+        },
+        "(A1000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A1200)": {
+            "value": "Commodore Amiga"
+        },
+        "(A1200-A4000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A2000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A2000-A3000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A2024)": {
+            "value": "Commodore Amiga"
+        },
+        "(A2500-A3000UX)": {
+            "value": "Commodore Amiga"
+        },
+        "(A3000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A4000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A4000T)": {
+            "value": "Commodore Amiga"
+        },
+        "(A500)": {
+            "value": "Commodore Amiga"
+        },
+        "(A500+)": {
+            "value": "Commodore Amiga"
+        },
+        "(A500-A1000-A2000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A500-A1000-A2000-CDTV)": {
+            "value": "Commodore Amiga"
+        },
+        "(A500-A1200)": {
+            "value": "Commodore Amiga"
+        },
+        "(A500-A1200-A2000-A4000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A500-A2000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A500-A600-A2000)": {
+            "value": "Commodore Amiga"
+        },
+        "(A570)": {
+            "value": "Commodore Amiga"
+        },
+        "(A600)": {
+            "value": "Commodore Amiga"
+        },
+        "(A600HD)": {
+            "value": "Commodore Amiga"
+        },
+        "(AGA)": {
+            "value": "Commodore Amiga"
+        },
+        "(AGA-CD32)": {
+            "value": "Commodore Amiga"
+        },
+        "(Aladdin Deck Enhancer)": {
+            "value": "Nintendo NES"
+        },
+        "(CD32)": {
+            "value": "Commodore Amiga"
+        },
+        "(CDTV)": {
+            "value": "Commodore Amiga"
+        },
+        "(Computrainer)": {
+            "value": "Nintendo NES"
+        },
+        "(Doctor PC Jr.)": {
+            "value": "Nintendo NES"
+        },
+        "(ECS)": {
+            "value": "Commodore Amiga"
+        },
+        "(ECS-AGA)": {
+            "value": "Commodore Amiga"
+        },
+        "(Executive)": {
+            "value": "Osborne 1 & Executive"
+        },
+        "(Mega ST)": {
+            "value": "Atari ST"
+        },
+        "(Mega-STE)": {
+            "value": "Atari ST"
+        },
+        "(OCS)": {
+            "value": "Commodore Amiga"
+        },
+        "(OCS-AGA)": {
+            "value": "Commodore Amiga"
+        },
+        "(ORCH80)": {
+            "value": "???"
+        },
+        "(Osbourne 1)": {
+            "value": "Osborne 1 & Executive"
+        },
+        "(PIANO90)": {
+            "value": "???"
+        },
+        "(PlayChoice-10)": {
+            "value": "Nintendo NES"
+        },
+        "(Plus4)": {
+            "value": "???"
+        },
+        "(Primo-A)": {
+            "value": "Microkey Primo"
+        },
+        "(Primo-A64)": {
+            "value": "Microkey Primo"
+        },
+        "(Primo-B)": {
+            "value": "Microkey Primo"
+        },
+        "(Primo-B64)": {
+            "value": "Microkey Primo"
+        },
+        "(Pro-Primo)": {
+            "value": "Microkey Primo"
+        },
+        "(ST)": {
+            "value": "Atari ST"
+        },
+        "(STE)": {
+            "value": "Atari ST"
+        },
+        "(STE-Falcon)": {
+            "value": "???"
+        },
+        "(TT)": {
+            "value": "Atari ST"
+        },
+        "(TURBO-R GT)": {
+            "value": "MSX"
+        },
+        "(TURBO-R ST)": {
+            "value": "MSX"
+        },
+        "(VS DualSystem)": {
+            "value": "Nintendo NES"
+        },
+        "(VS UniSystem)": {
+            "value": "Nintendo NES"
+        }
+    },
+    "demo": {
+        "(demo)": {
+            "value": "General demonstration version"
+        },
+        "(demo-kiosk)": {
+            "value": "Retail demo units and kiosks"
+        },
+        "(demo-playable)": {
+            "value": "General demonstration version, playable"
+        },
+        "(demo-rolling)": {
+            "value": "General demonstration version, non-interactive"
+        },
+        "(demo-slideshow)": {
+            "value": "General demonstration version, non-interactive slideshow"
+        }
+    },
+    "development_status": {
+        "(alpha)": {
+            "value": "Early test build"
+        },
+        "(beta)": {
+            "value": "Later, feature complete test build"
+        },
+        "(preview)": {
+            "value": "Near complete build"
+        },
+        "(pre-release)": {
+            "value": "Near complete build"
+        },
+        "(proto)": {
+            "value": "Unreleased, prototype software"
+        }
+    },
+    "language": {
+        "(ar)": {
+            "value": "Arabic"
+        },
+        "(bg)": {
+            "value": "Bulgarian"
+        },
+        "(bs)": {
+            "value": "Bosnian"
+        },
+        "(cs)": {
+            "value": "Czech"
+        },
+        "(cy)": {
+            "value": "Welsh"
+        },
+        "(da)": {
+            "value": "Danish"
+        },
+        "(de)": {
+            "value": "German"
+        },
+        "(el)": {
+            "value": "Greek"
+        },
+        "(en)": {
+            "value": "English"
+        },
+        "(eo)": {
+            "value": "Esperanto"
+        },
+        "(es)": {
+            "value": "Spanish"
+        },
+        "(et)": {
+            "value": "Estonian"
+        },
+        "(fa)": {
+            "value": "Persian"
+        },
+        "(fi)": {
+            "value": "Finnish"
+        },
+        "(fr)": {
+            "value": "French"
+        },
+        "(ga)": {
+            "value": "Irish"
+        },
+        "(gu)": {
+            "value": "Gujarati"
+        },
+        "(he)": {
+            "value": "Hebrew"
+        },
+        "(hi)": {
+            "value": "Hindi"
+        },
+        "(hr)": {
+            "value": "Croatian"
+        },
+        "(hu)": {
+            "value": "Hungarian"
+        },
+        "(is)": {
+            "value": "Icelandic"
+        },
+        "(it)": {
+            "value": "Italian"
+        },
+        "(ja)": {
+            "value": "Japanese"
+        },
+        "(ko)": {
+            "value": "Korean"
+        },
+        "(lt)": {
+            "value": "Lithuanian"
+        },
+        "(lv)": {
+            "value": "Latvian"
+        },
+        "(ms)": {
+            "value": "Malay"
+        },
+        "(nl)": {
+            "value": "Dutch"
+        },
+        "(no)": {
+            "value": "Norwegian"
+        },
+        "(pl)": {
+            "value": "Polish"
+        },
+        "(pt)": {
+            "value": "Portuguese"
+        },
+        "(ro)": {
+            "value": "Romanian"
+        },
+        "(ru)": {
+            "value": "Russian"
+        },
+        "(sk)": {
+            "value": "Slovakian"
+        },
+        "(sl)": {
+            "value": "Slovenian"
+        },
+        "(sq)": {
+            "value": "Albanian"
+        },
+        "(sr)": {
+            "value": "Serbian"
+        },
+        "(sv)": {
+            "value": "Swedish"
+        },
+        "(th)": {
+            "value": "Thai"
+        },
+        "(tr)": {
+            "value": "Turkish"
+        },
+        "(ur)": {
+            "value": "Urdu"
+        },
+        "(vi)": {
+            "value": "Vietnamese"
+        },
+        "(yi)": {
+            "value": "Yiddish"
+        },
+        "(zh)": {
+            "value": "Chinese"
+        }
+    },
+    "copyright_status": {
+        "(CW)": {
+            "value": "Cardware"
+        },
+        "(CW-R)": {
+            "value": "Cardware-Registered"
+        },
+        "(FW)": {
+            "value": "Freeware"
+        },
+        "(GW)": {
+            "value": "Giftware"
+        },
+        "(GW-R)": {
+            "value": "Giftware-Registered"
+        },
+        "(LW)": {
+            "value": "Licenceware"
+        },
+        "(PD)": {
+            "value": "Public Domain"
+        },
+        "(SW)": {
+            "value": "Shareware"
+        },
+        "(SW-R)": {
+            "value": "Shareware-Registered"
+        }
+    },
+    "dump": {
+        "[f]": {
+            "value": "Fixed",
+            "regex": "\\[f\\.*?\\]"
+        },
+        "[cr]": {
+            "value": "Cracked",
+            "regex": "\\[cr\\.*?\\]"
+        },
+        "[h]": {
+            "value": "Hacked",
+            "regex": "\\[h\\.*?\\]"
+        },
+        "[m]": {
+            "value": "Modified",
+            "regex": "\\[m\\.*?\\]"
+        },
+        "[p]": {
+            "value": "Pirated",
+            "regex": "\\[p\\.*?\\]"
+        },
+        "[t]": {
+            "value": "Trained",
+            "regex": "\\[t\\.*?\\]"
+        },
+        "[tr]": {
+            "value": "Translated",
+            "regex": "\\[tr\\.*?\\]"
+        },
+        "[o]": {
+            "value": "Over dump"
+        },
+        "[u]": {
+            "value": "Under Dump"
+        },
+        "[v]": {
+            "value": "Virus",
+            "regex": "\\[v\\.*?\\]"
+        },
+        "[b]": {
+            "value": "Bad Dump",
+            "regex": "\\[b\\.*?\\]"
+        },
+        "[a]": {
+            "value": "Alternate",
+            "regex": "\\[a\\.*?\\]"
+        },
+        "[!]": {
+            "value": "Known Verified Dump"
+        }
+    },
+    "region": {
+        "(AE)": {
+            "value": "United Arab Emirates"
+        },
+        "(AL)": {
+            "value": "Albania"
+        },
+        "(AS)": {
+            "value": "Asia"
+        },
+        "(AT)": {
+            "value": "Austria"
+        },
+        "(AU)": {
+            "value": "Australia"
+        },
+        "(BA)": {
+            "value": "Bosnia and Herzegovina"
+        },
+        "(BE)": {
+            "value": "Belgium"
+        },
+        "(BG)": {
+            "value": "Bulgaria"
+        },
+        "(BR)": {
+            "value": "Brazil"
+        },
+        "(CA)": {
+            "value": "Canada"
+        },
+        "(CH)": {
+            "value": "Switzerland"
+        },
+        "(CL)": {
+            "value": "Chile"
+        },
+        "(CN)": {
+            "value": "China"
+        },
+        "(CS)": {
+            "value": "Serbia and Montenegro"
+        },
+        "(CY)": {
+            "value": "Cyprus"
+        },
+        "(CZ)": {
+            "value": "Czech Republic"
+        },
+        "(DE)": {
+            "value": "Germany"
+        },
+        "(DK)": {
+            "value": "Denmark"
+        },
+        "(EE)": {
+            "value": "Estonia"
+        },
+        "(EG)": {
+            "value": "Egypt"
+        },
+        "(ES)": {
+            "value": "Spain"
+        },
+        "(EU)": {
+            "value": "Europe"
+        },
+        "(FI)": {
+            "value": "Finland"
+        },
+        "(FR)": {
+            "value": "France"
+        },
+        "(GB)": {
+            "value": "United Kingdom"
+        },
+        "(GR)": {
+            "value": "Greece"
+        },
+        "(HK)": {
+            "value": "Hong Kong"
+        },
+        "(HR)": {
+            "value": "Croatia"
+        },
+        "(HU)": {
+            "value": "Hungary"
+        },
+        "(ID)": {
+            "value": "Indonesia"
+        },
+        "(IE)": {
+            "value": "Ireland"
+        },
+        "(IL)": {
+            "value": "Israel"
+        },
+        "(IN)": {
+            "value": "India"
+        },
+        "(IR)": {
+            "value": "Iran"
+        },
+        "(IS)": {
+            "value": "Iceland"
+        },
+        "(IT)": {
+            "value": "Italy"
+        },
+        "(JO)": {
+            "value": "Jordan"
+        },
+        "(JP)": {
+            "value": "Japan"
+        },
+        "(KR)": {
+            "value": "South Korea"
+        },
+        "(LT)": {
+            "value": "Lithuania"
+        },
+        "(LU)": {
+            "value": "Luxembourg"
+        },
+        "(LV)": {
+            "value": "Latvia"
+        },
+        "(MN)": {
+            "value": "Mongolia"
+        },
+        "(MX)": {
+            "value": "Mexico"
+        },
+        "(MY)": {
+            "value": "Malaysia"
+        },
+        "(NL)": {
+            "value": "Netherlands"
+        },
+        "(NO)": {
+            "value": "Norway"
+        },
+        "(NP)": {
+            "value": "Nepal"
+        },
+        "(NZ)": {
+            "value": "New Zealand"
+        },
+        "(OM)": {
+            "value": "Oman"
+        },
+        "(PE)": {
+            "value": "Peru"
+        },
+        "(PH)": {
+            "value": "Philippines"
+        },
+        "(PL)": {
+            "value": "Poland"
+        },
+        "(PT)": {
+            "value": "Portugal"
+        },
+        "(QA)": {
+            "value": "Qatar"
+        },
+        "(RO)": {
+            "value": "Romania"
+        },
+        "(RU)": {
+            "value": "Russia"
+        },
+        "(SE)": {
+            "value": "Sweden"
+        },
+        "(SG)": {
+            "value": "Singapore"
+        },
+        "(SI)": {
+            "value": "Slovenia"
+        },
+        "(SK)": {
+            "value": "Slovakia"
+        },
+        "(TH)": {
+            "value": "Thailand"
+        },
+        "(TR)": {
+            "value": "Turkey"
+        },
+        "(TW)": {
+            "value": "Taiwan"
+        },
+        "(US)": {
+            "value": "United States"
+        },
+        "(VN)": {
+            "value": "Vietnam"
+        },
+        "(YU)": {
+            "value": "Yugoslavia"
+        },
+        "(ZA)": {
+            "value": "South Africa"
+        }
+    },
+    "video": {
+        "(CGA)": {
+            "value": "CGA"
+        },
+        "(EGA)": {
+            "value": "EGA"
+        },
+        "(HGC)": {
+            "value": "HGC"
+        },
+        "(MCGA)": {
+            "value": "MCGA"
+        },
+        "(MDA)": {
+            "value": "MDA"
+        },
+        "(NTSC)": {
+            "value": "NTSC"
+        },
+        "(NTSC-PAL)": {
+            "value": "NTSC-PAL"
+        },
+        "(PAL)": {
+            "value": "PAL"
+        },
+        "(PAL-60)": {
+            "value": "PAL-60"
+        },
+        "(PAL-NTSC)": {
+            "value": "PAL-NTSC"
+        },
+        "(SVGA)": {
+            "value": "SVGA"
+        },
+        "(VGA)": {
+            "value": "VGA"
+        },
+        "(XGA)": {
+            "value": "XGA"
+        }
+    },
+    "media_type": {
+        "(Disc)": {
+            "value": "Optical disc based media"
+        },
+        "(Disk)": {
+            "value": "Magnetic disk based media"
+        },
+        "(File)": {
+            "value": "Individual files"
+        },
+        "(Part)": {
+            "value": "Individual parts"
+        },
+        "(Side)": {
+            "value": "Side of media"
+        },
+        "(Tape)": {
+            "value": "Magnetic tape based media"
+        }
+    }
+}

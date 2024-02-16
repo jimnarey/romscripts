@@ -1,0 +1,92 @@
+{
+    "region": {
+        "(PD)": {
+            "value": "Public domain",
+            "description": "Free software and freeware"
+        },
+        "(J)": {
+            "value": "Japan"
+        },
+        "(Gr)": {
+            "value": "Greece"
+        },
+        "(S)": {
+            "value": "Spain"
+        },
+        "(A)": {
+            "value": "Australia"
+        },
+        "(Sw)": {
+            "value": "Sweden"
+        },
+        "(U)": {
+            "value": "United States"
+        },
+        "(Ch)": {
+            "value": "China"
+        },
+        "(C)": {
+            "value": "Canada"
+        },
+        "(F)": {
+            "value": "France"
+        },
+        "(No)": {
+            "value": "Norway"
+        },
+        "(G)": {
+            "value": "Germany"
+        },
+        "(HK)": {
+            "value": "Hong Kong"
+        },
+        "(Nl)": {
+            "value": "Netherlands"
+        },
+        "(UK)": {
+            "value": "United Kingdom"
+        },
+        "(Unl)": {
+            "value": "Unlicensed"
+        },
+        "(As)": {
+            "value": "Asia"
+        },
+        "(Unk)": {
+            "value": "Unknown country"
+        },
+        "(D)": {
+            "value": "Netherlands (Dutch)"
+        },
+        "(K)": {
+            "value": "Korea"
+        },
+        "(I)": {
+            "value": "Italy"
+        },
+        "(W)": {
+            "value": "World"
+        },
+        "(E)": {
+            "value": "Europe"
+        },
+        "(R)": {
+            "value": "Russia"
+        },
+        "(B)": {
+            "value": "Brazil"
+        },
+        "(UE)": {
+            "value": "United States & Europe"
+        },
+        "(JU)": {
+            "value": "Japan & United States"
+        },
+        "(JE)": {
+            "value": "Japan & Europe"
+        },
+        "(EB)": {
+            "value": "Europe & Brazil"
+        }
+    }
+}

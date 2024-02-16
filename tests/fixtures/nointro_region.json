@@ -1,0 +1,64 @@
+{
+    "region": {
+        "(Australia)": {
+            "value": "Australia, do not use with Europe"
+        },
+        "(Brazil)": {
+            "value": "Brazil"
+        },
+        "(Canada)": {
+            "value": "Canada, do not use with USA"
+        },
+        "(China)": {
+            "value": "China"
+        },
+        "(France)": {
+            "value": "France"
+        },
+        "(Germany)": {
+            "value": "Germany"
+        },
+        "(Hong Kong)": {
+            "value": "Hong Kong"
+        },
+        "(Italy)": {
+            "value": "Italy"
+        },
+        "(Japan)": {
+            "value": "Japan"
+        },
+        "(Korea)": {
+            "value": "Korea"
+        },
+        "(Netherlands)": {
+            "value": "Netherlands"
+        },
+        "(Spain)": {
+            "value": "Spain"
+        },
+        "(Sweden)": {
+            "value": "Sweden"
+        },
+        "(USA)": {
+            "value": "Includes Canada"
+        },
+        "(World)": {
+            "value": "Europe, USA, Japan"
+        },
+        "(Europe)": {
+            "value": "Two or more European countries, includes Australia"
+        },
+        "(Asia)": {
+            "value": "Multiple Asian countries excl. Japan"
+        },
+        "(Japan, USA)": {
+            "value": "Japan, USA"
+        },
+        "(Japan, Europe)": {
+            "value": "Japan, Europe"
+        },
+        "(USA, Europe)": {
+            "value": "USA, Europe"
+        }
+    }
+}

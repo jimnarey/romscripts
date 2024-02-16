@@ -1,0 +1,46 @@
+{
+    "dump": {
+        "[a#]": {
+            "value": "Alternative",
+            "description": "The ROM is a copy of an alternative release of the game. Many games have been re-released to fix bugs or to eliminate Game Genie codes.",
+            "regex": "\\[a[0-9]?\\]"
+        },
+        "[h]": {
+            "value": "Hacked",
+            "description": "The ROM has been user modified, with examples being changing the internal header or country codes, applying a release group intro, or editing the game's content."
+        },
+        "[b#]": {
+            "value": "Bad",
+            "description": "A ROM image which has been corrupted because the original game is very old, because of a faulty dumper (bad connection) or during its upload to a release server. These ROMs often have graphic errors or sometimes don't work at all.",
+            "regex": "\\[b[0-9]?\\]"
+        },
+        "[p#]": {
+            "value": "Pirated",
+            "description": "A dump of a pirated version of a game. These ROMs often have their copyright messages or company names removed or corrupted. Also, many ROMs contain \"intro\" screens with the name and symbols of the pirate group that have released them.",
+            "regex": "\\[p[0-9]?\\]"
+        },
+        "[!p]": {
+            "value": "Pending",
+            "description": "This is the closest dump to the original game to date, but the proper ROM is still waiting to be dumped."
+        },
+        "[f#]": {
+            "value": "Fixed",
+            "description": "A fixed dump is a ROM that has been altered to run better on a flashcart or an emulator.",
+            "regex": "\\[f[0-9]?\\]"
+        },
+        "[o#]": {
+            "value": "Overdumped",
+            "description": "The ROM contains more data than the original game. This extra data is useless and doesn't affect the game at all; it just makes the ROM bigger.",
+            "regex": "\\[o[0-9]?\\]"
+        },
+        "[!]": {
+            "value": "verified",
+            "description": "Verified - Good Dump. The ROM is an exact copy of the original game; it has not had any hacks or modifications."
+        },
+        "[t#]": {
+            "value": "Trained",
+            "description": "A trainer (special code which executes before starting the actual game) has been added to the ROM. It allows the player to access cheats from a menu or ingame.",
+            "regex": "\\[t[0-9]?\\]"
+        }
+    }
+}

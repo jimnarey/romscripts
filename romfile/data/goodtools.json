@@ -1,0 +1,840 @@
+{
+    "dump": {
+        "[a#]": {
+            "value": "Alternative",
+            "description": "The ROM is a copy of an alternative release of the game. Many games have been re-released to fix bugs or to eliminate Game Genie codes.",
+            "regex": "\\[a[0-9]?\\]"
+        },
+        "[h]": {
+            "value": "Hacked",
+            "description": "The ROM has been user modified, with examples being changing the internal header or country codes, applying a release group intro, or editing the game's content."
+        },
+        "[b#]": {
+            "value": "Bad",
+            "description": "A ROM image which has been corrupted because the original game is very old, because of a faulty dumper (bad connection) or during its upload to a release server. These ROMs often have graphic errors or sometimes don't work at all.",
+            "regex": "\\[b[0-9]?\\]"
+        },
+        "[p#]": {
+            "value": "Pirated",
+            "description": "A dump of a pirated version of a game. These ROMs often have their copyright messages or company names removed or corrupted. Also, many ROMs contain \"intro\" screens with the name and symbols of the pirate group that have released them.",
+            "regex": "\\[p[0-9]?\\]"
+        },
+        "[!p]": {
+            "value": "Pending",
+            "description": "This is the closest dump to the original game to date, but the proper ROM is still waiting to be dumped."
+        },
+        "[f#]": {
+            "value": "Fixed",
+            "description": "A fixed dump is a ROM that has been altered to run better on a flashcart or an emulator.",
+            "regex": "\\[f[0-9]?\\]"
+        },
+        "[o#]": {
+            "value": "Overdumped",
+            "description": "The ROM contains more data than the original game. This extra data is useless and doesn't affect the game at all; it just makes the ROM bigger.",
+            "regex": "\\[o[0-9]?\\]"
+        },
+        "[!]": {
+            "value": "verified",
+            "description": "Verified - Good Dump. The ROM is an exact copy of the original game; it has not had any hacks or modifications."
+        },
+        "[t#]": {
+            "value": "Trained",
+            "description": "A trainer (special code which executes before starting the actual game) has been added to the ROM. It allows the player to access cheats from a menu or ingame.",
+            "regex": "\\[t[0-9]?\\]"
+        }
+    },
+    "traslation": {
+        "(Rus)": {
+            "value": "Russian Translation"
+        },
+        "(Lit)": {
+            "value": "Lithuanian Translation"
+        },
+        "(Por)": {
+            "value": "Portuguese Translation"
+        },
+        "(Pol)": {
+            "value": "Polish"
+        },
+        "(SChi)": {
+            "value": "Simplified Chinese Translation"
+        },
+        "(Alb)": {
+            "value": "Albanian Translation"
+        },
+        "(Cro)": {
+            "value": "Croatia Translation"
+        },
+        "(Rum)": {
+            "value": "Romanian Translation"
+        },
+        "(Lat)": {
+            "value": "Latvian Translation"
+        },
+        "(Uru)": {
+            "value": "Uruguay Spanish Translation"
+        },
+        "(Fin)": {
+            "value": "Finnish Translation"
+        },
+        "(Jap)": {
+            "value": "Japanese Translation"
+        },
+        "(Dan)": {
+            "value": "Danish Translation"
+        },
+        "(TChi)": {
+            "value": "Traditional Chinese Translation"
+        },
+        "(Ger)": {
+            "value": "German Translation"
+        },
+        "(Ara)": {
+            "value": "Arabic Translation"
+        },
+        "(Kor)": {
+            "value": "Korean Translation"
+        },
+        "(Nor)": {
+            "value": "Norwegian Translation"
+        },
+        "(Spa)": {
+            "value": "Spanish Translation"
+        },
+        "(Bra)": {
+            "value": "Brazilian Portuguese Translation"
+        },
+        "(Gre)": {
+            "value": "Greek Translation"
+        },
+        "(Ita)": {
+            "value": "Italian Translation"
+        },
+        "(Dut)": {
+            "value": "Dutch Translation"
+        },
+        "(Fre)": {
+            "value": "French Translation"
+        },
+        "(Ser)": {
+            "value": "Serbian Translation"
+        },
+        "(Tai)": {
+            "value": "Thai Translation"
+        },
+        "(Eng)": {
+            "value": "English Translation"
+        },
+        "(ChS)": {
+            "value": "Simplified Chinese Translation"
+        },
+        "(Swe)": {
+            "value": "Swedish Translation"
+        },
+        "(Tur)": {
+            "value": "Turkish Translation"
+        },
+        "(Rom)": {
+            "value": "Romanian Translation"
+        },
+        "(Chi)": {
+            "value": "Chinese Translation"
+        },
+        "(ChT)": {
+            "value": "Traditional Chinese Translation"
+        },
+        "(Heb)": {
+            "value": "Hebrew Translation"
+        }
+    },
+    "gbx": {
+        "[C]": {
+            "value": "GBC version",
+            "description": "Game Boy Color version"
+        },
+        "[S]": {
+            "value": "SGB version",
+            "description": "Super Game Boy version"
+        },
+        "GBS Player": {
+            "value": "Music",
+            "description": "Game Boy music ROM"
+        },
+        "NES Conversion": {
+            "value": "NES to GBC",
+            "description": "NES ROM converted to Game Boy Color ROM"
+        },
+        "(Bung)": {
+            "value": "Bung cartridge",
+            "description": "ROM from a Bung cartridge"
+        },
+        "[BF]": {
+            "value": "Bung fix",
+            "description": "Bung fix (ROM fixed to work on a Bung cartridge)"
+        }
+    },
+    "general": {
+        "(##MBit)": {
+            "value": "ROM size",
+            "description": "ROM size in megabits",
+            "regex": "\\([0-9]{,2}MBit\\)"
+        },
+        "(SF-7000)": {
+            "value": "SF-7000 SMS cart",
+            "description": "SF-7000 cartridge (GoodSMS only)"
+        },
+        "ZZZ_UNK": {
+            "value": "Unclassified",
+            "description": "Unclassified ROM"
+        },
+        "(Cart)": {
+            "value": "Cartridge format"
+        },
+        "(VC)": {
+            "value": "From Wii VC",
+            "description": "Games from Nintendo Wii Virtual Console (mostly LCD/epilepsy patches)"
+        },
+        "(Alpha)": {
+            "value": "Alpha version"
+        },
+        "(old)": {
+            "value": "Old version"
+        },
+        "(Pre-Release)": {
+            "value": "Pre-release version"
+        },
+        "(GCN)": {
+            "value": "GameCube rip"
+        },
+        "(##k)": {
+            "value": "ROM size in kilobits",
+            "regex": "\\([0-9]{,2}k\\)"
+        },
+        "BIOS": {
+            "value": "Consols BIOS",
+            "description": "Copy of console's basic in/out system"
+        },
+        "(Ch-Trad)": {
+            "value": "Pirated, Chinese",
+            "description": "Pirate traditional Chinese game"
+        },
+        "(M#)": {
+            "value": "Multi-language",
+            "description": "Multilanguage; # of languages (selectable by a menu)",
+            "regex": "\\(M[0-9]?\\)"
+        },
+        "[hIR]": {
+            "value": "Hack intro removed",
+            "description": "Hacked dumping group intro removed"
+        },
+        "(Telestrat)": {
+            "value": "Telestrat ROM",
+            "description": "Telestrat ROM (GoodOric only)"
+        },
+        "(Beta)": {
+            "value": "Beta version"
+        },
+        "(REV##)": {
+            "value": "Revision number",
+            "description": "Revision number (00 is earliest)",
+            "regex": "\\(REV[0-9]{,2}\\)"
+        },
+        "[hI]": {
+            "value": "Hacked intro",
+            "description": "Hacked dumping group intro"
+        },
+        "(SG-1000)": {
+            "value": "SG-1000 SMS cart",
+            "description": "SG-1000 cartridge (GoodSMS only)"
+        },
+        "(NG-Dump Known)": {
+            "value": "No good dump",
+            "description": "No good dump has been found"
+        },
+        "[T-XXX]": {
+            "value": "Obsolete translation",
+            "regex": "\\[T-.{,3}\\]"
+        },
+        "(NTSC)": {
+            "value": "NTSC",
+            "description": "American or Japan TV Display Standard"
+        },
+        "(N64DD)": {
+            "value": "64DD ROM",
+            "description": "Nintendo 64DD ROM"
+        },
+        "(Menu)": {
+            "value": "Redundant menu",
+            "description": "Multicart menu, unselectable options"
+        },
+        "(Hack)": {
+            "value": "Hack",
+            "description": "ROM hack"
+        },
+        "(Compilation)": {
+            "value": "Dump of compilation",
+            "description": "The ROM is a dump of a compilation"
+        },
+        "[M]": {
+            "value": "Mono",
+            "description": "Mono-color game"
+        },
+        "(Vol #)": {
+            "value": "Official multicart",
+            "regex": "\\(Vol [0-9]?\\)"
+        },
+        "(Prototype)": {
+            "value": "Prototype",
+            "description": "Prototype version"
+        },
+        "[T+XXX]": {
+            "value": "Recent Translation",
+            "description": "Most recent translation",
+            "regex": "\\[T\\+.{,3}\\]"
+        },
+        "(Kiosk Demo)": {
+            "value": "Kiosk Version",
+            "description": "Demonstration version available at Kiosks"
+        },
+        "[h#+#C]": {
+            "value": "Hacked cart info",
+            "description": "Hacked internal cartridge information; #th variant",
+            "regex": "\\[h[0-9]?\\+[0-9]?C\\]"
+        },
+        "(19##)": {
+            "value": "Release year",
+            "description": "Release year (20th Century)",
+            "regex": "\\(19[0-9]{,2}\\)"
+        },
+        "(SC-3000)": {
+            "value": "SC-3000 SMS",
+            "description": "SC-3000 cartridge (GoodSMS only)"
+        },
+        "[h#C]": {
+            "value": "Hacked cart info",
+            "description": "Hacked internal cartridge information",
+            "regex": "\\[h[0-9]?C\\]"
+        },
+        "##-in-1": {
+            "value": "Pirate multicart",
+            "regex": "[0-9]{,2}-in-1"
+        },
+        "(PAL)": {
+            "value": "PAL",
+            "description": "European TV Display Standard"
+        },
+        "(20##)": {
+            "value": "Release year",
+            "description": "Release year (21st Century)",
+            "regex": "\\(20[0-9]{,2}\\)"
+        },
+        "(Atmos)": {
+            "value": "Atmos ROM",
+            "description": "Atmos ROM (GoodOric only)"
+        },
+        "(V#.#)": {
+            "value": "Version number",
+            "description": "Version number (1.0 is earliest)",
+            "regex": "\\(V[0-9]?\\.[0-9]?\\)"
+        },
+        "(Ch-Simple)": {
+            "value": "Pirate, Chinese",
+            "description": "Pirate simple Chinese game"
+        },
+        "[f#+#C]": {
+            "value": "Hacked cart name",
+            "description": "Hack, only cart name is changed; #th variant",
+            "regex": "\\[f[0-9]?\\+[0-9]?C\\]"
+        },
+        "[R]": {
+            "value": "RSID format",
+            "description": "RSID format (GoodPSID only)"
+        },
+        "(Adam)": {
+            "value": "ADAM version",
+            "description": "ADAM version (GoodCol only)"
+        },
+        "[R-XXX]": {
+            "value": "Language",
+            "regex": "\\[R-.{,3}\\]"
+        },
+        "(GG2SMS)": {
+            "value": "SMS mode",
+            "description": "Master System mode (GoodGG only)"
+        },
+        "[f#C]": {
+            "value": "Hacked cart name",
+            "description": "Hack, only cart name is changed",
+            "regex": "\\[f[0-9]?C\\]"
+        },
+        "(Beta #)": {
+            "value": "Beta",
+            "description": "Numbered beta",
+            "regex": "\\(Beta [0-9]?\\)"
+        },
+        "[b#+#C]": {
+            "value": "TBC",
+            "regex": "\\[b[0-9]?\\+[0-9]?C\\]"
+        },
+        "[p#+#C]": {
+            "value": "TBC",
+            "regex": "\\[p[0-9]?\\+[0-9]?C\\]"
+        },
+        "[o#+#C]": {
+            "value": "TBC",
+            "regex": "\\[o[0-9]?\\+[0-9]?C\\]"
+        },
+        "[t#+#C]": {
+            "value": "TBC",
+            "regex": "\\[t[0-9]?\\+[0-9]?C\\]"
+        },
+        "[h#I+#C]": {
+            "value": "TBC",
+            "regex": "\\[h[0-9]?I\\+[0-9]?C\\]"
+        },
+        "[h#I]": {
+            "value": "TBC",
+            "regex": "\\[h[0-9]?I\\]"
+        },
+        "[h#IR+#C]": {
+            "value": "TBC",
+            "regex": "\\[h[0-9]?IR\\+[0-9]?C\\]"
+        },
+        "[h#IR]": {
+            "value": "TBC",
+            "regex": "\\[h[0-9]?IR\\]"
+        },
+        "[T+~]": {
+            "value": "TBC",
+            "regex": "\\[T\\+.*?\\]"
+        },
+        "[T-~]": {
+            "value": "TBC",
+            "regex": "\\[T-.*?\\]"
+        },
+        "(~19##)": {
+            "value": "TBC",
+            "regex": "\\(.*?19[0-9]{,2}\\)"
+        },
+        "(S~Hack)": {
+            "value": "TBC",
+            "regex": "\\(S.*?Hack\\)"
+        },
+        "(Sample)": {
+            "value": "TBC"
+        },
+        "(Older)": {
+            "value": "TBC"
+        },
+        "(alt music)": {
+            "value": "Alternative music",
+            "description": "Alternative music version of Sonic Spinball"
+        }
+    },
+    "snes": {
+        "(NSS)": {
+            "value": "Arcade SNES",
+            "description": "Arcade SNES ROM"
+        },
+        "(BS)": {
+            "value": "Satellaview ROM",
+            "description": "Broadcast Satellite (Satellaview) ROM"
+        },
+        "(ST)": {
+            "value": "Sufami ROM",
+            "description": "Sufami Turbo ROM"
+        },
+        "(NP)": {
+            "value": "Nintendo Power ROM"
+        }
+    },
+    "gba": {
+        "NDS": {
+            "value": "NDS Slot 2",
+            "description": "Nintendo DS slot-2 cartridge dump"
+        },
+        "PocketSNES": {
+            "value": "PocketSNES",
+            "description": "Emulated SNES ROM via PocketSNES emulator"
+        },
+        "DrSMS": {
+            "value": "DrSMS",
+            "description": "Emulated Master System ROM via DrSMS emulator"
+        },
+        "(IQue)": {
+            "value": "IQue console",
+            "description": "Chinese Game Boy Advance ROM for IQue console"
+        },
+        "Cologne": {
+            "value": "ColecoVision ROM, Cologne Emulator",
+            "description": "Emulated ColecoVision ROM via Cologne emulator"
+        },
+        "GBAGI": {
+            "value": "Adventure Game Emulator",
+            "description": "Emulated Adventure Game Interpreter ROM via GBAGI emulator"
+        },
+        "[f126]": {
+            "value": "Removed EEPROM",
+            "description": "Removed EEPROM_V126"
+        },
+        "SNESAdvance": {
+            "value": "SNESAdvance",
+            "description": "Emulated SNES ROM via SNESAdvance emulator"
+        },
+        "VGB": {
+            "value": "Game Boy, VGB",
+            "description": "Emulated Game Boy ROM via VGB emulator"
+        },
+        "Coleco on GBA": {
+            "value": "ColecoVision ROM, GBA Emulator",
+            "description": "Emulated ColecoVision ROM via Coleco on GBA emulator"
+        },
+        "PictureBoy": {
+            "value": "E-book, Pictureboy",
+            "description": "E-Book using PictureBoy converter"
+        },
+        "-e": {
+            "value": "E-reader ROM",
+            "description": "E-Reader ROM"
+        },
+        "TextReader": {
+            "value": "E-book, TextReader",
+            "description": "E-Book using TextReader converter"
+        },
+        "Swanadvance": {
+            "value": "Swanadvance",
+            "description": "Emulated WonderSwan ROM via Swanadvance emulator"
+        },
+        "PCEAdvance": {
+            "value": "PCEAdvance",
+            "description": "Emulated TurboGrafx 16 ROM via PCEAdvance emulator"
+        },
+        "[hIRff]": {
+            "value": "Intro removed",
+            "description": "Intro removed; replaced with ff values"
+        },
+        "FooN": {
+            "value": "ZX Spectrum, via FooN",
+            "description": "Emulated ZX Spectrum ROM via FooN emulator"
+        },
+        "PocketSMS": {
+            "value": "PocketSMS",
+            "description": "Emulated Master System ROM via PocketSMS emulator"
+        },
+        "[f125]": {
+            "value": "Removed EEPROM",
+            "description": "Removed EEPROM_V125"
+        },
+        "(MB2GBA)": {
+            "value": "Multiboot",
+            "description": "Multiboot game converted to GBA format"
+        },
+        "Goomba": {
+            "value": "Game Boy, Goomba",
+            "description": "Emulated Game Boy ROM via Goomba emulator"
+        },
+        "[f_#]": {
+            "value": "Removed EEPROM",
+            "description": "Removed EEPROM_V124 patched",
+            "regex": "\\[f_[0-9]?\\]"
+        },
+        "[v]": {
+            "value": "GBA Video",
+            "description": "Game Boy Advance video"
+        },
+        "[ebb]": {
+            "value": "Book reader",
+            "description": "Book Reader Advance ROM"
+        },
+        "+ ## NES": {
+            "value": "Multicart",
+            "description": "Unlicensed multicart with ## NES games",
+            "regex": "\\+ [0-9]{,2} NES"
+        },
+        "ReadBoy": {
+            "value": "E-book, Readboy",
+            "description": "E-Book using ReadBoy converter"
+        },
+        "Snezzyboy": {
+            "value": "SNES, Sneezeboy",
+            "description": "Emulated SNES ROM via Snezzyboy emulator"
+        },
+        "[hIR00]": {
+            "value": "Intro removed",
+            "description": "Intro removed; replaced with 00 values"
+        },
+        "s##e##": {
+            "value": "Series, episode",
+            "description": "Series number and episode number for videos",
+            "regex": "s[0-9]{,2}e[0-9]{,2}"
+        },
+        "[eb]": {
+            "value": "E-Book ROM",
+            "description": "E-book ROM"
+        },
+        "GoodBook": {
+            "value": "E-book, Goodbook",
+            "description": "E-Book using GoodBook converter"
+        },
+        "FC2GBA": {
+            "value": "NES, FC2GBA",
+            "description": "Emulated NES ROM via FC2GBA emulator"
+        },
+        "(MB)": {
+            "value": "Multiboot",
+            "description": "Multiboot ROM"
+        },
+        "Pogoshell": {
+            "value": "Pogoshell program",
+            "description": "Program for Pogoshell tool"
+        },
+        "PocketNES": {
+            "value": "NES, PocketNES",
+            "description": "Emulated NES ROM via PocketNES emulator"
+        },
+        "[eba]": {
+            "value": "E-book Advance",
+            "description": "E-Book Advance ROM"
+        }
+    },
+    "region": {
+        "(PD)": {
+            "value": "Public domain",
+            "description": "Free software and freeware"
+        },
+        "(J)": {
+            "value": "Japan"
+        },
+        "(Gr)": {
+            "value": "Greece"
+        },
+        "(S)": {
+            "value": "Spain"
+        },
+        "(A)": {
+            "value": "Australia"
+        },
+        "(Sw)": {
+            "value": "Sweden"
+        },
+        "(U)": {
+            "value": "United States"
+        },
+        "(Ch)": {
+            "value": "China"
+        },
+        "(C)": {
+            "value": "Canada"
+        },
+        "(F)": {
+            "value": "France"
+        },
+        "(No)": {
+            "value": "Norway"
+        },
+        "(G)": {
+            "value": "Germany"
+        },
+        "(HK)": {
+            "value": "Hong Kong"
+        },
+        "(Nl)": {
+            "value": "Netherlands"
+        },
+        "(UK)": {
+            "value": "United Kingdom"
+        },
+        "(Unl)": {
+            "value": "Unlicensed"
+        },
+        "(As)": {
+            "value": "Asia"
+        },
+        "(Unk)": {
+            "value": "Unknown country"
+        },
+        "(D)": {
+            "value": "Netherlands (Dutch)"
+        },
+        "(K)": {
+            "value": "Korea"
+        },
+        "(I)": {
+            "value": "Italy"
+        },
+        "(W)": {
+            "value": "World"
+        },
+        "(E)": {
+            "value": "Europe"
+        },
+        "(R)": {
+            "value": "Russia"
+        },
+        "(B)": {
+            "value": "Brazil"
+        },
+        "(UE)": {
+            "value": "United States & Europe"
+        },
+        "(JU)": {
+            "value": "Japan & United States"
+        },
+        "(JE)": {
+            "value": "Japan & Europe"
+        },
+        "(EB)": {
+            "value": "Europe & Brazil"
+        }
+    },
+    "nes": {
+        "SMB#": {
+            "value": "SMB[0-9]?",
+            "description": "Unspecified Super Mario Bros. hack",
+            "regex": "SMB[0-9]?"
+        },
+        "(Aladdin)": {
+            "value": "Needs Aladin cartridge",
+            "description": "Runs with an Aladdin cartridge that locks out 10NES lockout chip"
+        },
+        "(PC10)": {
+            "value": "Playchoice-10",
+            "description": "PlayChoice-10 version"
+        },
+        "(KC)": {
+            "value": "Konami classic"
+        },
+        "(PRG0)": {
+            "value": "Program revision 0"
+        },
+        "[hFFE]": {
+            "value": "Far East Copiers",
+            "description": "Copied from Far East Copiers"
+        },
+        "(GBA E-reader)": {
+            "value": "From e-reader carc",
+            "description": "Hacked from the e-Reader card"
+        },
+        "(Mapper ##)": {
+            "value": "Mapper [0-9]{,2}",
+            "description": "Mapper number",
+            "regex": "\\(Mapper [0-9]{,2}\\)"
+        },
+        "(Sachen)": {
+            "value": "Sachen Game",
+            "description": "Unlicensed game by Sachen"
+        },
+        "(FDS Hack)": {
+            "value": "FCDS to NES",
+            "description": "Hacked from the Family Computer Disk System to NES"
+        },
+        "(PRG1)": {
+            "value": "Program revision 1"
+        },
+        "(VS)": {
+            "value": "Versus version"
+        },
+        "(E-GC)": {
+            "value": "NES ROM from GC",
+            "description": "NES ROM ripped from European GameCube"
+        },
+        "[U]": {
+            "value": "NES Universal",
+            "description": "Universal NES image file format"
+        },
+        "[hMxx]": {
+            "value": "Hacked for mapper",
+            "description": "Hacked to run on mapper xx",
+            "regex": "\\[hM.{,2}\\]"
+        },
+        "(J-GC)": {
+            "value": "NES from Jap. GC",
+            "description": "NES ROM ripped from Japanese GameCube"
+        }
+    },
+    "genesis": {
+        "(Alt Music)": {
+            "value": "Alternative music",
+            "description": "Alternative music version of Sonic Spinball"
+        },
+        "(8)": {
+            "value": "PAL",
+            "description": "PAL (GoodGen 0.999.7 only)"
+        },
+        "(F)": {
+            "value": "World",
+            "description": "World (GoodGen v0.999.7 only)"
+        },
+        "(1)": {
+            "value": "Jap. & Korea",
+            "description": "Japan & Korea (GoodGen v0.999.7 only)"
+        },
+        "(J-Cart)": {
+            "value": "2 controller cart",
+            "description": "The original cartridge has two controller ports on it"
+        },
+        "(MD Bundle)": {
+            "value": "From a 'pack-in'",
+            "description": "The ROM comes from Sega Mega Drive/Genesis pack-in game"
+        },
+        "[c]": {
+            "value": "OK, bad checksum",
+            "description": "Known bad checksum but good dump"
+        },
+        "(MP)": {
+            "value": "Megaplay",
+            "description": "MegaPlay version"
+        },
+        "(REVSC02)": {
+            "value": "From Sonic comp",
+            "description": "Sonic Compilation version of Sonic 2"
+        },
+        "(5)": {
+            "value": "NTSC",
+            "description": "NTSC (GoodGen 0.999.7 only)"
+        },
+        "(REVXB)": {
+            "value": "Sonic, Jap. v2",
+            "description": "Sonic the Hedgehog Japanese version 2",
+            "regex": "\\(REV.?B\\)"
+        },
+        "(SN)": {
+            "value": "Sega-Net",
+            "description": "Sega-Net game"
+        },
+        "[x]": {
+            "value": "Poss bad checksum",
+            "description": "Thought to have bad checksum"
+        },
+        "(4)": {
+            "value": "USA & Brazil",
+            "description": "USA & Brazil (GoodGen v0.999.7 only)"
+        },
+        "(B)": {
+            "value": "Non-USA",
+            "description": "Non-USA (GoodGen v0.999.7 only)"
+        }
+    },
+    "n64": {
+        "(Debug Version)": {
+            "value": "Debug Version"
+        },
+        "(Beta-WIP)": {
+            "value": "Beta-WIP"
+        },
+        "(Save-PAL)": {
+            "value": "Save-PAL"
+        },
+        "(Save)": {
+            "value": "Patched save",
+            "description": "Changes the save routine. Instead of EEPROM16 the patched save is SRAM.[10]"
+        },
+        "(GC)": {
+            "value": "GC Rip",
+            "description": "Nintendo GameCube rip"
+        },
+        "(Z64-Save)": {
+            "value": "Z64-Save"
+        }
+    }
+}

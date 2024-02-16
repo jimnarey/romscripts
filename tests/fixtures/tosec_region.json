@@ -1,0 +1,208 @@
+{
+    "region": {
+        "(AE)": {
+            "value": "United Arab Emirates"
+        },
+        "(AL)": {
+            "value": "Albania"
+        },
+        "(AS)": {
+            "value": "Asia"
+        },
+        "(AT)": {
+            "value": "Austria"
+        },
+        "(AU)": {
+            "value": "Australia"
+        },
+        "(BA)": {
+            "value": "Bosnia and Herzegovina"
+        },
+        "(BE)": {
+            "value": "Belgium"
+        },
+        "(BG)": {
+            "value": "Bulgaria"
+        },
+        "(BR)": {
+            "value": "Brazil"
+        },
+        "(CA)": {
+            "value": "Canada"
+        },
+        "(CH)": {
+            "value": "Switzerland"
+        },
+        "(CL)": {
+            "value": "Chile"
+        },
+        "(CN)": {
+            "value": "China"
+        },
+        "(CS)": {
+            "value": "Serbia and Montenegro"
+        },
+        "(CY)": {
+            "value": "Cyprus"
+        },
+        "(CZ)": {
+            "value": "Czech Republic"
+        },
+        "(DE)": {
+            "value": "Germany"
+        },
+        "(DK)": {
+            "value": "Denmark"
+        },
+        "(EE)": {
+            "value": "Estonia"
+        },
+        "(EG)": {
+            "value": "Egypt"
+        },
+        "(ES)": {
+            "value": "Spain"
+        },
+        "(EU)": {
+            "value": "Europe"
+        },
+        "(FI)": {
+            "value": "Finland"
+        },
+        "(FR)": {
+            "value": "France"
+        },
+        "(GB)": {
+            "value": "United Kingdom"
+        },
+        "(GR)": {
+            "value": "Greece"
+        },
+        "(HK)": {
+            "value": "Hong Kong"
+        },
+        "(HR)": {
+            "value": "Croatia"
+        },
+        "(HU)": {
+            "value": "Hungary"
+        },
+        "(ID)": {
+            "value": "Indonesia"
+        },
+        "(IE)": {
+            "value": "Ireland"
+        },
+        "(IL)": {
+            "value": "Israel"
+        },
+        "(IN)": {
+            "value": "India"
+        },
+        "(IR)": {
+            "value": "Iran"
+        },
+        "(IS)": {
+            "value": "Iceland"
+        },
+        "(IT)": {
+            "value": "Italy"
+        },
+        "(JO)": {
+            "value": "Jordan"
+        },
+        "(JP)": {
+            "value": "Japan"
+        },
+        "(KR)": {
+            "value": "South Korea"
+        },
+        "(LT)": {
+            "value": "Lithuania"
+        },
+        "(LU)": {
+            "value": "Luxembourg"
+        },
+        "(LV)": {
+            "value": "Latvia"
+        },
+        "(MN)": {
+            "value": "Mongolia"
+        },
+        "(MX)": {
+            "value": "Mexico"
+        },
+        "(MY)": {
+            "value": "Malaysia"
+        },
+        "(NL)": {
+            "value": "Netherlands"
+        },
+        "(NO)": {
+            "value": "Norway"
+        },
+        "(NP)": {
+            "value": "Nepal"
+        },
+        "(NZ)": {
+            "value": "New Zealand"
+        },
+        "(OM)": {
+            "value": "Oman"
+        },
+        "(PE)": {
+            "value": "Peru"
+        },
+        "(PH)": {
+            "value": "Philippines"
+        },
+        "(PL)": {
+            "value": "Poland"
+        },
+        "(PT)": {
+            "value": "Portugal"
+        },
+        "(QA)": {
+            "value": "Qatar"
+        },
+        "(RO)": {
+            "value": "Romania"
+        },
+        "(RU)": {
+            "value": "Russia"
+        },
+        "(SE)": {
+            "value": "Sweden"
+        },
+        "(SG)": {
+            "value": "Singapore"
+        },
+        "(SI)": {
+            "value": "Slovenia"
+        },
+        "(SK)": {
+            "value": "Slovakia"
+        },
+        "(TH)": {
+            "value": "Thailand"
+        },
+        "(TR)": {
+            "value": "Turkey"
+        },
+        "(TW)": {
+            "value": "Taiwan"
+        },
+        "(US)": {
+            "value": "United States"
+        },
+        "(VN)": {
+            "value": "Vietnam"
+        },
+        "(YU)": {
+            "value": "Yugoslavia"
+        },
+        "(ZA)": {
+            "value": "South Africa"
+        }
+    }
+}
