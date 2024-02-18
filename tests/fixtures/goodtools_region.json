@@ -56,7 +56,7 @@
             "value": "Unknown country"
         },
         "(D)": {
-            "value": "Netherlands (Dutch)"
+            "value": "Netherlands"
         },
         "(K)": {
             "value": "Korea"
@@ -77,16 +77,16 @@
             "value": "Brazil"
         },
         "(UE)": {
-            "value": "United States & Europe"
+            "value": "United States, Europe"
         },
         "(JU)": {
-            "value": "Japan & United States"
+            "value": "Japan, United States"
         },
         "(JE)": {
-            "value": "Japan & Europe"
+            "value": "Japan, Europe"
         },
         "(EB)": {
-            "value": "Europe & Brazil"
+            "value": "Europe, Brazil"
         }
     }
 }
