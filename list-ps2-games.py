@@ -40,9 +40,7 @@ def find_unique_game_ids(files: list[str]) -> set[str]:
     return set([normalise_id(id) for id in game_ids])
 
 
-def find_game_matches(
-    game_ids: list[str], games_data: dict[str, dict[str, str]]
-) -> list[str]:
+def find_game_matches(game_ids: list[str], games_data: dict[str, dict[str, str]]) -> list[str]:
     matches = [games_data.get(id) for id in game_ids]
     return [match for match in matches if match]  # type: ignore
 

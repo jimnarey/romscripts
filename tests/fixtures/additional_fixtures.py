@@ -1,4 +1,3 @@
-
 TITLES = [
     "Adventures of Batman and Robin, The (U) [p1][!].gen",
     "Advanced Daisenryaku (J) (REV01) [h1C].gen",
@@ -6,7 +5,7 @@ TITLES = [
     "Addams Family Values (1994)(Ocean)(EU)(M3)",
     "Addams Family, The (1993)(Acclaim - Flying Edge)(EU-US)(en)",
     "Adventures of Rocky and Bullwinkle and Friends, The (1993)(Absolute Entertainment)(US)",
-    "Asterix and the Great Rescue (Europe, Brazil) (En,Fr,De,Es,It).zip"
+    "Asterix and the Great Rescue (Europe, Brazil) (En,Fr,De,Es,It).zip",
 ]
 
 CODE_SPECS = [
@@ -61,8 +60,7 @@ CODE_SPECS = [
     {
         "code": "[f#]",
         "code_type": "dump",
-        "description": "A fixed dump is a ROM that has been altered to run better on "
-        "a flashcart or an emulator.",
+        "description": "A fixed dump is a ROM that has been altered to run better on " "a flashcart or an emulator.",
         "regex": "\\[f[0-9]?\\]",
         "value": "Fixed",
     },

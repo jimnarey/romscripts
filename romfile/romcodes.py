@@ -22,7 +22,7 @@ class CodeSet(object):
         for char in "() ":
             code = code.replace(char, "")
         return code.split(delimiter)
-    
+
     @staticmethod
     def has_multi_code_delimiter(code: str) -> bool:
         for char in MULTI_CODE_DELIMITERS:
@@ -40,15 +40,15 @@ class CodeSet(object):
         return None
 
     @staticmethod
-    def match_unbracketed(code: str, code_spec: CodeSpec) -> Optional[CodeSpec]:
+    def match_unbracketed(
+        code: str, code_spec: CodeSpec
+    ) -> Optional[CodeSpec]:
         stripped_spec_code = code_spec["code"]
         for char in "()[]":
             stripped_spec_code = stripped_spec_code.replace(char, "")
         if code == stripped_spec_code:
             return code_spec
         return None
-    
-    
 
     def __init__(self, format, code_set_path: str):
         self.format = format
@@ -60,7 +60,9 @@ class CodeSet(object):
             for code_spec in self.flat_codes_by_type(code_type):
                 yield code_spec
 
-    def flat_codes_by_type(self, code_type: str) -> Generator[CodeSpec, None, None]:
+    def flat_codes_by_type(
+        self, code_type: str
+    ) -> Generator[CodeSpec, None, None]:
         for code in self.codes[code_type]:
             yield {
                 "code_type": code_type,
@@ -94,7 +96,9 @@ class CodeSet(object):
             for code_type in MULTI_CODE_TYPES:
                 for code_spec in self.flat_codes_by_type(code_type):
                     for sub_code in sub_codes:
-                        matched_code_spec = CodeSet.match_unbracketed(sub_code, code_spec)
+                        matched_code_spec = CodeSet.match_unbracketed(
+                            sub_code, code_spec
+                        )
                         if matched_code_spec:
                             matched_code_specs.append(matched_code_spec)
                 # This makes sure we really are dealing with a multi-code and not arbitary
@@ -102,7 +106,6 @@ class CodeSet(object):
                 if len(matched_code_specs) > 1:
                     return matched_code_specs
         return None
-
 
     def find_matching_code(self, code: str) -> Optional[list[CodeSpec]]:
         matched_code_spec = self.find_matching_full_code(code)

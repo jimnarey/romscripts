@@ -10,11 +10,15 @@ import romfile.romcodes as romcodes
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 FIXTURES_PATH = os.path.join(SCRIPT_PATH, "fixtures")
 GOODTOOLS_DUMP_CODES_PATH = os.path.join(FIXTURES_PATH, "goodtools_dump.json")
-GOODTOOLS_REGION_CODES_PATH = os.path.join(FIXTURES_PATH, "goodtools_region.json")
+GOODTOOLS_REGION_CODES_PATH = os.path.join(
+    FIXTURES_PATH, "goodtools_region.json"
+)
 NOINTRO_REGION_CODES_PATH = os.path.join(FIXTURES_PATH, "nointro_region.json")
 TOSEC_REGION_CODES_PATH = os.path.join(FIXTURES_PATH, "tosec_region.json")
 
-goodtools_dump_code_set = romcodes.CodeSet("goodtools", GOODTOOLS_DUMP_CODES_PATH)
+goodtools_dump_code_set = romcodes.CodeSet(
+    "goodtools", GOODTOOLS_DUMP_CODES_PATH
+)
 tosec_region_code_set = romcodes.CodeSet("tosec", TOSEC_REGION_CODES_PATH)
 
 
