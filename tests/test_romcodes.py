@@ -20,6 +20,9 @@ goodtools_dump_code_set = romcodes.CodeSet(
     "goodtools", GOODTOOLS_DUMP_CODES_PATH
 )
 tosec_region_code_set = romcodes.CodeSet("tosec", TOSEC_REGION_CODES_PATH)
+nointro_region_code_set = romcodes.CodeSet(
+    "nointro", NOINTRO_REGION_CODES_PATH
+)
 
 
 class TestCodeSet(unittest.TestCase):
@@ -41,7 +44,7 @@ class TestCodeSet(unittest.TestCase):
             },
         )
         code_specs = []
-        # Double check length of output after some odd results in REPL
+        # Check against a different code set
         for code_spec in tosec_region_code_set.flat_all_codes():
             code_specs.append(code_spec)
         self.assertEqual(len(code_specs), 68)
@@ -130,7 +133,8 @@ class TestCodeSet(unittest.TestCase):
             ],
         )
 
-    def test_find_matching_multi_code(self):
+    # Uses find_matching_multi_code_by_type
+    def test_find_matching_multi_code_with_valid_tosec_region_code(self):
         code = "(EU-US)"
         matches = tosec_region_code_set.find_matching_multi_code(code)
         self.assertEqual(len(matches), 2)
@@ -154,4 +158,58 @@ class TestCodeSet(unittest.TestCase):
                 "value": "United States",
             },
         )
-        # self.assertEqual(len(matches), 2)
+
+    def test_find_matching_multi_code_with_valid_nointro_region_code(self):
+        code = "(USA, Europe)"
+        matches = nointro_region_code_set.find_matching_multi_code(code)
+        self.assertEqual(len(matches), 2)
+        self.assertEqual(
+            matches[0],
+            {
+                "code": "(USA)",
+                "code_type": "region",
+                "description": "",
+                "regex": "",
+                "value": "United States. Includes Canada",
+            },
+        )
+        self.assertEqual(
+            matches[1],
+            {
+                "code": "(Europe)",
+                "code_type": "region",
+                "description": "",
+                "regex": "",
+                "value": "Two or more European countries, includes Australia",
+            },
+        )
+
+    # TODO: Add some tests to ensure that arbitrary values separated by commas
+    # or dashes are not matched as multi-codes
+
+    def test_find_matching_multi_code_by_type(self):
+        code = "(EU-US)"
+        matches = tosec_region_code_set.find_matching_multi_code_by_type(
+            code, "-", "region"
+        )
+        self.assertEqual(len(matches), 2)
+        self.assertEqual(
+            matches[0],
+            {
+                "code": "(EU)",
+                "code_type": "region",
+                "description": "",
+                "regex": "",
+                "value": "Europe",
+            },
+        )
+        self.assertEqual(
+            matches[1],
+            {
+                "code": "(US)",
+                "code_type": "region",
+                "description": "",
+                "regex": "",
+                "value": "United States",
+            },
+        )

@@ -84,6 +84,22 @@ class CodeSet(object):
                 return [matched_code_spec]
         return None
 
+    def find_matching_multi_code_by_type(
+        self, code: str, delim: str, code_type: str
+    ) -> Optional[list[CodeSpec]]:
+        matched_code_specs = []
+        for code_spec in self.flat_codes_by_type(code_type):
+            for sub_code in CodeSet.get_code_parts(code, delim):
+                matched_code_spec = CodeSet.match_unbracketed(
+                    sub_code, code_spec
+                )
+                if matched_code_spec:
+                    matched_code_specs.append(matched_code_spec)
+            # If len < 1 it's not a valid multi-code
+            if len(matched_code_specs) > 1:
+                return matched_code_specs
+        return None
+
     def find_matching_multi_code(self, code: str) -> Optional[list[CodeSpec]]:
         """
         Only called if a full match has not been found.
@@ -91,19 +107,11 @@ class CodeSet(object):
         if not CodeSet.has_multi_code_delimiter(code):
             return None
         for delim in MULTI_CODE_DELIMITERS:
-            matched_code_specs = []
-            sub_codes = CodeSet.get_code_parts(code, delim)
             for code_type in MULTI_CODE_TYPES:
-                for code_spec in self.flat_codes_by_type(code_type):
-                    for sub_code in sub_codes:
-                        matched_code_spec = CodeSet.match_unbracketed(
-                            sub_code, code_spec
-                        )
-                        if matched_code_spec:
-                            matched_code_specs.append(matched_code_spec)
-                # This makes sure we really are dealing with a multi-code and not arbitary
-                # terms which happen to be separated by a multi-code delimiter.
-                if len(matched_code_specs) > 1:
+                matched_code_specs = self.find_matching_multi_code_by_type(
+                    code, delim, code_type
+                )
+                if matched_code_specs:
                     return matched_code_specs
         return None
 
