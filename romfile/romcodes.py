@@ -5,6 +5,8 @@ import json
 import os
 from typing import Generator
 
+MULTI_CODE_TYPES = ["region"]
+MULTI_CODE_DELIMITERS = "-,"
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 JSON_PATH = os.path.join(SCRIPT_PATH, "data")
@@ -20,6 +22,13 @@ class CodeSet(object):
         for char in "() ":
             code = code.replace(char, "")
         return code.split(delimiter)
+    
+    @staticmethod
+    def has_multi_code_delimiter(code: str) -> bool:
+        for char in MULTI_CODE_DELIMITERS:
+            if char in code:
+                return True
+        return False
 
     @staticmethod
     def match_bracketed(code: str, code_spec: CodeSpec) -> Optional[CodeSpec]:
@@ -38,6 +47,8 @@ class CodeSet(object):
         if code == stripped_spec_code:
             return code_spec
         return None
+    
+    
 
     def __init__(self, format, code_set_path: str):
         self.format = format
@@ -62,11 +73,36 @@ class CodeSet(object):
             }
 
     def find_matching_full_code(self, code: str) -> Optional[list[CodeSpec]]:
+        """
+        Searches all codes in the set for a full match with the provided code.
+        """
         for code_spec in self.flat_all_codes():
             matched_code_spec = CodeSet.match_bracketed(code, code_spec)
             if matched_code_spec:
                 return [matched_code_spec]
         return None
+
+    def find_matching_multi_code(self, code: str) -> Optional[list[CodeSpec]]:
+        """
+        Only called if a full match has not been found.
+        """
+        if not CodeSet.has_multi_code_delimiter(code):
+            return None
+        for delim in MULTI_CODE_DELIMITERS:
+            matched_code_specs = []
+            sub_codes = CodeSet.get_code_parts(code, delim)
+            for code_type in MULTI_CODE_TYPES:
+                for code_spec in self.flat_codes_by_type(code_type):
+                    for sub_code in sub_codes:
+                        matched_code_spec = CodeSet.match_unbracketed(sub_code, code_spec)
+                        if matched_code_spec:
+                            matched_code_specs.append(matched_code_spec)
+                # This makes sure we really are dealing with a multi-code and not arbitary
+                # terms which happen to be separated by a multi-code delimiter.
+                if len(matched_code_specs) > 1:
+                    return matched_code_specs
+        return None
+
 
     def find_matching_code(self, code: str) -> Optional[list[CodeSpec]]:
         matched_code_spec = self.find_matching_full_code(code)

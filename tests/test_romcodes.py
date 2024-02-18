@@ -58,11 +58,17 @@ class TestCodeSet(unittest.TestCase):
             },
         )
 
-    def test_get_code_parts(self):
+    def test_get_code_parts_tosec(self):
         code = "(EU-US)"
         delimiter = "-"
         parts = romcodes.CodeSet.get_code_parts(code, delimiter)
         self.assertEqual(parts, ["EU", "US"])
+
+    def test_code_parts_nointro(self):
+        code = "(USA, Europe)"
+        delimiter = ","
+        parts = romcodes.CodeSet.get_code_parts(code, delimiter)
+        self.assertEqual(parts, ["USA", "Europe"])
 
     def test_match_unbracketed(self):
         code = "!"
@@ -119,3 +125,29 @@ class TestCodeSet(unittest.TestCase):
                 }
             ],
         )
+
+    def test_find_matching_multi_code(self):
+        code = "(EU-US)"
+        matches = tosec_region_code_set.find_matching_multi_code(code)
+        self.assertEqual(len(matches), 2)
+        self.assertEqual(
+            matches[0],
+            {
+                "code": "(EU)",
+                "code_type": "region",
+                "description": "",
+                "regex": "",
+                "value": "Europe",
+            },
+        )
+        self.assertEqual(
+            matches[1],
+            {
+                "code": "(US)",
+                "code_type": "region",
+                "description": "",
+                "regex": "",
+                "value": "United States",
+            },
+        )
+        # self.assertEqual(len(matches), 2)

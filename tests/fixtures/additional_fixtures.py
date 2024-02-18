@@ -6,6 +6,7 @@ TITLES = [
     "Addams Family Values (1994)(Ocean)(EU)(M3)",
     "Addams Family, The (1993)(Acclaim - Flying Edge)(EU-US)(en)",
     "Adventures of Rocky and Bullwinkle and Friends, The (1993)(Absolute Entertainment)(US)",
+    "Asterix and the Great Rescue (Europe, Brazil) (En,Fr,De,Es,It).zip"
 ]
 
 CODE_SPECS = [
