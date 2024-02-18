@@ -24,8 +24,5 @@ repos:
     -   id: mypy
         additional_dependencies:
         -    PyYAML
-        -    aiohttp
-        -    selenium
-        -    flask
 
-        args: [--explicit-package-bases]
+        args: [--explicit-package-bases, --ignore-missing-imports]
