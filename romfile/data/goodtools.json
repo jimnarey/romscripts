@@ -43,7 +43,7 @@
             "regex": "\\[t[0-9]?\\]"
         }
     },
-    "traslation": {
+    "translation": {
         "(Rus)": {
             "value": "Russian Translation"
         },

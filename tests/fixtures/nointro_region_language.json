@@ -64,5 +64,52 @@
         "(USA, Europe)": {
             "value": "USA, Europe"
         }
+    },
+    "language": {
+        "(En)": {
+            "value": "English"
+        },
+        "(Ja)": {
+            "value": "Japanese"
+        },
+        "(Fr)": {
+            "value": "French"
+        },
+        "(De)": {
+            "value": "German"
+        },
+        "(Es)": {
+            "value": "Spanish"
+        },
+        "(It)": {
+            "value": "Italian"
+        },
+        "(Nl)": {
+            "value": "Dutch"
+        },
+        "(Pt)": {
+            "value": "Portuguese"
+        },
+        "(Sv)": {
+            "value": "Swedish"
+        },
+        "(No)": {
+            "value": "Norwegian"
+        },
+        "(Da)": {
+            "value": "Danish"
+        },
+        "(Fi)": {
+            "value": "Finish"
+        },
+        "(Zh)": {
+            "value": "Chinese"
+        },
+        "(Ko)": {
+            "value": "Korean"
+        },
+        "(Pl)": {
+            "value": "Polish"
+        }
     }
 }

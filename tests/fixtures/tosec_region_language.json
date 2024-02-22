@@ -204,5 +204,142 @@
         "(ZA)": {
             "value": "South Africa"
         }
+    },
+    "language": {
+        "(ar)": {
+            "value": "Arabic"
+        },
+        "(bg)": {
+            "value": "Bulgarian"
+        },
+        "(bs)": {
+            "value": "Bosnian"
+        },
+        "(cs)": {
+            "value": "Czech"
+        },
+        "(cy)": {
+            "value": "Welsh"
+        },
+        "(da)": {
+            "value": "Danish"
+        },
+        "(de)": {
+            "value": "German"
+        },
+        "(el)": {
+            "value": "Greek"
+        },
+        "(en)": {
+            "value": "English"
+        },
+        "(eo)": {
+            "value": "Esperanto"
+        },
+        "(es)": {
+            "value": "Spanish"
+        },
+        "(et)": {
+            "value": "Estonian"
+        },
+        "(fa)": {
+            "value": "Persian"
+        },
+        "(fi)": {
+            "value": "Finnish"
+        },
+        "(fr)": {
+            "value": "French"
+        },
+        "(ga)": {
+            "value": "Irish"
+        },
+        "(gu)": {
+            "value": "Gujarati"
+        },
+        "(he)": {
+            "value": "Hebrew"
+        },
+        "(hi)": {
+            "value": "Hindi"
+        },
+        "(hr)": {
+            "value": "Croatian"
+        },
+        "(hu)": {
+            "value": "Hungarian"
+        },
+        "(is)": {
+            "value": "Icelandic"
+        },
+        "(it)": {
+            "value": "Italian"
+        },
+        "(ja)": {
+            "value": "Japanese"
+        },
+        "(ko)": {
+            "value": "Korean"
+        },
+        "(lt)": {
+            "value": "Lithuanian"
+        },
+        "(lv)": {
+            "value": "Latvian"
+        },
+        "(ms)": {
+            "value": "Malay"
+        },
+        "(nl)": {
+            "value": "Dutch"
+        },
+        "(no)": {
+            "value": "Norwegian"
+        },
+        "(pl)": {
+            "value": "Polish"
+        },
+        "(pt)": {
+            "value": "Portuguese"
+        },
+        "(ro)": {
+            "value": "Romanian"
+        },
+        "(ru)": {
+            "value": "Russian"
+        },
+        "(sk)": {
+            "value": "Slovakian"
+        },
+        "(sl)": {
+            "value": "Slovenian"
+        },
+        "(sq)": {
+            "value": "Albanian"
+        },
+        "(sr)": {
+            "value": "Serbian"
+        },
+        "(sv)": {
+            "value": "Swedish"
+        },
+        "(th)": {
+            "value": "Thai"
+        },
+        "(tr)": {
+            "value": "Turkish"
+        },
+        "(ur)": {
+            "value": "Urdu"
+        },
+        "(vi)": {
+            "value": "Vietnamese"
+        },
+        "(yi)": {
+            "value": "Yiddish"
+        },
+        "(zh)": {
+            "value": "Chinese"
+        }
     }
 }

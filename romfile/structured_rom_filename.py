@@ -30,12 +30,7 @@ class StructuredRomFileName(object):
 
     def __init__(self, name):
         self.original_name = self.get_base_name(name)
-        self._codes_split = [
-            match
-            for match in re.findall(
-                StructuredRomFileName.info_pattern, self.original_name
-            )
-        ]
+        self._codes_split = [match for match in re.findall(StructuredRomFileName.info_pattern, self.original_name)]
         self.title = self.get_title()
         self.year = self.get_year()
 

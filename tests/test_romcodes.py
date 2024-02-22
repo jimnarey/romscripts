@@ -15,131 +15,6 @@ GOODTOOLS_REGION_CODES_JSON_PATH = os.path.join(FIXTURES_PATH, "goodtools_region
 NOINTRO_REGION_LANGUAGE_CODES_JSON_PATH = os.path.join(FIXTURES_PATH, "nointro_region_language.json")
 TOSEC_REGION_LANGUAGE_CODES_JSON_PATH = os.path.join(FIXTURES_PATH, "tosec_region_language.json")
 
-TOSEC_REGION_CODES = [
-    "(AE)",
-    "(AL)",
-    "(AS)",
-    "(AT)",
-    "(AU)",
-    "(BA)",
-    "(BE)",
-    "(BG)",
-    "(BR)",
-    "(CA)",
-    "(CH)",
-    "(CL)",
-    "(CN)",
-    "(CS)",
-    "(CY)",
-    "(CZ)",
-    "(DE)",
-    "(DK)",
-    "(EE)",
-    "(EG)",
-    "(ES)",
-    "(EU)",
-    "(FI)",
-    "(FR)",
-    "(GB)",
-    "(GR)",
-    "(HK)",
-    "(HR)",
-    "(HU)",
-    "(ID)",
-    "(IE)",
-    "(IL)",
-    "(IN)",
-    "(IR)",
-    "(IS)",
-    "(IT)",
-    "(JO)",
-    "(JP)",
-    "(KR)",
-    "(LT)",
-    "(LU)",
-    "(LV)",
-    "(MN)",
-    "(MX)",
-    "(MY)",
-    "(NL)",
-    "(NO)",
-    "(NP)",
-    "(NZ)",
-    "(OM)",
-    "(PE)",
-    "(PH)",
-    "(PL)",
-    "(PT)",
-    "(QA)",
-    "(RO)",
-    "(RU)",
-    "(SE)",
-    "(SG)",
-    "(SI)",
-    "(SK)",
-    "(TH)",
-    "(TR)",
-    "(TW)",
-    "(US)",
-    "(VN)",
-    "(YU)",
-    "(ZA)",
-]
-
-NOINTRO_REGION_CODES = [
-    "(Australia)",
-    "(Brazil)",
-    "(Canada)",
-    "(China)",
-    "(France)",
-    "(Germany)",
-    "(Hong Kong)",
-    "(Italy)",
-    "(Japan)",
-    "(Korea)",
-    "(Netherlands)",
-    "(Spain)",
-    "(Sweden)",
-    "(USA)",
-    "(World)",
-    "(Europe)",
-    "(Asia)",
-    "(Japan, USA)",
-    "(Japan, Europe)",
-    "(USA, Europe)",
-]
-
-GOODTOOLS_REGION_CODES = [
-    "(PD)",
-    "(J)",
-    "(Gr)",
-    "(S)",
-    "(A)",
-    "(Sw)",
-    "(U)",
-    "(Ch)",
-    "(C)",
-    "(F)",
-    "(No)",
-    "(G)",
-    "(HK)",
-    "(Nl)",
-    "(UK)",
-    "(Unl)",
-    "(As)",
-    "(Unk)",
-    "(D)",
-    "(K)",
-    "(I)",
-    "(W)",
-    "(E)",
-    "(R)",
-    "(B)",
-    "(UE)",
-    "(JU)",
-    "(JE)",
-    "(EB)",
-]
 
 goodtools_dump_code_set = romcodes.CodeSet("goodtools", GOODTOOLS_DUMP_CODES_PATH)
 goodtools_region_code_set = romcodes.CodeSet("goodtools", GOODTOOLS_REGION_CODES_JSON_PATH)
@@ -259,6 +134,11 @@ class TestCodeSetIntegration(unittest.TestCase):
             },
         )
 
+    def test_find_matching_full_code_by_type_with_non_existent_type(self):
+        code = "[!]"
+        matches = goodtools_dump_code_set.find_matching_full_codes_by_type([code], "nonsense")
+        self.assertDictEqual(matches, {})
+
     # TODO: add tests to confirm split_codes is de-populated as matches are found
     def test_find_matching_split_codes_by_type_tosec(self):
         split_codes = [{"(US-EU)": ["US", "EU"]}]
@@ -319,6 +199,12 @@ class TestCodeSetIntegration(unittest.TestCase):
                 ]
             },
         )
+
+    def test_find_matching_split_codes_by_type_with_non_existent_type(self):
+        split_codes = [{"(USA, Europe)": ["USA", "Europe"]}]
+        matches = nointro_region_language_code_set.find_matching_split_codes_by_type(split_codes, "nonsense")
+        self.assertDictEqual(matches, {})
+
 
     def test_find_matching_split_codes_tosec(self):
         split_codes = [{"(US-EU)": ["US", "EU"]}, {"(en, fr)": ["en", "fr"]}]
@@ -432,10 +318,36 @@ class TestCodeSetIntegration(unittest.TestCase):
         self.assertDictEqual(
             matches,
             {
-                "(USA)": {"code_type": "region", "code": "(USA)", "value": "United States, Canada", "regex": "", "description": ""},
+                "(USA)": {
+                    "code_type": "region",
+                    "code": "(USA)",
+                    "value": "United States, Canada",
+                    "regex": "",
+                    "description": "",
+                },
                 "(En,Fr)": [
                     {"code_type": "language", "code": "(En)", "value": "English", "regex": "", "description": ""},
                     {"code_type": "language", "code": "(Fr)", "value": "French", "regex": "", "description": ""},
+                ],
+            },
+        )
+
+    def test_match_codes_by_type_tosec(self):
+        codes = ["(EU)", "(en, fr)"]
+        matches = tosec_region_language_code_set.match_codes(codes, ["region"])
+        self.assertDictEqual(
+            matches,
+            {
+                "(EU)": {"code_type": "region", "code": "(EU)", "value": "Europe", "regex": "", "description": ""},
+            },
+        )
+        matches = tosec_region_language_code_set.match_codes(codes, ["language"])
+        self.assertDictEqual(
+            matches,
+            {
+                "(en, fr)": [
+                    {"code_type": "language", "code": "(en)", "value": "English", "regex": "", "description": ""},
+                    {"code_type": "language", "code": "(fr)", "value": "French", "regex": "", "description": ""},
                 ],
             },
         )

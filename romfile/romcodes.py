@@ -76,7 +76,7 @@ class CodeSet(object):
 
     def flat_codes_by_type(self, code_type: str):
         code_specs: list[CodeSpec] = []
-        for code in self.codes[code_type]:
+        for code in self.codes.get(code_type, {}):
             code_specs.append(
                 {
                     "code_type": code_type,
@@ -111,31 +111,21 @@ class CodeSet(object):
                 code_spec_matches[code].append(code_spec)
         return code_spec_matches
 
-    def find_matching_split_codes(self, split_codes: SplitCodes) -> CodeSpecMatches:
+    def find_matching_split_codes(self, split_codes: SplitCodes, code_types: Optional[list[str]] = None) -> CodeSpecMatches:
+        code_types = code_types or MULTI_CODE_TYPES
         code_spec_matches = {}
-        for code_type in MULTI_CODE_TYPES:
+        for code_type in code_types:
             code_spec_matches.update(self.find_matching_split_codes_by_type(split_codes, code_type))
         return code_spec_matches
 
-    def find_matching_multi_codes(self, codes: list[str]) -> CodeSpecMatches:
+    def find_matching_multi_codes(self, codes: list[str], code_types: Optional[list[str]] = None) -> CodeSpecMatches:
         split_codes = [code for code in (CodeSet.try_as_multi_code(code) for code in codes) if code is not None]
-        return self.find_matching_split_codes(split_codes)
+        return self.find_matching_split_codes(split_codes, code_types=code_types)
 
-    def match_codes(self, codes: list[str]) -> CodeSpecMatches:
+    def match_codes(self, codes: list[str], code_types: Optional[list[str]] = None) -> CodeSpecMatches:
         code_spec_matches = self.find_matching_full_codes(codes, self.code_types)
-        code_spec_matches.update(self.find_matching_multi_codes(codes))
+        code_spec_matches.update(self.find_matching_multi_codes(codes, code_types=code_types))
         return code_spec_matches
-
-    def match_format(self, codes: list[str]) -> bool:
-        """
-        Uses the provided (region) code to determine whether the filename
-        format matches the instance's code set convention.
-        """
-        for region_code in self.flat_codes_by_type("region"):
-            for code in codes:
-                if self.match_bracketed(code, region_code):
-                    return True
-        return False
 
 
 class CodeSetManager(object):
@@ -144,11 +134,16 @@ class CodeSetManager(object):
         for codeset in codesets:
             self.codesets.append(codeset)
 
-    def check_format(self, codes: list[str]) -> Optional[str]:
+    # def check_format(self, codes: list[str]) -> Optional[str]:
+    #     for codeset in self.codesets:
+    #         if codeset.match_format(codes):
+    #             return codeset.format
+    #     return None
+            
+    def match_format(self, codes: list[str]) -> Optional[str]:
+        region_matches = []
         for codeset in self.codesets:
-            if codeset.match_format(codes):
-                return codeset.format
-        return None
+            region_matches.append(codeset.match_codes_by_type(codes))
 
     def get_set_by_format(self, format):
         for codeset in self.codesets:
