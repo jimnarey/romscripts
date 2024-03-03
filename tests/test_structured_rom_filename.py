@@ -20,15 +20,15 @@ class TestStructuredRomFileName(unittest.TestCase):
     def test_extract_codes(self):
         filename = "Adventures of Batman and Robin, The (U) [p1][!].gen"
         rom = StructuredRomFileName(filename)
-        self.assertEqual(rom.codes, ["(U)", "[p1]", "[!]"])
+        self.assertEqual(rom.codes(), ["(U)", "[p1]", "[!]"])
         filename = "Adventures of Rocky and Bullwinkle and Friends, The (1993)(Absolute Entertainment)(US)"
         rom = StructuredRomFileName(filename)
-        self.assertEqual(rom.codes, ["(1993)", "(Absolute Entertainment)", "(US)"])
+        self.assertEqual(rom.codes(), ["(1993)", "(Absolute Entertainment)", "(US)"])
 
     def test_extract_inner_codes(self):
         filename = "Adventures of Batman and Robin, The (U) [p1][!].gen"
         rom = StructuredRomFileName(filename)
-        self.assertEqual(rom.inner_codes, ["U", "p1", "!"])
+        self.assertEqual(rom.inner_codes(), ["U", "p1", "!"])
         filename = "Adventures of Rocky and Bullwinkle and Friends, The (1993)(Absolute Entertainment)(US)"
         rom = StructuredRomFileName(filename)
-        self.assertEqual(rom.inner_codes, ["1993", "Absolute Entertainment", "US"])
+        self.assertEqual(rom.inner_codes(), ["1993", "Absolute Entertainment", "US"])

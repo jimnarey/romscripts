@@ -1,6 +1,6 @@
 import os
 import re
-import functools
+# import functools
 
 
 class StructuredRomFileName(object):
@@ -35,11 +35,11 @@ class StructuredRomFileName(object):
         self.year = self.get_year()
 
     # Fallback in case title regex match fails
-    def remove_codes_from_filename(self):
-        name_no_codes = self.original_name
-        for code in self._codes_split:
-            name_no_codes = name_no_codes.replace(code, "").strip()
-        return name_no_codes
+    # def remove_codes_from_filename(self):
+    #     name_no_codes = self.original_name
+    #     for code in self._codes_split:
+    #         name_no_codes = name_no_codes.replace(code, "").strip()
+    #     return name_no_codes
 
     def get_title(self):
         m = re.match(StructuredRomFileName.title_pattern, self.original_name)
@@ -49,18 +49,19 @@ class StructuredRomFileName(object):
                 return match
             match = self.restore_article(match)
             return match
-        return self.remove_codes_from_filename()
+        return self.original_name
+        # return self.remove_codes_from_filename()
 
-    @functools.cached_property
+    # @functools.cached_property
     def inner_codes(self):
         return [code[1] for code in self._codes_split]
 
-    @functools.cached_property
+    # @functools.cached_property
     def codes(self):
         return ["".join(code) for code in self._codes_split]
 
     def get_year(self):
-        for match in self.inner_codes:
+        for match in self.inner_codes():
             if match[:2] in ("19", "20"):
                 return match[:4]
         return None
