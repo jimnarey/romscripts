@@ -4,3 +4,5 @@ testing/*
 *.pyc
 **/__pycache__
 .mypy_cache
+*.7z
+*.rar
