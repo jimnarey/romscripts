@@ -75,6 +75,7 @@ class CodeSet(object):
         self.code_types = list(self.codes.keys())
 
     def flat_codes_by_type(self, code_type: str):
+        # breakpoint()
         code_specs: list[CodeSpec] = []
         for code in self.codes.get(code_type, {}):
             code_specs.append(
@@ -94,24 +95,27 @@ class CodeSet(object):
             code_spec_matches.update(CodeSet.match_bracketed(codes, code_spec))
         return code_spec_matches
 
-    def find_matching_full_codes(self, codes: list[str], code_types: list[str]) -> CodeSpecMatches:
+    def find_matching_full_codes(self, codes: list[str], code_types: Optional[list[str]]) -> CodeSpecMatches:
+        code_types = code_types or self.code_types
         code_spec_matches = {}
         for code_type in code_types:
             code_spec_matches.update(self.find_matching_full_codes_by_type(codes, code_type))
         return code_spec_matches
 
     def find_matching_split_codes_by_type(self, split_codes: SplitCodes, code_type: str) -> CodeSpecMatches:
-        code_spec_matches = {}
+        code_spec_matches: CodeSpecMatches = {}
         for code_spec in self.flat_codes_by_type(code_type):
             ub_code = "".join([char for char in code_spec["code"] if char not in "() "])
             index, code = CodeSet.match_split_codes_with_unbracketed_code(split_codes, ub_code)
             if index is not None and code:
                 if code not in code_spec_matches:
                     code_spec_matches[code] = []
-                code_spec_matches[code].append(code_spec)
+                code_spec_matches[code].append(code_spec)  # type: ignore
         return code_spec_matches
 
-    def find_matching_split_codes(self, split_codes: SplitCodes, code_types: Optional[list[str]] = None) -> CodeSpecMatches:
+    def find_matching_split_codes(
+        self, split_codes: SplitCodes, code_types: Optional[list[str]] = None
+    ) -> CodeSpecMatches:
         code_types = code_types or MULTI_CODE_TYPES
         code_spec_matches = {}
         for code_type in code_types:
@@ -123,27 +127,16 @@ class CodeSet(object):
         return self.find_matching_split_codes(split_codes, code_types=code_types)
 
     def match_codes(self, codes: list[str], code_types: Optional[list[str]] = None) -> CodeSpecMatches:
-        code_spec_matches = self.find_matching_full_codes(codes, self.code_types)
+        code_spec_matches = self.find_matching_full_codes(codes, code_types=code_types)
         code_spec_matches.update(self.find_matching_multi_codes(codes, code_types=code_types))
         return code_spec_matches
 
 
 class CodeSetManager(object):
     def __init__(self, codesets: list[CodeSet]):
-        self.codesets = []
+        self.codesets: list[CodeSet] = []
         for codeset in codesets:
             self.codesets.append(codeset)
-
-    # def check_format(self, codes: list[str]) -> Optional[str]:
-    #     for codeset in self.codesets:
-    #         if codeset.match_format(codes):
-    #             return codeset.format
-    #     return None
-            
-    def match_format(self, codes: list[str]) -> Optional[str]:
-        region_matches = []
-        for codeset in self.codesets:
-            region_matches.append(codeset.match_codes_by_type(codes))
 
     def get_set_by_format(self, format):
         for codeset in self.codesets:
@@ -151,9 +144,23 @@ class CodeSetManager(object):
                 return codeset
         return None
 
+    def match_format_by_region(self, codes: list[str]) -> list:
+        region_matches = []
+        for codeset in self.codesets:
+            codeset_matches = codeset.match_codes(codes.copy(), code_types=["region"])
+            if codeset_matches:
+                region_matches.append(codeset)
+
+        return region_matches
+
+    # TODO: If a rom has region HK it could be Goodtools or TOSEC. Use other codes
+    # to differentiate. Only TOSEC has 'language'. Only Goodtools has 'translation'.
+    # Check for codes in those categories. Failing that, codes in one list but not
+    # the other
+
 
 tosec_code_set = CodeSet("tosec", os.path.join(JSON_PATH, "tosec.json"))
 goodtools_code_set = CodeSet("goodtools", os.path.join(JSON_PATH, "goodtools.json"))
-nointro_code_set = CodeSet("no_intro", os.path.join(JSON_PATH, "nointro.json"))
+nointro_code_set = CodeSet("nointro", os.path.join(JSON_PATH, "nointro.json"))
 
 manager = CodeSetManager([tosec_code_set, goodtools_code_set, nointro_code_set])

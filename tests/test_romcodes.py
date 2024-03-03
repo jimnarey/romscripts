@@ -1,11 +1,8 @@
 import unittest
-
-# import json
 import os
 
-# import logging
-
 import romfile.romcodes as romcodes
+from .fixtures import region_codes
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 FIXTURES_PATH = os.path.join(SCRIPT_PATH, "fixtures")
@@ -205,7 +202,6 @@ class TestCodeSetIntegration(unittest.TestCase):
         matches = nointro_region_language_code_set.find_matching_split_codes_by_type(split_codes, "nonsense")
         self.assertDictEqual(matches, {})
 
-
     def test_find_matching_split_codes_tosec(self):
         split_codes = [{"(US-EU)": ["US", "EU"]}, {"(en, fr)": ["en", "fr"]}]
         matches = tosec_region_language_code_set.find_matching_split_codes(split_codes)
@@ -352,10 +348,32 @@ class TestCodeSetIntegration(unittest.TestCase):
             },
         )
 
-# class TestCodeSetManager(unittest.TestCase):
 
-#     def test_check_format_nointro(self):
+class TestCodeSetManager(unittest.TestCase):
+    def test_match_format_by_region_no_intro(self):
+        codes = region_codes.NOINTRO_REGION_CODES
+        for code in codes:
+            matches = region_code_set_manager.match_format_by_region([code])
+            self.assertEqual(len(matches), 1)
+            self.assertEqual(matches[0].format, "nointro")
 
-#         codes = ["(Europe, Brazil)",  "(En,Fr,De,Es,It)"]
-#         format = region_code_set_manager.check_format(codes)
-#         self.assertEqual(format, "nointro")
+    def test_match_format_by_region_tosec(self):
+        codes = region_codes.TOSEC_REGION_CODES
+        codes.remove("(HK)")
+        for code in codes:
+            matches = region_code_set_manager.match_format_by_region([code])
+            self.assertEqual(len(matches), 1)
+            self.assertEqual(matches[0].format, "tosec")
+
+    def test_match_format_by_region_goodtools(self):
+        codes = region_codes.GOODTOOLS_REGION_CODES
+        codes.remove("(HK)")
+        for code in codes:
+            matches = region_code_set_manager.match_format_by_region([code])
+            self.assertEqual(len(matches), 1)
+            self.assertEqual(matches[0].format, "goodtools")
+
+    def test_match_format_by_region_no_match(self):
+        codes = ["(HK)"]
+        matches = region_code_set_manager.match_format_by_region(codes)
+        self.assertEqual(len(matches), 2)
