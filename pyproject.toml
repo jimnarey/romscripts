@@ -10,6 +10,7 @@ authors = ["Jim Narey"]
 [tool.poetry.dependencies]
 python = "^3.11"
 pre-commit = "^3.6.2"
+sqlalchemy = "^2.0.28"
 
 [tool.poetry.dev-dependencies]
 
