@@ -1,0 +1,29 @@
+<datafile>
+    <game name="005">
+            <description>005</description>
+            <year>1981</year>
+            <manufacturer>Sega</manufacturer>
+            <rom name="1346b.u25" size="2048" crc="8e68533e"/>
+            <rom name="5092.u1" size="2048" crc="29e10a81"/>
+            <rom name="5093.u2" size="2048" crc="e1edc3df"/>
+            <rom name="5094.u3" size="2048" crc="995773bb"/>
+            <rom name="5095.u4" size="2048" crc="f887f575"/>
+            <rom name="5096.u5" size="2048" crc="5545241e"/>
+            <rom name="5097.u6" size="2048" crc="428edb54"/>
+            <rom name="5098.u7" size="2048" crc="5bcb9d63"/>
+            <rom name="5099.u8" size="2048" crc="0ea24ba3"/>
+            <rom name="5100.u9" size="2048" crc="a79af131"/>
+            <rom name="5101.u10" size="2048" crc="8a1cdae0"/>
+            <rom name="5102.u11" size="2048" crc="70826a15"/>
+            <rom name="5103.u12" size="2048" crc="7f80c5b0"/>
+            <rom name="5104.u13" size="2048" crc="0140930e"/>
+            <rom name="5105.u14" size="2048" crc="17807a05"/>
+            <rom name="5106.u15" size="2048" crc="c7cdfa9d"/>
+            <rom name="5107.u16" size="2048" crc="95f8a2e6"/>
+            <rom name="5108.u17" size="2048" crc="d371cacd"/>
+            <rom name="5109.u18" size="2048" crc="48a20617"/>
+            <rom name="5110.u19" size="2048" crc="7d26111a"/>
+            <rom name="5111.u20" size="2048" crc="a888e175"/>
+            <rom name="epr-1286.16" size="2048" crc="fbe0d501"/>
+        </game>
+</datafile>
