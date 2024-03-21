@@ -7,7 +7,7 @@ For now, this only validates the MAME source files
 import os
 import multiprocessing
 import xml.etree.ElementTree as ET
-import shared
+from shared import shared
 
 
 def validate_root_tag(root: ET.Element) -> None:
