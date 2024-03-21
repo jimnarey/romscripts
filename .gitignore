@@ -6,3 +6,4 @@ testing/*
 .mypy_cache
 *.7z
 *.rar
+*.db
