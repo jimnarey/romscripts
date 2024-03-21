@@ -2,10 +2,10 @@ import unittest
 import os
 
 import romfile.romcodes as romcodes
-from .fixtures import region_codes
+from .fixtures.romfile import region_codes
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
-FIXTURES_PATH = os.path.join(SCRIPT_PATH, "fixtures")
+FIXTURES_PATH = os.path.join(SCRIPT_PATH, "fixtures", "romfile")
 
 GOODTOOLS_DUMP_CODES_PATH = os.path.join(FIXTURES_PATH, "goodtools_dump.json")
 GOODTOOLS_REGION_CODES_JSON_PATH = os.path.join(FIXTURES_PATH, "goodtools_region.json")
