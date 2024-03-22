@@ -25,14 +25,16 @@ class TestModels(unittest.TestCase):
             create_db.Rom(name="rom1", size=100, crc="crc1", sha1="sha1"),
             create_db.Rom(name="rom2", size=200, crc="crc2", sha1="sha2"),
         ]
-        game = create_db.Game(
-            is_bios=False, name="game1", year="2000", manufacturer="man1", emulators=[emulator], roms=roms
-        )
-        self.session.add(game)
+        game = create_db.Game(is_bios=False, name="game1", year="2000", manufacturer="man1", roms=roms)
+        game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
+        self.session.add(game_emulator)
         self.session.commit()
         db_game = self.session.query(create_db.Game).filter_by(name="game1").one()
+        db_emulator = self.session.query(create_db.Emulator).filter_by(name="emu1").one()
         self.assertEqual(db_game, game)
-        self.assertEqual(db_game.emulators[0], emulator)
+        self.assertEqual(db_emulator, emulator)
+        self.assertEqual(db_game.game_emulators[0], game_emulator)
+        self.assertEqual(db_emulator.game_emulators[0], game_emulator)
         self.assertEqual(set(rom.name for rom in db_game.roms), {"rom1", "rom2"})
 
 
@@ -42,7 +44,8 @@ def create_game_fixture(emulator_name: str = "emu1", rom_crcs: list[str] = ["crc
         create_db.Rom(name="rom2", size=200, crc=rom_crcs[1], sha1="sha2"),
     ]
     emulator = create_db.Emulator(name=emulator_name, version="1.0")
-    game = create_db.Game(is_bios=False, name="game", year="2000", manufacturer="man1", emulators=[emulator], roms=roms)
+    game = create_db.Game(is_bios=False, name="game", year="2000", manufacturer="man1", roms=roms)
+    create_db.GameEmulator(game=game, emulator=emulator)
     return game
 
 
@@ -128,8 +131,11 @@ class TestProcessGames(unittest.TestCase):
         emulator_2 = create_db.Emulator(name="MAME", version="2")
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(create_db.Game).filter_by(name="005").all()
+        game_emulators = games[0].game_emulators
         self.assertEqual(len(games), 1)
-        self.assertEqual(games[0].emulators, [emulator_1, emulator_2])
+        self.assertEqual(len(game_emulators), 2)
+        self.assertIn(emulator_1, [ge.emulator for ge in game_emulators])
+        self.assertIn(emulator_2, [ge.emulator for ge in game_emulators])
 
     def test_creates_new_game_when_one_rom_is_different(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
@@ -141,9 +147,11 @@ class TestProcessGames(unittest.TestCase):
         emulator_2 = create_db.Emulator(name="MAME", version="2")
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(create_db.Game).filter_by(name="005").all()
+        game_emulators_1 = games[0].game_emulators
+        game_emulators_2 = games[1].game_emulators
         self.assertEqual(len(games), 2)
-        self.assertEqual(games[0].emulators, [emulator_1])
-        self.assertEqual(games[1].emulators, [emulator_2])
+        self.assertEqual([emulator_1], [ge.emulator for ge in game_emulators_1])
+        self.assertEqual([emulator_2], [ge.emulator for ge in game_emulators_2])
 
 
 if __name__ == "__main__":

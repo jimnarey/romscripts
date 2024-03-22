@@ -26,12 +26,12 @@ game_rom_association = Table(
 )
 
 
-game_emulator_association = Table(
-    "game_emulator_association",
-    Base.metadata,
-    Column("game_id", Integer, ForeignKey("games.id")),
-    Column("emulator_id", Integer, ForeignKey("emulators.id")),
-)
+class GameEmulator(Base):
+    __tablename__ = "game_emulator"
+    game_id = Column(Integer, ForeignKey("games.id"), primary_key=True)
+    emulator_id = Column(Integer, ForeignKey("emulators.id"), primary_key=True)
+    game = relationship("Game", back_populates="game_emulators")
+    emulator = relationship("Emulator", back_populates="game_emulators")
 
 
 class Emulator(Base):
@@ -39,7 +39,7 @@ class Emulator(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     version = Column(String)
-    games = relationship("Game", secondary=game_emulator_association, back_populates="emulators")
+    game_emulators = relationship("GameEmulator", back_populates="emulator")
 
 
 class Game(Base):
@@ -47,10 +47,10 @@ class Game(Base):
     id = Column(Integer, primary_key=True)
     is_bios = Column(Boolean)
     name = Column(String)
-    # TODO: Add description
+    description = Column(String)
     year = Column(Integer)
     manufacturer = Column(String)
-    emulators = relationship("Emulator", secondary=game_emulator_association, back_populates="games")
+    game_emulators = relationship("GameEmulator", back_populates="game")
     # TODO: What should happen when no games are associated with a rom?
     roms = relationship("Rom", secondary=game_rom_association, back_populates="games")
 
@@ -114,6 +114,7 @@ def create_game(game_element: ET.Element) -> Optional[Game]:
         game = Game(
             is_bios=True if game_element.get("isbios", "") == "yes" else False,
             name=game_element.get("name", ""),
+            description=game_element.get("description", ""),
             year=int(game_element.get("year", 0)),
             manufacturer=game_element.get("manufacturer", ""),
         )
@@ -136,13 +137,16 @@ def process_games(session: Session, root: ET.Element, emulator: Emulator):
         if game := create_game(element):
             if existing_game := get_existing_game(session, game):
                 print(f"Game found: {game.name}")
-                existing_game.emulators.append(emulator)
+                game_emulator = GameEmulator(game=existing_game, emulator=emulator)
+                session.add(game_emulator)
                 num_existing_games += 1
             else:
                 print(f"Adding game: {game.name}")
-                game.emulators.append(emulator)
+                game_emulator = GameEmulator(game=game, emulator=emulator)
+                game.game_emulators.append(game_emulator)
                 session.add(game)
                 num_new_games += 1
+        session.commit()
     return num_existing_games, num_new_games
 
 
