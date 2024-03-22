@@ -45,7 +45,8 @@ def create_game_fixture(emulator_name: str = "emu1", rom_crcs: list[str] = ["crc
     ]
     emulator = create_db.Emulator(name=emulator_name, version="1.0")
     game = create_db.Game(is_bios=False, name="game", year="2000", manufacturer="man1", roms=roms)
-    create_db.GameEmulator(game=game, emulator=emulator)
+    game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
+    game.game_emulators.append(game_emulator)
     return game
 
 
@@ -85,6 +86,26 @@ class TestGameExists(unittest.TestCase):
         self.session.commit()
         game_2 = create_game_fixture(rom_crcs=["crc1", "crc3"])
         self.assertIsNone(create_db.get_existing_game(self.session, game_2))
+
+    def test_can_handle_multiple_existing_games_with_same_name_with_match(self):
+        game_1 = create_game_fixture()
+        self.session.add(game_1)
+        self.session.commit()
+        game_2 = create_game_fixture(rom_crcs=["crc1", "crc3"])
+        self.session.add(game_2)
+        self.session.commit()
+        game_3 = create_game_fixture()
+        self.assertEqual(create_db.get_existing_game(self.session, game_3), game_1)
+
+    def test_can_handle_multiple_existing_games_with_same_name_without_match(self):
+        game_1 = create_game_fixture()
+        self.session.add(game_1)
+        self.session.commit()
+        game_2 = create_game_fixture(rom_crcs=["crc1", "crc3"])
+        self.session.add(game_2)
+        self.session.commit()
+        game_3 = create_game_fixture(rom_crcs=["crc1", "crc4"])
+        self.assertIsNone(create_db.get_existing_game(self.session, game_3))
 
 
 class TestCreateGame(unittest.TestCase):

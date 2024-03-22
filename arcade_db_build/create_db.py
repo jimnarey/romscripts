@@ -87,22 +87,12 @@ def create_roms(rom_elements: list[ET.Element]) -> list[Rom]:
 
 def get_existing_game(session: Session, game: Game) -> Optional[Game]:
     try:
-        existing_game = (
-            session.query(Game)
-            .filter(
-                # TODO: just search on game name
-                Game.is_bios == game.is_bios,
-                Game.name == game.name,
-                Game.year == game.year,
-                Game.manufacturer == game.manufacturer,
-            )
-            .one()
-        )
-        # TODO: deal with multiple games with same basic attributes
-        existing_game_roms = [(rom.name, rom.size, rom.crc, rom.sha1) for rom in existing_game.roms]
-        game_roms = [(rom.name, rom.size, rom.crc, rom.sha1) for rom in game.roms]
-        if set(existing_game_roms) == set(game_roms):
-            return existing_game
+        existing_games = session.query(Game).filter(Game.name == game.name).all()
+        for existing_game in existing_games:
+            existing_game_roms = [(rom.name, rom.size, rom.crc, rom.sha1) for rom in existing_game.roms]
+            game_roms = [(rom.name, rom.size, rom.crc, rom.sha1) for rom in game.roms]
+            if set(existing_game_roms) == set(game_roms):
+                return existing_game
     except NoResultFound:
         pass
     return None
