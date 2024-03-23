@@ -3,7 +3,7 @@
 """
 For now, this only validates the MAME source files
 """
-
+from typing import Optional
 import os
 import multiprocessing
 import xml.etree.ElementTree as ET
@@ -29,7 +29,24 @@ def validate_tag_names(path: str, element_tags: list[str]) -> None:
         print("Unrecognised element tag: ", path, et)
 
 
-def process_dat(path: str) -> None:
+def validate_tag_attributes(path: str, elements: list[ET.Element]) -> tuple[set, set, set]:
+    game_attributes: set[str] = set()
+    driver_attributes: set[str] = set()
+    feature_attributes: set[str] = set()
+    for element in elements:
+        game_attributes.update(element.attrib.keys())
+        driver_elements = [subelement for subelement in element if subelement.tag == "driver"]
+        if len(driver_elements) > 1:
+            print("Multiple driver elements: ", path)
+        for driver_element in driver_elements:
+            driver_attributes.update(driver_element.attrib.keys())
+        feature_elements = [subelement for subelement in element if subelement.tag == "feature"]
+        for feature_element in feature_elements:
+            feature_attributes.update(feature_element.attrib.keys())
+    return game_attributes, driver_attributes, feature_attributes
+
+
+def process_dat(path: str) -> Optional[tuple[set, set, set]]:
     print(os.path.basename(path))
     source = shared.get_source_contents(path)
     try:
@@ -37,20 +54,62 @@ def process_dat(path: str) -> None:
     except Exception as e:
         print("Error: ", type(e), path)
     if root:
-        validate_root_tag(root)
+        elements = [element for element in root]
         element_tags = [element.tag for element in root]
+        validate_root_tag(root)
         validate_num_headers(path, element_tags)
         validate_tag_names(path, element_tags)
+        return validate_tag_attributes(path, elements)
+    return None
 
 
 def process_files():
     with multiprocessing.Pool(8) as pool:
-        pool.map(process_dat, shared.MAME_DATS)
+        results = pool.map(process_dat, shared.MAME_DATS)
+
+    game_attributes = set()
+    driver_attributes = set()
+    feature_attributes = set()
+
+    for result in results:
+        if result:
+            game_attributes.update(result[0])
+            driver_attributes.update(result[1])
+            feature_attributes.update(result[2])
+
+    known_game_attributes = set(
+        ["rom", "isdevice", "name", "cloneof", "runnable", "isbios", "sourcefile", "ismechanical", "romof", "sampleof"]
+    )
+    known_driver_attributes = set(
+        [
+            "palettesize",
+            "hiscoresave",
+            "requiresartwork",
+            "unofficial",
+            "good",
+            "status",
+            "graphic",
+            "cocktailmode",
+            "savestate",
+            "protection",
+            "emulation",
+            "cocktail",
+            "color",
+            "nosoundhardware",
+            "sound",
+            "incomplete",
+        ]
+    )
+
+    known_feature_attributes = set(["overall", "type", "status"])
+
+    if not game_attributes == known_game_attributes:
+        print("Unrecognised game attributes: ", game_attributes - known_game_attributes)
+    if not driver_attributes == known_driver_attributes:
+        print("Unrecognised driver attributes: ", driver_attributes - known_driver_attributes)
+    if not feature_attributes == known_feature_attributes:
+        print("Unrecognised feature attributes: ", feature_attributes - known_feature_attributes)
 
 
 if __name__ == "__main__":
     process_files()
-    # df_dat_path = "/home/jimnarey/projects/romscripts/arcade_db_build/mame_db_source/dats/MAME 0.53.dat.bz2"
-    # m_dat_path = "/home/jimnarey/projects/romscripts/arcade_db_build/mame_db_source/dats/MAME 0.141.xml.bz2"
-    # d = shared.get_source_root(shared.get_source_contents(df_dat_path))
-    # m = shared.get_source_root(shared.get_source_contents(m_dat_path))
