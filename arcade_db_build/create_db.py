@@ -3,7 +3,7 @@
 from typing import Optional
 import os
 import xml.etree.ElementTree as ET
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey, Table
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Table
 from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.exc import NoResultFound
@@ -43,13 +43,25 @@ class Emulator(Base):
 
 
 class Game(Base):
+    """
+    This can be improved by adding a model for yes/no choices and
+    using references for clone_of and rom_of which are assigned on
+    a second pass through the data (just in case any XML declares
+    a clone before a parent)
+    """
+
     __tablename__ = "games"
     id = Column(Integer, primary_key=True)
-    is_bios = Column(Boolean)
     name = Column(String)
     description = Column(String)
     year = Column(Integer)
     manufacturer = Column(String)
+    clone_of = Column(String)
+    rom_of = Column(String)
+    is_bios = Column(String)
+    is_device = Column(String)
+    runnable = Column(String)
+    ismechanical = Column(String)
     game_emulators = relationship("GameEmulator", back_populates="game")
     # TODO: What should happen when no games are associated with a rom?
     roms = relationship("Rom", secondary=game_rom_association, back_populates="games")
@@ -102,11 +114,16 @@ def create_game(game_element: ET.Element) -> Optional[Game]:
     rom_elements = [element for element in game_element if element.tag == "rom"]
     if rom_elements:
         game = Game(
-            is_bios=True if game_element.get("isbios", "") == "yes" else False,
             name=game_element.get("name", ""),
             description=game_element.get("description", ""),
             year=int(game_element.get("year", 0)),
             manufacturer=game_element.get("manufacturer", ""),
+            clone_of=game_element.get("cloneof", ""),
+            rom_of=game_element.get("romof", ""),
+            is_bios=game_element.get("isbios", ""),
+            is_device=game_element.get("isdevice", ""),
+            runnable=game_element.get("runnable", ""),
+            ismechanical=game_element.get("ismechanical", ""),
         )
         game.roms = create_roms(rom_elements)
         return game

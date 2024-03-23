@@ -20,6 +20,9 @@ class TestModels(unittest.TestCase):
         self.session.rollback()
 
     def test_models_are_properly_declared(self):
+        """
+        This doesn't add every field on Game. It tests the realtionships
+        """
         emulator = create_db.Emulator(name="emu1", version="1.0")
         roms = [
             create_db.Rom(name="rom1", size=100, crc="crc1", sha1="sha1"),
