@@ -1,7 +1,7 @@
 import os
 import unittest
 from xml.etree import ElementTree as ET
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from arcade_db_build import create_db
 
@@ -53,7 +53,7 @@ def create_game_fixture(emulator_name: str = "emu1", rom_crcs: list[str] = ["crc
     return game
 
 
-class TestGameExists(unittest.TestCase):
+class TestGetRecords(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
         create_db.Base.metadata.create_all(engine)
@@ -63,11 +63,79 @@ class TestGameExists(unittest.TestCase):
     def tearDown(self):
         self.session.rollback()
 
-    def test_returns_none_when_no_game_exists(self):
+    def test_get_all_instance_attributes(self):
+        driver = create_db.Driver(
+            palettesize="abc",
+            hiscoresave="def",
+            requiresartwork="ghi",
+            unofficial="jkl",
+            good="mno",
+            status="pqr",
+            graphic="stu",
+            cocktailmode="vwx",
+            savestate="yz",
+            protection="abc",
+            emulation="def",
+            cocktail="ghi",
+            color="jkl",
+            nosoundhardware="mno",
+            sound="pqr",
+            incomplete="stu",
+        )
+        all_attrs = create_db.get_instance_attributes(driver, create_db.Driver)
+        # Confirm the driver has an id attribute which is not returned
+        self.assertIsNone(driver.id)
+        # Confirm the driver has a game_emulators attribute which is not returned
+        self.assertEqual(driver.game_emulators, [])
+        self.assertEqual(
+            all_attrs,
+            {
+                "palettesize": "abc",
+                "hiscoresave": "def",
+                "requiresartwork": "ghi",
+                "unofficial": "jkl",
+                "good": "mno",
+                "status": "pqr",
+                "graphic": "stu",
+                "cocktailmode": "vwx",
+                "savestate": "yz",
+                "protection": "abc",
+                "emulation": "def",
+                "cocktail": "ghi",
+                "color": "jkl",
+                "nosoundhardware": "mno",
+                "sound": "pqr",
+                "incomplete": "stu",
+            },
+        )
+
+    def test_get_existing_record_returns_record_when_no_attrs_provided(self):
+        game_1 = create_game_fixture()
+        self.session.add(game_1)
+        self.session.commit()
+        game_2 = create_game_fixture()
+        # Confirm we're not dealing with the same instance
+        self.assertNotEqual(game_1, game_2)
+        instance_attrs = {c.key: getattr(game_2, c.key) for c in inspect(game_2).mapper.column_attrs}
+        instance_attrs.pop(inspect(create_db.Game).primary_key[0].key, None)
+        self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, instance_attrs), [game_1])
+
+    def test_get_existing_record_returns_none_when_no_record_exists(self):
+        self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, {"name": "game"}), [])
+
+    def test_get_existing_record_returns_record_with_specified_attributes(self):
+        game_1 = create_game_fixture()
+        self.session.add(game_1)
+        self.session.commit()
+        self.assertEqual(
+            create_db.get_existing_records(self.session, create_db.Game, {"name": "game", "year": "2000"}), [game_1]
+        )
+
+    def test_get_existing_game_returns_none_when_no_game_exists(self):
         game = create_game_fixture()
         self.assertIsNone(create_db.get_existing_game(self.session, game))
 
-    def test_returns_existing_game_with_same_attributes(self):
+    def test_get_existing_game_returns_existing_game_with_same_attributes(self):
         game_1 = create_game_fixture()
         game_2 = create_game_fixture()
         # Confirm we're not dealing with the same instance
@@ -76,21 +144,21 @@ class TestGameExists(unittest.TestCase):
         self.session.commit()
         self.assertEqual(create_db.get_existing_game(self.session, game_2), game_1)
 
-    def test_returns_existing_game_with_same_attributes_except_emulator(self):
+    def test_get_existing_game_returns_existing_game_with_same_attributes_except_emulator(self):
         game_1 = create_game_fixture()
         self.session.add(game_1)
         self.session.commit()
         game_2 = create_game_fixture(emulator_name="emu2")
         self.assertEqual(create_db.get_existing_game(self.session, game_2), game_1)
 
-    def test_returns_none_when_game_rom_has_different_crc(self):
+    def test_get_existing_game_returns_none_when_game_rom_has_different_crc(self):
         game_1 = create_game_fixture()
         self.session.add(game_1)
         self.session.commit()
         game_2 = create_game_fixture(rom_crcs=["crc1", "crc3"])
         self.assertIsNone(create_db.get_existing_game(self.session, game_2))
 
-    def test_can_handle_multiple_existing_games_with_same_name_with_match(self):
+    def test_get_existing_game_can_handle_multiple_existing_games_with_same_name_with_match(self):
         game_1 = create_game_fixture()
         self.session.add(game_1)
         self.session.commit()
@@ -100,7 +168,7 @@ class TestGameExists(unittest.TestCase):
         game_3 = create_game_fixture()
         self.assertEqual(create_db.get_existing_game(self.session, game_3), game_1)
 
-    def test_can_handle_multiple_existing_games_with_same_name_without_match(self):
+    def test_get_existing_game_can_handle_multiple_existing_games_with_same_name_without_match(self):
         game_1 = create_game_fixture()
         self.session.add(game_1)
         self.session.commit()
@@ -111,14 +179,98 @@ class TestGameExists(unittest.TestCase):
         self.assertIsNone(create_db.get_existing_game(self.session, game_3))
 
 
-class TestCreateGame(unittest.TestCase):
-    def test_create_game(self):
+class TestCreateRecords(unittest.TestCase):
+    def setUp(self):
+        engine = create_engine("sqlite:///:memory:")
+        create_db.Base.metadata.create_all(engine)
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
+
+    def test_create_game_and_create_roms(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
         game = create_db.create_game(root[0])
         self.assertIsNotNone(game)
         self.assertEqual(game.name, "005")
         self.assertEqual(len(game.roms), 22)
+
+    def test_create_features(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
+        root = tree.getroot()
+        features = create_db.create_features(root[0])
+        self.assertEqual(features[0].overall, "imperfect")
+        self.assertEqual(features[0].type, "graphics")
+        self.assertEqual(features[1].status, "imperfect")
+        self.assertEqual(features[1].type, "sound")
+
+    def test_create_driver(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
+        root = tree.getroot()
+        driver = create_db.create_driver(root[0])
+        self.assertEqual(driver.status, "imperfect")
+        self.assertEqual(driver.emulation, "good")
+        self.assertEqual(driver.savestate, "unsupported")
+
+    def test_add_features_no_existing_feature(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
+        root = tree.getroot()
+        game = create_game_fixture()
+        emulator = create_db.Emulator(name="MAME", version="1")
+        game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
+        create_db.add_features(self.session, game_emulator, root[0])
+        self.assertEqual(len(game_emulator.features), 2)
+        self.assertEqual(game_emulator.features[0].overall, "imperfect")
+        self.assertEqual(game_emulator.features[0].type, "graphics")
+        self.assertEqual(game_emulator.features[1].status, "imperfect")
+        self.assertEqual(game_emulator.features[1].type, "sound")
+
+    def test_add_features_with_existing_feature(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
+        root = tree.getroot()
+        game_1 = create_game_fixture()
+        emulator_1 = create_db.Emulator(name="MAME", version="1")
+        game_emulator_1 = create_db.GameEmulator(game=game_1, emulator=emulator_1)
+        create_db.add_features(self.session, game_emulator_1, root[0])
+        self.session.add_all([game_1, emulator_1, game_emulator_1])
+        self.session.commit()
+        game_2 = create_game_fixture()
+        emulator_2 = create_db.Emulator(name="MAME", version="2")
+        game_emulator_2 = create_db.GameEmulator(game=game_2, emulator=emulator_2)
+        create_db.add_features(self.session, game_emulator_2, root[0])
+        self.session.add_all([game_2, emulator_2, game_emulator_2])
+        self.session.commit()
+        self.assertEqual(len(game_emulator_1.features), 2)
+        self.assertEqual(len(game_emulator_2.features), 2)
+        self.assertEqual((len(self.session.query(create_db.Feature).all())), 2)
+        self.assertEqual(set(game_emulator_1.features), set(game_emulator_2.features))
+
+    def test_add_driver_no_existing_driver(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
+        root = tree.getroot()
+        game = create_game_fixture()
+        emulator = create_db.Emulator(name="MAME", version="1")
+        game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
+        create_db.add_driver(self.session, game_emulator, root[0])
+        self.assertEqual(game_emulator.driver.status, "imperfect")
+        self.assertEqual(game_emulator.driver.emulation, "good")
+        self.assertEqual(game_emulator.driver.savestate, "unsupported")
+
+    def test_add_driver_with_existing_driver(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
+        root = tree.getroot()
+        game_1 = create_game_fixture()
+        emulator_1 = create_db.Emulator(name="MAME", version="1")
+        game_emulator_1 = create_db.GameEmulator(game=game_1, emulator=emulator_1)
+        create_db.add_driver(self.session, game_emulator_1, root[0])
+        self.session.add_all([game_1, emulator_1, game_emulator_1])
+        self.session.commit()
+        game_2 = create_game_fixture()
+        emulator_2 = create_db.Emulator(name="MAME", version="2")
+        game_emulator_2 = create_db.GameEmulator(game=game_2, emulator=emulator_2)
+        create_db.add_driver(self.session, game_emulator_2, root[0])
+        self.session.add_all([game_2, emulator_2, game_emulator_2])
+        self.session.commit()
+        self.assertEqual(game_emulator_1.driver, game_emulator_2.driver)
 
 
 class TestGetEmulatorDetails(unittest.TestCase):
