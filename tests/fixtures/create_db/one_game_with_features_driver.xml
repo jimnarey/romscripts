@@ -1,0 +1,94 @@
+<datafile>
+    <machine name="1on1gov" sourcefile="zn.cpp" romof="coh1002m">
+		<description>1 on 1 Government (Japan)</description>
+		<year>2000</year>
+		<manufacturer>Tecmo</manufacturer>
+		<rom name="m534002c-61.ic353" merge="m534002c-61.ic353" size="524288" crc="69ffbcb4" sha1="03eb2febfab3fcde716defff291babd9392de965" region="maincpu:rom" offset="0"/>
+		<rom name="mg01.ic652" merge="mg01.ic652" size="8" crc="50dc8322" sha1="cef4011c6c06d6fce546e1db5d9fbae155eabf57" region="cat702_1" offset="0"/>
+		<rom name="78081g503.ic655" size="8192" status="nodump" region="upd78081" offset="0"/>
+		<rom name="1on1.u119" size="1048576" crc="10aecc19" sha1="ad2fe6011551935907568cc3b4028f481034537c" region="bankedroms" offset="1"/>
+		<rom name="1on1.u120" size="1048576" crc="eea158bd" sha1="2b2a56fcce46557201bbbab7b170ee64549ddafe" region="bankedroms" offset="0"/>
+		<rom name="ooo-0.u0217" size="4194304" crc="8b42f365" sha1="6035a370f477f0f33894f642717fa0b012540d36" region="bankedroms" offset="800000"/>
+		<rom name="ooo-1.u0218" size="4194304" crc="65162f46" sha1="db420a2f0d996b32cd4b6e9352d46a36fa31eaaa" region="bankedroms" offset="c00000"/>
+		<rom name="ooo-2.u0219" size="4194304" crc="14cf3a84" sha1="60175a1fb2c765e4c3d0e30e77961f84cfa8485c" region="bankedroms" offset="1000000"/>
+		<rom name="ooo-3.u0220" size="4194304" crc="9a45f6ff" sha1="e0ee90c545c821bf1d6b4709b1e40f93314c51a6" region="bankedroms" offset="1400000"/>
+		<rom name="ooo-4.u0221" size="4194304" crc="ba20a1fd" sha1="7893f50de730624b8447f39fc7e25e4e334df845" region="bankedroms" offset="1800000"/>
+		<rom name="ooo-5.u0222" size="4194304" crc="eed1953d" sha1="8d3e738a07b9c6b6ca55be7b47444b5e3725065c" region="bankedroms" offset="1c00000"/>
+		<rom name="ooo-6.u0223" size="4194304" crc="f74f38b6" sha1="ff7f0ebff85fc982f8d1c13d6649d4c7c5da6c45" region="bankedroms" offset="2000000"/>
+		<rom name="ooo-7.u0323" size="4194304" crc="0e58777c" sha1="9f8ee3c6d6d8b1482522500e18217577056d8c98" region="bankedroms" offset="2400000"/>
+		<rom name="at28c16" size="2048" crc="fe992f29" sha1="73c9c4d40abd8f3a95d4eb20f3c65f3a5cdd1203" region="at28c16" offset="0"/>
+		<rom name="mg10" size="8" crc="8a73da40" sha1="d6803a4c1d240dec2a4d8ac43aa6d7e9df947026" region="cat702_2" offset="0"/>
+		<device_ref name="cxd8530cq"/>
+		<device_ref name="psxirq"/>
+		<device_ref name="psxdma"/>
+		<device_ref name="psxmdec"/>
+		<device_ref name="psxrcnt"/>
+		<device_ref name="psxsio0"/>
+		<device_ref name="psxsio1"/>
+		<device_ref name="ram"/>
+		<device_ref name="cat702"/>
+		<device_ref name="znmcu"/>
+		<device_ref name="cxd8561q"/>
+		<device_ref name="screen"/>
+		<device_ref name="speaker"/>
+		<device_ref name="speaker"/>
+		<device_ref name="psxspu"/>
+		<device_ref name="at28c16"/>
+		<device_ref name="cat702"/>
+		<chip type="cpu" tag="maincpu" name="Sony CXD8530CQ" clock="67737600"/>
+		<chip type="audio" tag="lspeaker" name="Speaker"/>
+		<chip type="audio" tag="rspeaker" name="Speaker"/>
+		<chip type="audio" tag="spu" name="PlayStation SPU" clock="33868800"/>
+		<display tag="screen" type="raster" rotate="0" width="640" height="480" refresh="60.000000" />
+		<sound channels="2"/>
+		<input players="4" coins="4" service="yes" tilt="yes">
+			<control type="joy" player="1" buttons="3" ways="8"/>
+			<control type="joy" player="2" buttons="3" ways="8"/>
+			<control type="joy" player="3" buttons="3" ways="8"/>
+			<control type="joy" player="4" buttons="3" ways="8"/>
+		</input>
+		<dipswitch name="Unknown" tag="DSW" mask="1">
+			<diplocation name="S551" number="1"/>
+			<dipvalue name="Off" value="1" default="yes"/>
+			<dipvalue name="On" value="0"/>
+			<dipvalue name="Off" value="1" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Service Mode" tag="DSW" mask="2">
+			<diplocation name="S551" number="2"/>
+			<dipvalue name="Off" value="2" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Unknown" tag="DSW" mask="4">
+			<diplocation name="S551" number="3"/>
+			<dipvalue name="Off" value="4" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Unknown" tag="DSW" mask="8">
+			<diplocation name="S551" number="4"/>
+			<dipvalue name="Off" value="8" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<port tag=":ANALOG1">
+		</port>
+		<port tag=":ANALOG2">
+		</port>
+		<port tag=":DSW">
+		</port>
+		<port tag=":P1">
+		</port>
+		<port tag=":P2">
+		</port>
+		<port tag=":P3">
+		</port>
+		<port tag=":P4">
+		</port>
+		<port tag=":SERVICE">
+		</port>
+		<port tag=":SYSTEM">
+		</port>
+		<driver status="imperfect" emulation="good" savestate="unsupported"/>
+		<feature type="graphics" overall="imperfect"/>
+		<feature type="sound" status="imperfect"/>
+	</machine>
+</datafile>
