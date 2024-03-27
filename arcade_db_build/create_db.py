@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-
 from typing import Optional, Type
+import re
 import os
 import xml.etree.ElementTree as ET
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, create_engine, inspect
-from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase, backref
 from sqlalchemy.orm import relationship
 from sqlalchemy.exc import NoResultFound
 
@@ -103,8 +103,14 @@ class Game(Base):
     description = Column(String)
     year = Column(Integer)
     manufacturer = Column(String)
-    clone_of = Column(String)  # Add one-to-many to self
-    rom_of = Column(String)  # Add one-to-many to self
+    cloneof_id = Column(Integer, ForeignKey("games.id"))  # Add one-to-many to self
+    cloneof = relationship(
+        "Game", foreign_keys=[cloneof_id], backref=backref("clones", foreign_keys=[cloneof_id]), remote_side=[id]
+    )
+    romof_id = Column(Integer, ForeignKey("games.id"))  # Add one-to-many to self
+    romof = relationship(
+        "Game", foreign_keys=[romof_id], backref=backref("bios_children", foreign_keys=[romof_id]), remote_side=[id]
+    )
     is_bios = Column(String)
     is_device = Column(String)
     runnable = Column(String)
@@ -214,7 +220,17 @@ def create_roms(rom_elements: list[ET.Element]) -> list[Rom]:
     return roms
 
 
-def create_game(game_element: ET.Element) -> Optional[Game]:
+def create_game_references(game_element: ET.Element) -> Optional[dict[str, str]]:
+    references = {}
+    for reference in ("cloneof", "romof"):
+        if reference_target := game_element.get(reference, None):
+            references[reference] = reference_target
+    if references:
+        return references
+    return None
+
+
+def create_game(game_element: ET.Element) -> tuple[Optional[Game], Optional[dict]]:  # Tighten this
     rom_elements = [element for element in game_element if element.tag == "rom"]
     if rom_elements:
         game = Game(
@@ -222,16 +238,15 @@ def create_game(game_element: ET.Element) -> Optional[Game]:
             description=game_element.get("description", ""),
             year=int(game_element.get("year", 0)),
             manufacturer=game_element.get("manufacturer", ""),
-            clone_of=game_element.get("cloneof", ""),
-            rom_of=game_element.get("romof", ""),
             is_bios=game_element.get("isbios", ""),
             is_device=game_element.get("isdevice", ""),
             runnable=game_element.get("runnable", ""),
             ismechanical=game_element.get("ismechanical", ""),
         )
         game.roms = create_roms(rom_elements)
-        return game
-    return None
+        game_references = create_game_references(game_element)
+        return game, game_references
+    return None, None
 
 
 def get_mame_emulator_details(dat_file: str) -> list[str]:
@@ -266,7 +281,9 @@ def add_driver(session: Session, game_emulator: GameEmulator, game_element: ET.E
         session.add(added_driver)
 
 
-def process_game(session: Session, game_element: ET.Element, game: Game, emulator: Emulator, action: str = "added"):
+def add_game_emulator_relationship(
+    session: Session, game_element: ET.Element, game: Game, emulator: Emulator, action: str = "added"
+):
     print(f"Game {action}: {game.name}")
     game_emulator = GameEmulator(game=game, emulator=emulator)
     session.add_all([game, game_emulator])
@@ -274,19 +291,66 @@ def process_game(session: Session, game_element: ET.Element, game: Game, emulato
     add_driver(session, game_emulator, game_element)
 
 
+def add_game_reference(session: Session, game: Game, emulator: Emulator, field: str, target_game_name: str):
+    target_game = (
+        session.query(Game).filter(Game.name == target_game_name, Game.game_emulators.any(emulator=emulator)).first()
+    )
+    # TODO: This will populate unhandled references. Handle better
+    if target_game and game != target_game:
+        # if target_game:
+        setattr(game, field, target_game)
+        return True
+    return False
+
+
+def add_game_references(session: Session, emulator: Emulator, game_references: dict[str, str], game: Game):
+    for key in ["cloneof", "romof"]:
+        if target_game_name := game_references.get(key):
+            if add_game_reference(session, game, emulator, key, target_game_name):
+                del game_references[key]
+
+
+def attempt_add_game_references(session: Session, emulator: Emulator, game_references: dict[str, str], game: Game):
+    add_game_references(session, emulator, game_references, game)
+    if game_references:
+        game_references["id"] = str(game.id)
+        return game_references
+    return None
+
+
 def process_games(session: Session, root: ET.Element, emulator: Emulator):
+    all_remaining_references = []
     num_existing_games = 0
     num_new_games = 0
     for element in root:
-        if game := create_game(element):
+        game, game_references = create_game(element)
+        if game:
             if existing_game := get_existing_game(session, game):
-                process_game(session, element, existing_game, emulator, action="updated")
+                add_game_emulator_relationship(session, element, existing_game, emulator, action="updated")
                 num_existing_games += 1
             else:
-                process_game(session, element, game, emulator)
+                add_game_emulator_relationship(session, element, game, emulator)
                 num_new_games += 1
-        session.commit()
-    return num_existing_games, num_new_games
+            if game_references:
+                if remaining_references := attempt_add_game_references(session, emulator, game_references, game):
+                    all_remaining_references.append(remaining_references)
+            session.commit()
+
+    return all_remaining_references, num_existing_games, num_new_games
+
+
+def assign_remaining_game_references(
+    session: Session, emulator: Emulator, all_remaining_references: list[dict[str, str]]
+):
+    remaining_reference_count = len(all_remaining_references)
+    for remaining_references in all_remaining_references:
+        game = session.query(Game).filter(Game.id == remaining_references["id"]).first()
+        if game:
+            add_game_references(session, emulator, remaining_references, game)
+            session.commit()
+            if list(remaining_references.keys()) == ["id"]:
+                remaining_reference_count -= 1
+    print(f"Unhandled references: {remaining_reference_count}")
 
 
 def process_dats(session: Session, dats: list[str]):
@@ -298,12 +362,27 @@ def process_dats(session: Session, dats: list[str]):
         session.commit()
         source = shared.get_source_contents(dat_file)
         root = shared.get_source_root(source)
-        num_existing_games, num_new_games = process_games(session, root, emulator)
+        all_references, num_existing_games, num_new_games = process_games(session, root, emulator)
+        assign_remaining_game_references(session, emulator, all_references)
         print(
             f"Emulator: {emulator_name} {emulator_version} - Existing Games: {num_existing_games}, New Games: {num_new_games}"
         )
 
 
+def extract_mame_version(filename):
+    version = filename.replace("MAME ", "").replace(".xml.bz2", "")
+    version = re.sub(r"\D", "", version)
+    return float(version) if version else 0
+
+
 if __name__ == "__main__":
     session = get_session(DATABASE_PATH)
-    process_dats(session, shared.MAME_DATS)
+    sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
+    process_dats(session, sorted_dats)
+
+
+# Game updated: puckmana
+# /home/jimnarey/projects/romscripts/./arcade_db_build/create_db.py:293: SAWarning: Object of type <Game> not in session, add operation along 'Game.clones' will not proceed (This warning originated from the Session 'autoflush' process, which was invoked automatically in response to a user-initiated operation.)
+#   target_game = session.query(Game).filter(Game.name == target_game_name, Game.game_emulators.any(emulator=emulator)).first()
+# /home/jimnarey/projects/romscripts/./arcade_db_build/create_db.py:332: SAWarning: Object of type <Game> not in session, add operation along 'Game.bios_children' will not proceed
+#   session.commit()
