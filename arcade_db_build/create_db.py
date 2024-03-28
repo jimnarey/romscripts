@@ -380,3 +380,14 @@ def create_db():
 #     sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
 #     process_dats(session, sorted_dats)
 #     session.close()
+
+# TODO: Add disk model and read from DATs. Use validation script to get all possible attributes
+# Add bios field to rom model. Work out what biosset in game elements is for
+# Normalise underscoring in Game field names (is_bios etc)
+# Time each DAT and get an average time per game
+# Count the number of games in the validation script so we can calculate a total build time
+# Log any unhandled references
+# Consider logging any invalid references (circular)
+# Add FBA parsing
+# Add FBN DATs and parsing
+# Enable updating an existing database with new DATs
