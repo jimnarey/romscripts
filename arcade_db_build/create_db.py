@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase, backref
 from sqlalchemy.orm import relationship
 from sqlalchemy.exc import NoResultFound
 
-from shared import shared
+from .shared import shared
 
 DATABASE_FILENAME = "arcade.db"
 DATABASE_PATH = os.path.join(shared.PARENT_PATH, DATABASE_FILENAME)
@@ -368,8 +368,15 @@ def extract_mame_version(filename):
     return float(version) if version else 0
 
 
-if __name__ == "__main__":
+def create_db():
     session = get_session(DATABASE_PATH)
     sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
     process_dats(session, sorted_dats)
     session.close()
+
+
+# if __name__ == "__main__":
+#     session = get_session(DATABASE_PATH)
+#     sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
+#     process_dats(session, sorted_dats)
+#     session.close()
