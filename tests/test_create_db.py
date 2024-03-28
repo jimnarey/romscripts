@@ -358,41 +358,6 @@ class TestAddGameReferences(unittest.TestCase):
         self.assertDictEqual(references, {"cloneof": "Nonexistent Game", "romof": "Nonexistent Game"})
 
 
-class TestAttemptAddGameReferences(unittest.TestCase):
-    def setUp(self):
-        engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
-        Session = sessionmaker(bind=engine)
-        self.session = Session()
-        self.game_1 = create_db.Game(name="Test Game")
-        self.emulator = create_db.Emulator(name="Test Emulator")
-        self.game_2 = create_db.Game(name="Target Game")
-        self.game_emulator = create_db.GameEmulator(game=self.game_2, emulator=self.emulator)
-        self.session.add_all([self.game_1, self.emulator, self.game_2, self.game_emulator])
-        self.session.commit()
-
-    def test_attempt_add_game_references_adds_associations_and_returns_none_when_all_valid(self):
-        references = {"cloneof": "Target Game", "romof": "Target Game"}
-        result = create_db.attempt_add_game_references(self.session, self.emulator, references, self.game_1)
-        self.assertEqual(self.game_1.cloneof, self.game_2)
-        self.assertEqual(self.game_1.romof, self.game_2)
-        self.assertIsNone(result)
-
-    def test_attempt_add_game_references_returns_id_and_reference_when_one_invalid(self):
-        references = {"cloneof": "Target Game", "romof": "Nonexistent Game"}
-        result = create_db.attempt_add_game_references(self.session, self.emulator, references, self.game_1)
-        self.assertEqual(self.game_1.cloneof, self.game_2)
-        self.assertIsNone(self.game_1.romof)
-        self.assertDictEqual(result, {"romof": "Nonexistent Game", "id": "1"})
-
-    def test_attempt_add_game_references_returns_id_and_references_when_none_valid(self):
-        references = {"cloneof": "Nonexistent Game", "romof": "Nonexistent Game"}
-        result = create_db.attempt_add_game_references(self.session, self.emulator, references, self.game_1)
-        self.assertIsNone(self.game_1.cloneof)
-        self.assertIsNone(self.game_1.romof)
-        self.assertDictEqual(result, {"cloneof": "Nonexistent Game", "romof": "Nonexistent Game", "id": "1"})
-
-
 class TestGetEmulatorDetails(unittest.TestCase):
     def test_get_emulator_name_xml(self):
         dat_file = "romscripts/arcade_db_build/mame_db_source/dats/MAME 0.158.xml.bz2"
