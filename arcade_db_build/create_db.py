@@ -147,6 +147,7 @@ def get_existing_records(
     session: Session, model_class: Type[DeclarativeBase], instance_attrs: dict[str, str]
 ) -> list[DeclarativeBase]:
     existing_records = session.query(model_class).filter_by(**instance_attrs).all()
+    # breakpoint()
     return existing_records
 
 
@@ -202,7 +203,24 @@ def create_driver(game_element: ET.Element) -> Optional[Driver]:
     return None
 
 
-def create_roms(rom_elements: list[ET.Element]) -> list[Rom]:
+# def create_roms(rom_elements: list[ET.Element]) -> list[Rom]:
+#     roms = []
+#     for rom_element in rom_elements:
+#         rom = Rom(
+#             name=rom_element.get("name", ""),
+#             size=int(rom_element.get("size", 0)),
+#             crc=rom_element.get("crc", ""),
+#             sha1=rom_element.get("sha1", ""),
+#         )
+#         roms.append(rom)
+#     return roms
+
+
+def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list[Rom]:
+    """
+    Need to think about how to handle existing roms which have additional attributes
+    in later DATs.
+    """
     roms = []
     for rom_element in rom_elements:
         rom = Rom(
@@ -211,7 +229,10 @@ def create_roms(rom_elements: list[ET.Element]) -> list[Rom]:
             crc=rom_element.get("crc", ""),
             sha1=rom_element.get("sha1", ""),
         )
-        roms.append(rom)
+        if existing_roms := get_existing_records(session, Rom, get_instance_attributes(rom, Rom)):
+            roms.append(existing_roms[0])  # Ugly
+        else:
+            roms.append(rom)
     return roms
 
 
@@ -225,7 +246,7 @@ def create_game_references(game_element: ET.Element) -> Optional[dict[str, str]]
     return None
 
 
-def create_game(game_element: ET.Element) -> tuple[Optional[Game], Optional[dict]]:  # Tighten this
+def create_game(session: Session, game_element: ET.Element) -> tuple[Optional[Game], Optional[dict]]:  # Tighten this
     rom_elements = [element for element in game_element if element.tag == "rom"]
     if rom_elements:
         game = Game(
@@ -238,7 +259,7 @@ def create_game(game_element: ET.Element) -> tuple[Optional[Game], Optional[dict
             runnable=game_element.get("runnable", ""),
             ismechanical=game_element.get("ismechanical", ""),
         )
-        game.roms = create_roms(rom_elements)
+        game.roms = get_or_create_roms(session, rom_elements)
         game_references = create_game_references(game_element)
         return game, game_references
     return None, None
@@ -269,7 +290,7 @@ def add_driver(session: Session, game_emulator: GameEmulator, game_element: ET.E
     added_driver = None
     if found_driver := create_driver(game_element):
         if driver_query_result := get_existing_records(session, Driver, get_instance_attributes(found_driver, Driver)):
-            added_driver = driver_query_result[0]
+            added_driver = driver_query_result[0]  # This is a bit ugly
         else:
             added_driver = found_driver
         game_emulator.driver = added_driver
@@ -291,7 +312,7 @@ def process_games(session: Session, root: ET.Element, emulator: Emulator):
     num_existing_games = 0
     num_new_games = 0
     for element in root:
-        game, game_references = create_game(element)
+        game, game_references = create_game(session, element)
         if game:
             if existing_game := get_existing_game(session, game):
                 processing_game = existing_game
@@ -381,7 +402,9 @@ def create_db():
 #     process_dats(session, sorted_dats)
 #     session.close()
 
-# TODO: Add disk model and read from DATs. Use validation script to get all possible attributes
+# TODO: Fix rom cross-referencing
+# Add sourcefile to game/machine
+# Add disk model and read from DATs. Use validation script to get all possible attributes
 # Add bios field to rom model. Work out what biosset in game elements is for
 # Normalise underscoring in Game field names (is_bios etc)
 # Time each DAT and get an average time per game
@@ -391,3 +414,10 @@ def create_db():
 # Add FBA parsing
 # Add FBN DATs and parsing
 # Enable updating an existing database with new DATs
+
+# Re-order
+# Get existing game based on game attributes. Don't instantiate a new game to do this
+# If it exists, add the emulator (already in the session)
+# If it doesn't, create a new game, add to the session and add the game_emulator/emulator
+# Get any existing roms, create any new roms, add to session and to new game
+# commit

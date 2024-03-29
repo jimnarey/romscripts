@@ -1,0 +1,19 @@
+<!-- Roms have been edited to create required fixture -->
+<datafile>
+    <machine name="columnsj" sourcefile="segac2.cpp" cloneof="columns" romof="columns">
+		<description>Columns (Japan)</description>
+		<year>1990</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="epr-13112.ic32" size="131072" crc="bae6e53e" sha1="2c2fd621eecd55591f22d076323972a7d0314615" region="maincpu" offset="0"/>
+		<rom name="epr-13111.ic31" size="131072" crc="aa5ccd6d" sha1="480e29e3112282d1790f1fb68075453325ba4336" region="maincpu" offset="1"/>
+		<driver status="good" emulation="good" savestate="unsupported"/>
+	</machine>
+    <machine name="columns" sourcefile="segac2.cpp">
+		<description>Columns (World)</description>
+		<year>1990</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="epr-13112.ic32" size="131072" crc="bae6e53e" sha1="2c2fd621eecd55591f22d076323972a7d0314615" region="maincpu" offset="0"/>
+		<rom name="epr-13113.ic31" size="131072" crc="9a426d9b" sha1="3322e65ebf8d0a6047f7d408387c63ea401b8973" region="maincpu" offset="1"/>
+		<driver status="good" emulation="good" savestate="unsupported"/>
+	</machine>
+</datafile>

@@ -187,17 +187,30 @@ class TestCreateRecords(unittest.TestCase):
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
-    def test_create_game_and_create_roms(self):
+    def test_get_or_create_roms_with_a_common_rom(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_overlapping_roms.xml"))
+        root = tree.getroot()
+        rom_elements_1 = [element for element in root[0] if element.tag == "rom"]
+        roms_1 = create_db.get_or_create_roms(self.session, rom_elements_1)
+        self.session.commit()
+        rom_elements_2 = [element for element in root[1] if element.tag == "rom"]
+        roms_2 = create_db.get_or_create_roms(self.session, rom_elements_2)
+        self.session.commit()
+        all_roms = self.session.query(create_db.Rom).all()
+        self.assertEqual(len(set(roms_1).intersection(set(roms_2))), 1)
+        self.assertEqual(len(all_roms), 3)
+
+    def test_create_game_with_roms(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
-        game, _ = create_db.create_game(root[0])
+        game, _ = create_db.create_game(self.session, root[0])
         self.assertEqual(game.name, "005")
         self.assertEqual(len(game.roms), 22)
 
-    def test_create_game_and_game_references(self):
+    def test_create_game_with_references(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_cloneof_romof_rels.xml"))
         root = tree.getroot()
-        game, game_references = create_db.create_game(root[0])
+        game, game_references = create_db.create_game(self.session, root[0])
         self.assertEqual(game.name, "columnsj")
         self.assertEqual(game_references, {"romof": "columns", "cloneof": "columns"})
 
