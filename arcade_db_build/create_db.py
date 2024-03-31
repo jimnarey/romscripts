@@ -86,13 +86,6 @@ class Emulator(Base):
 
 
 class Game(Base):
-    """
-    This can be improved by adding a model for yes/no choices and
-    using references for clone_of and rom_of which are assigned on
-    a second pass through the data (just in case any XML declares
-    a clone before a parent)
-    """
-
     __tablename__ = "games"
     id = Column(Integer, primary_key=True)
     name = Column(String)
@@ -178,9 +171,9 @@ def create_features(game_element: ET.Element) -> list[Feature]:
     feature_elements = [element for element in game_element if element.tag == "feature"]
     for feature_element in feature_elements:
         feature = Feature(
-            overall=feature_element.get("overall", ""),
-            type=feature_element.get("type", ""),
-            status=feature_element.get("status", ""),
+            overall=feature_element.get("overall", None),
+            type=feature_element.get("type", None),
+            status=feature_element.get("status", None),
         )
         features.append(feature)
     return features
@@ -191,22 +184,22 @@ def create_driver(game_element: ET.Element) -> Optional[Driver]:
     # driver_element is falsey!
     if driver_element is not None:
         driver = Driver(
-            palettesize=driver_element.get("palettesize", ""),
-            hiscoresave=driver_element.get("hiscoresave", ""),
-            requiresartwork=driver_element.get("requiresartwork", ""),
-            unofficial=driver_element.get("unofficial", ""),
-            good=driver_element.get("good", ""),
-            status=driver_element.get("status", ""),
-            graphic=driver_element.get("graphic", ""),
-            cocktailmode=driver_element.get("cocktailmode", ""),
-            savestate=driver_element.get("savestate", ""),
-            protection=driver_element.get("protection", ""),
-            emulation=driver_element.get("emulation", ""),
-            cocktail=driver_element.get("cocktail", ""),
-            color=driver_element.get("color", ""),
-            nosoundhardware=driver_element.get("nosoundhardware", ""),
-            sound=driver_element.get("sound", ""),
-            incomplete=driver_element.get("incomplete", ""),
+            palettesize=driver_element.get("palettesize", None),
+            hiscoresave=driver_element.get("hiscoresave", None),
+            requiresartwork=driver_element.get("requiresartwork", None),
+            unofficial=driver_element.get("unofficial", None),
+            good=driver_element.get("good", None),
+            status=driver_element.get("status", None),
+            graphic=driver_element.get("graphic", None),
+            cocktailmode=driver_element.get("cocktailmode", None),
+            savestate=driver_element.get("savestate", None),
+            protection=driver_element.get("protection", None),
+            emulation=driver_element.get("emulation", None),
+            cocktail=driver_element.get("cocktail", None),
+            color=driver_element.get("color", None),
+            nosoundhardware=driver_element.get("nosoundhardware", None),
+            sound=driver_element.get("sound", None),
+            incomplete=driver_element.get("incomplete", None),
         )
         return driver
     return None
@@ -219,6 +212,14 @@ def get_rom_size(rom_element: ET.Element) -> Optional[int]:
     return None
 
 
+def get_inner_element_text(outer_element: ET.Element, inner_element_name: str) -> Optional[str]:
+    inner_element = outer_element.find(inner_element_name)  # Using := confuse
+    if inner_element is not None:
+        return inner_element.text
+    return None
+
+
+# Decide what to do when later MAME versions add attributes to an existing rom
 def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list[Rom]:
     """
     Need to think about how to handle existing roms which have additional attributes
@@ -226,15 +227,13 @@ def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list
     """
     roms = []
     for rom_element in rom_elements:
-        rom = Rom(
-            name=rom_element.get("name"),
-            size=get_rom_size(rom_element),
-            crc=rom_element.get("crc"),
-            sha1=rom_element.get("sha1"),
-        )
-        if existing_roms := get_existing_records(session, Rom, get_instance_attributes(rom, Rom)):
+        attributes = {key: value for key, value in rom_element.items() if key in ("name", "size", "crc")}
+        if existing_roms := get_existing_records(session, Rom, attributes):
+            if rom_element.get("sha1") and not existing_roms[0].sha1:  # type: ignore
+                existing_roms[0].sha1 = rom_element.get("sha1")  # type: ignore
             roms.append(existing_roms[0])  # Ugly
         else:
+            rom = Rom(**attributes)
             roms.append(rom)
     return roms
 
@@ -251,11 +250,12 @@ def create_game_references(game_element: ET.Element) -> Optional[dict[str, str]]
 
 # Get description, year and manufacturer
 def create_game(session: Session, game_element: ET.Element) -> Optional[Game]:  # Tighten this
-    if rom_elements := get_rom_elements(
-        game_element
-    ):  # This check can possibly come out, since we're checking in process_games
+    if rom_elements := get_rom_elements(game_element):  # Also checked in process_games
         game = Game(
             name=game_element.get("name"),
+            description=get_inner_element_text(game_element, "description"),
+            year=get_inner_element_text(game_element, "year"),
+            manufacturer=get_inner_element_text(game_element, "manufacturer"),
             isbios=game_element.get("isbios"),
             isdevice=game_element.get("isdevice"),
             runnable=game_element.get("runnable"),
@@ -390,30 +390,3 @@ def create_db():
     sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
     process_dats(session, sorted_dats)
     session.close()
-
-
-# if __name__ == "__main__":
-#     session = get_session(DATABASE_PATH)
-#     sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
-#     process_dats(session, sorted_dats)
-#     session.close()
-
-# TODO: Fix rom cross-referencing
-# Move cloneof and romof to game_emulator/have a collection with a primary
-# Add sourcefile to game/machine
-# Add disk model and read from DATs. Use validation script to get all possible attributes
-# Add bios field to rom model. Work out what biosset in game elements is for
-# Time each DAT and get an average time per game
-# Count the number of games in the validation script so we can calculate a total build time
-# Log any unhandled references
-# Consider logging any invalid references (circular)
-# Add FBA parsing
-# Add FBN DATs and parsing
-# Enable updating an existing database with new DATs
-
-# Re-order
-# Get existing game based on game attributes. Don't instantiate a new game to do this
-# If it exists, add the emulator (already in the session)
-# If it doesn't, create a new game, add to the session and add the game_emulator/emulator
-# Get any existing roms, create any new roms, add to session and to new game
-# commit

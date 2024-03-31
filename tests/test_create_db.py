@@ -44,6 +44,24 @@ class TestModels(unittest.TestCase):
         self.assertEqual(set(rom.name for rom in db_game.roms), {"rom1", "rom2"})
 
 
+class TestGetInnerElementText(unittest.TestCase):
+    def test_element_with_inner_element(self):
+        outer_element = ET.fromstring("<outer><inner>text</inner></outer>")
+        self.assertEqual(create_db.get_inner_element_text(outer_element, "inner"), "text")
+
+    def test_element_without_inner_element(self):
+        outer_element = ET.fromstring("<outer></outer>")
+        self.assertIsNone(create_db.get_inner_element_text(outer_element, "inner"))
+
+    def test_element_with_empty_inner_element(self):
+        outer_element = ET.fromstring("<outer><inner></inner></outer>")
+        self.assertIsNone(create_db.get_inner_element_text(outer_element, "inner"))
+
+    def test_element_with_multiple_inner_elements(self):
+        outer_element = ET.fromstring("<outer><inner>text1</inner><inner>text2</inner></outer>")
+        self.assertEqual(create_db.get_inner_element_text(outer_element, "inner"), "text1")
+
+
 def create_game_fixture(game_element: ET.Element, emulator_version: str = "1", game_name: Optional[str] = None):
     rom_elements = [element for element in game_element if element.tag == "rom"]
     roms = [
@@ -218,12 +236,18 @@ class TestCreateRecords(unittest.TestCase):
         self.assertEqual(game.name, "005")
         self.assertEqual(len(game.roms), 22)
 
-    # def test_create_game_with_references(self):
-    #     tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_cloneof_romof_rels.xml"))
-    #     root = tree.getroot()
-    #     game, game_references = create_db.create_game(self.session, root[0])
-    #     self.assertEqual(game.name, "columnsj")
-    #     self.assertEqual(game_references, {"romof": "columns", "cloneof": "columns"})
+    def test_get_or_create_roms_adds_sha1_to_existing_rom(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_rom_twice_add_sha1.xml"))
+        root = tree.getroot()
+        rom_elements_1 = [root[0]]
+        rom_elements_2 = [root[1]]
+        roms_1 = create_db.get_or_create_roms(self.session, rom_elements_1)
+        self.session.add_all(roms_1)
+        self.session.commit()
+        self.assertIsNone(roms_1[0].sha1)
+        roms_2 = create_db.get_or_create_roms(self.session, rom_elements_2)
+        self.assertEqual(roms_1[0].sha1, "123456789012345678901234567890")
+        self.assertEqual(roms_1, roms_2)
 
     def test_create_features(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
