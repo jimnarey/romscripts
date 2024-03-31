@@ -1,5 +1,6 @@
 import os
 import unittest
+from typing import Optional
 from xml.etree import ElementTree as ET
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
@@ -21,6 +22,7 @@ class TestModels(unittest.TestCase):
 
     def test_models_are_properly_declared(self):
         # TODO: add game:game relationships
+        # Add more fields, including those derived from sub-elements
         """
         This doesn't add every field on Game. It tests the realtionships
         """
@@ -29,7 +31,7 @@ class TestModels(unittest.TestCase):
             create_db.Rom(name="rom1", size=100, crc="crc1", sha1="sha1"),
             create_db.Rom(name="rom2", size=200, crc="crc2", sha1="sha2"),
         ]
-        game = create_db.Game(is_bios=False, name="game1", year="2000", manufacturer="man1", roms=roms)
+        game = create_db.Game(isbios=False, name="game1", year="2000", manufacturer="man1", roms=roms)
         game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
         self.session.add(game_emulator)
         self.session.commit()
@@ -42,13 +44,19 @@ class TestModels(unittest.TestCase):
         self.assertEqual(set(rom.name for rom in db_game.roms), {"rom1", "rom2"})
 
 
-def create_game_fixture(emulator_name: str = "emu1", rom_crcs: list[str] = ["crc1", "crc2"]):
+def create_game_fixture(game_element: ET.Element, emulator_version: str = "1", game_name: Optional[str] = None):
+    rom_elements = [element for element in game_element if element.tag == "rom"]
     roms = [
-        create_db.Rom(name="rom1", size=100, crc=rom_crcs[0], sha1="sha1"),
-        create_db.Rom(name="rom2", size=200, crc=rom_crcs[1], sha1="sha2"),
+        create_db.Rom(
+            name=rom_element.get("name"),
+            size=rom_element.get("size"),
+            crc=rom_element.get("crc"),
+            sha1=rom_element.get("sha1"),
+        )
+        for rom_element in rom_elements
     ]
-    emulator = create_db.Emulator(name=emulator_name, version="1.0")
-    game = create_db.Game(is_bios=False, name="game", year="2000", manufacturer="man1", roms=roms)
+    game = create_db.Game(name=game_name if game_name else game_element.get("name"), roms=roms)
+    emulator = create_db.Emulator(name="MAME", version=emulator_version)
     game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
     game.game_emulators.append(game_emulator)
     return game
@@ -110,74 +118,75 @@ class TestGetRecords(unittest.TestCase):
             },
         )
 
-    def test_get_existing_record_returns_record_when_no_attrs_provided(self):
-        game_1 = create_game_fixture()
-        self.session.add(game_1)
+    def test_get_existing_record_returns_record_when_passed_all_attributes(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[0])
+        self.session.add(game)
         self.session.commit()
-        game_2 = create_game_fixture()
-        # Confirm we're not dealing with the same instance
-        self.assertNotEqual(game_1, game_2)
-        instance_attrs = {c.key: getattr(game_2, c.key) for c in inspect(game_2).mapper.column_attrs}
+        instance_attrs = {c.key: getattr(game, c.key) for c in inspect(game).mapper.column_attrs}
         instance_attrs.pop(inspect(create_db.Game).primary_key[0].key, None)
-        self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, instance_attrs), [game_1])
+        self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, instance_attrs), [game])
 
     def test_get_existing_record_returns_none_when_no_record_exists(self):
         self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, {"name": "game"}), [])
 
-    def test_get_existing_record_returns_record_with_specified_attributes(self):
-        game_1 = create_game_fixture()
-        self.session.add(game_1)
+    def test_get_existing_record_returns_record_when_passed_some_attributes(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[0])
+        self.session.add(game)
         self.session.commit()
-        self.assertEqual(
-            create_db.get_existing_records(self.session, create_db.Game, {"name": "game", "year": "2000"}), [game_1]
-        )
+        self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, {"name": "005"}), [game])
 
     def test_get_existing_game_returns_none_when_no_game_exists(self):
-        game = create_game_fixture()
-        self.assertIsNone(create_db.get_existing_game(self.session, game))
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
+        root = tree.getroot()
+        self.assertIsNone(create_db.get_existing_game(self.session, root[0]))
 
     def test_get_existing_game_returns_existing_game_with_same_attributes(self):
-        game_1 = create_game_fixture()
-        game_2 = create_game_fixture()
-        # Confirm we're not dealing with the same instance
-        self.assertNotEqual(game_1, game_2)
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
+        root = tree.getroot()
+        game_1 = create_game_fixture(root[0])
         self.session.add(game_1)
         self.session.commit()
-        self.assertEqual(create_db.get_existing_game(self.session, game_2), game_1)
-
-    def test_get_existing_game_returns_existing_game_with_same_attributes_except_emulator(self):
-        game_1 = create_game_fixture()
-        self.session.add(game_1)
-        self.session.commit()
-        game_2 = create_game_fixture(emulator_name="emu2")
-        self.assertEqual(create_db.get_existing_game(self.session, game_2), game_1)
+        self.assertEqual(create_db.get_existing_game(self.session, root[0]), game_1)
 
     def test_get_existing_game_returns_none_when_game_rom_has_different_crc(self):
-        game_1 = create_game_fixture()
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[0])
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc.xml"))
+        root_2 = tree_2.getroot()
         self.session.add(game_1)
         self.session.commit()
-        game_2 = create_game_fixture(rom_crcs=["crc1", "crc3"])
-        self.assertIsNone(create_db.get_existing_game(self.session, game_2))
+        self.assertIsNone(create_db.get_existing_game(self.session, root_2[0]))
 
     def test_get_existing_game_can_handle_multiple_existing_games_with_same_name_with_match(self):
-        game_1 = create_game_fixture()
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[0])
         self.session.add(game_1)
-        self.session.commit()
-        game_2 = create_game_fixture(rom_crcs=["crc1", "crc3"])
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc.xml"))
+        root_2 = tree_2.getroot()
+        game_2 = create_game_fixture(root_2[0])
         self.session.add(game_2)
         self.session.commit()
-        game_3 = create_game_fixture()
-        self.assertEqual(create_db.get_existing_game(self.session, game_3), game_1)
+        self.assertEqual(create_db.get_existing_game(self.session, root_1[0]), game_1)
 
     def test_get_existing_game_can_handle_multiple_existing_games_with_same_name_without_match(self):
-        game_1 = create_game_fixture()
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[0])
         self.session.add(game_1)
-        self.session.commit()
-        game_2 = create_game_fixture(rom_crcs=["crc1", "crc3"])
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc.xml"))
+        root_2 = tree_2.getroot()
+        game_2 = create_game_fixture(root_2[0])
         self.session.add(game_2)
         self.session.commit()
-        game_3 = create_game_fixture(rom_crcs=["crc1", "crc4"])
-        self.assertIsNone(create_db.get_existing_game(self.session, game_3))
+        tree_3 = ET.parse(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc_2.xml"))
+        root_3 = tree_3.getroot()
+        self.assertIsNone(create_db.get_existing_game(self.session, root_3[0]))
 
 
 class TestCreateRecords(unittest.TestCase):
@@ -192,9 +201,11 @@ class TestCreateRecords(unittest.TestCase):
         root = tree.getroot()
         rom_elements_1 = [element for element in root[0] if element.tag == "rom"]
         roms_1 = create_db.get_or_create_roms(self.session, rom_elements_1)
+        self.session.add_all(roms_1)
         self.session.commit()
         rom_elements_2 = [element for element in root[1] if element.tag == "rom"]
         roms_2 = create_db.get_or_create_roms(self.session, rom_elements_2)
+        self.session.add_all(roms_2)
         self.session.commit()
         all_roms = self.session.query(create_db.Rom).all()
         self.assertEqual(len(set(roms_1).intersection(set(roms_2))), 1)
@@ -203,16 +214,16 @@ class TestCreateRecords(unittest.TestCase):
     def test_create_game_with_roms(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
-        game, _ = create_db.create_game(self.session, root[0])
+        game = create_db.create_game(self.session, root[0])
         self.assertEqual(game.name, "005")
         self.assertEqual(len(game.roms), 22)
 
-    def test_create_game_with_references(self):
-        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_cloneof_romof_rels.xml"))
-        root = tree.getroot()
-        game, game_references = create_db.create_game(self.session, root[0])
-        self.assertEqual(game.name, "columnsj")
-        self.assertEqual(game_references, {"romof": "columns", "cloneof": "columns"})
+    # def test_create_game_with_references(self):
+    #     tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_cloneof_romof_rels.xml"))
+    #     root = tree.getroot()
+    #     game, game_references = create_db.create_game(self.session, root[0])
+    #     self.assertEqual(game.name, "columnsj")
+    #     self.assertEqual(game_references, {"romof": "columns", "cloneof": "columns"})
 
     def test_create_features(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
@@ -234,9 +245,8 @@ class TestCreateRecords(unittest.TestCase):
     def test_add_features_no_existing_feature(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
         root = tree.getroot()
-        game = create_game_fixture()
-        emulator = create_db.Emulator(name="MAME", version="1")
-        game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
+        game = create_game_fixture(root[0])
+        game_emulator = game.game_emulators[0]
         create_db.add_features(self.session, game_emulator, root[0])
         self.assertEqual(len(game_emulator.features), 2)
         self.assertEqual(game_emulator.features[0].overall, "imperfect")
@@ -245,19 +255,15 @@ class TestCreateRecords(unittest.TestCase):
         self.assertEqual(game_emulator.features[1].type, "sound")
 
     def test_add_features_with_existing_feature(self):
-        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
-        root = tree.getroot()
-        game_1 = create_game_fixture()
-        emulator_1 = create_db.Emulator(name="MAME", version="1")
-        game_emulator_1 = create_db.GameEmulator(game=game_1, emulator=emulator_1)
-        create_db.add_features(self.session, game_emulator_1, root[0])
-        self.session.add_all([game_1, emulator_1, game_emulator_1])
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[0])
+        game_emulator_1 = game_1.game_emulators[0]
+        create_db.add_features(self.session, game_emulator_1, root_1[0])
         self.session.commit()
-        game_2 = create_game_fixture()
-        emulator_2 = create_db.Emulator(name="MAME", version="2")
-        game_emulator_2 = create_db.GameEmulator(game=game_2, emulator=emulator_2)
-        create_db.add_features(self.session, game_emulator_2, root[0])
-        self.session.add_all([game_2, emulator_2, game_emulator_2])
+        game_2 = create_game_fixture(root_1[0])
+        game_emulator_2 = game_2.game_emulators[0]
+        create_db.add_features(self.session, game_emulator_2, root_1[0])
         self.session.commit()
         self.assertEqual(len(game_emulator_1.features), 2)
         self.assertEqual(len(game_emulator_2.features), 2)
@@ -267,9 +273,8 @@ class TestCreateRecords(unittest.TestCase):
     def test_add_driver_no_existing_driver(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
         root = tree.getroot()
-        game = create_game_fixture()
-        emulator = create_db.Emulator(name="MAME", version="1")
-        game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
+        game = create_game_fixture(root[0])
+        game_emulator = game.game_emulators[0]
         create_db.add_driver(self.session, game_emulator, root[0])
         self.assertEqual(game_emulator.driver.status, "imperfect")
         self.assertEqual(game_emulator.driver.emulation, "good")
@@ -278,17 +283,12 @@ class TestCreateRecords(unittest.TestCase):
     def test_add_driver_with_existing_driver(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
         root = tree.getroot()
-        game_1 = create_game_fixture()
-        emulator_1 = create_db.Emulator(name="MAME", version="1")
-        game_emulator_1 = create_db.GameEmulator(game=game_1, emulator=emulator_1)
+        game_1 = create_game_fixture(root[0])
+        game_emulator_1 = game_1.game_emulators[0]
         create_db.add_driver(self.session, game_emulator_1, root[0])
-        self.session.add_all([game_1, emulator_1, game_emulator_1])
-        self.session.commit()
-        game_2 = create_game_fixture()
-        emulator_2 = create_db.Emulator(name="MAME", version="2")
-        game_emulator_2 = create_db.GameEmulator(game=game_2, emulator=emulator_2)
+        game_2 = create_game_fixture(root[0])
+        game_emulator_2 = game_2.game_emulators[0]
         create_db.add_driver(self.session, game_emulator_2, root[0])
-        self.session.add_all([game_2, emulator_2, game_emulator_2])
         self.session.commit()
         self.assertEqual(game_emulator_1.driver, game_emulator_2.driver)
 

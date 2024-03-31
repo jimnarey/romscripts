@@ -2,6 +2,7 @@
 from typing import Optional, Type
 import re
 import os
+import functools
 import xml.etree.ElementTree as ET
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, create_engine, inspect
 from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase, backref
@@ -106,8 +107,8 @@ class Game(Base):
     romof = relationship(
         "Game", foreign_keys=[romof_id], backref=backref("bios_children", foreign_keys=[romof_id]), remote_side=[id]
     )
-    is_bios = Column(String)
-    is_device = Column(String)
+    isbios = Column(String)
+    isdevice = Column(String)
     runnable = Column(String)
     ismechanical = Column(String)
     game_emulators = relationship("GameEmulator", back_populates="game")
@@ -147,20 +148,28 @@ def get_existing_records(
     session: Session, model_class: Type[DeclarativeBase], instance_attrs: dict[str, str]
 ) -> list[DeclarativeBase]:
     existing_records = session.query(model_class).filter_by(**instance_attrs).all()
-    # breakpoint()
     return existing_records
 
 
-def get_existing_game(session: Session, game: Game) -> Optional[Game]:
-    try:
-        existing_games: list[Game] = get_existing_records(session, Game, {"name": str(game.name)})  # type: ignore
-        for existing_game in existing_games:
-            existing_game_roms = [(rom.name, rom.size, rom.crc, rom.sha1) for rom in existing_game.roms]
-            game_roms = [(rom.name, rom.size, rom.crc, rom.sha1) for rom in game.roms]
-            if set(existing_game_roms) == set(game_roms):
-                return existing_game
-    except NoResultFound:
-        pass
+@functools.cache
+def get_rom_elements(game_element: ET.Element) -> list[ET.Element]:
+    return [element for element in game_element if element.tag == "rom"]
+
+
+# What happens if None is passed as the game name to get_existing_records?
+def get_existing_game(session: Session, game_element: ET.Element) -> Optional[Game]:
+    if rom_elements := get_rom_elements(
+        game_element
+    ):  # This check can possibly come out, since we're checking in process_games
+        try:
+            existing_games: list[Game] = get_existing_records(session, Game, {"name": game_element.get("name")})  # type: ignore
+            for existing_game in existing_games:
+                existing_game_roms = [(rom.name, rom.size, rom.crc, rom.sha1) for rom in existing_game.roms]
+                game_roms = [(rom.get("name"), int(rom.get("size")), rom.get("crc"), rom.get("sha1")) for rom in rom_elements]  # type: ignore
+                if set(existing_game_roms) == set(game_roms):
+                    return existing_game
+        except NoResultFound:
+            pass
     return None
 
 
@@ -203,17 +212,11 @@ def create_driver(game_element: ET.Element) -> Optional[Driver]:
     return None
 
 
-# def create_roms(rom_elements: list[ET.Element]) -> list[Rom]:
-#     roms = []
-#     for rom_element in rom_elements:
-#         rom = Rom(
-#             name=rom_element.get("name", ""),
-#             size=int(rom_element.get("size", 0)),
-#             crc=rom_element.get("crc", ""),
-#             sha1=rom_element.get("sha1", ""),
-#         )
-#         roms.append(rom)
-#     return roms
+# This is needed to keep the type checker happy
+def get_rom_size(rom_element: ET.Element) -> Optional[int]:
+    if size := rom_element.get("size"):
+        return int(size)
+    return None
 
 
 def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list[Rom]:
@@ -224,10 +227,10 @@ def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list
     roms = []
     for rom_element in rom_elements:
         rom = Rom(
-            name=rom_element.get("name", ""),
-            size=int(rom_element.get("size", 0)),
-            crc=rom_element.get("crc", ""),
-            sha1=rom_element.get("sha1", ""),
+            name=rom_element.get("name"),
+            size=get_rom_size(rom_element),
+            crc=rom_element.get("crc"),
+            sha1=rom_element.get("sha1"),
         )
         if existing_roms := get_existing_records(session, Rom, get_instance_attributes(rom, Rom)):
             roms.append(existing_roms[0])  # Ugly
@@ -246,23 +249,21 @@ def create_game_references(game_element: ET.Element) -> Optional[dict[str, str]]
     return None
 
 
-def create_game(session: Session, game_element: ET.Element) -> tuple[Optional[Game], Optional[dict]]:  # Tighten this
-    rom_elements = [element for element in game_element if element.tag == "rom"]
-    if rom_elements:
+# Get description, year and manufacturer
+def create_game(session: Session, game_element: ET.Element) -> Optional[Game]:  # Tighten this
+    if rom_elements := get_rom_elements(
+        game_element
+    ):  # This check can possibly come out, since we're checking in process_games
         game = Game(
-            name=game_element.get("name", ""),
-            description=game_element.get("description", ""),
-            year=int(game_element.get("year", 0)),
-            manufacturer=game_element.get("manufacturer", ""),
-            is_bios=game_element.get("isbios", ""),
-            is_device=game_element.get("isdevice", ""),
-            runnable=game_element.get("runnable", ""),
-            ismechanical=game_element.get("ismechanical", ""),
+            name=game_element.get("name"),
+            isbios=game_element.get("isbios"),
+            isdevice=game_element.get("isdevice"),
+            runnable=game_element.get("runnable"),
+            ismechanical=game_element.get("ismechanical"),
         )
         game.roms = get_or_create_roms(session, rom_elements)
-        game_references = create_game_references(game_element)
-        return game, game_references
-    return None, None
+        return game
+    return None
 
 
 def get_mame_emulator_details(dat_file: str) -> list[str]:
@@ -297,10 +298,7 @@ def add_driver(session: Session, game_emulator: GameEmulator, game_element: ET.E
         session.add(added_driver)
 
 
-def add_game_emulator_relationship(
-    session: Session, game_element: ET.Element, game: Game, emulator: Emulator, action: str = "added"
-):
-    # print(f"Game {action}: {game.name}")
+def add_game_emulator_relationship(session: Session, game_element: ET.Element, game: Game, emulator: Emulator):
     game_emulator = GameEmulator(game=game, emulator=emulator)
     session.add(game_emulator)
     add_features(session, game_emulator, game_element)
@@ -309,25 +307,25 @@ def add_game_emulator_relationship(
 
 def process_games(session: Session, root: ET.Element, emulator: Emulator):
     all_references = []
-    num_existing_games = 0
-    num_new_games = 0
+    new_games = 0
+    total_games = 0
     for element in root:
-        game, game_references = create_game(session, element)
-        if game:
-            if existing_game := get_existing_game(session, game):
-                processing_game = existing_game
-                num_existing_games += 1
-            else:
-                processing_game = game
-                num_new_games += 1
+        rom_elements = get_rom_elements(element)
+        if rom_elements:
+            game = get_existing_game(session, element)
+            if not game:
+                game = create_game(session, element)
                 session.add(game)
-            add_game_emulator_relationship(session, element, processing_game, emulator, action="updated")
-            session.commit()
-            if game_references:
-                game_references["id"] = str(processing_game.id)
-                all_references.append(game_references)
+                new_games += 1
+            if game:
+                add_game_emulator_relationship(session, element, game, emulator)
+                session.commit()
+                total_games += 1
+                if game_references := create_game_references(element):
+                    game_references["id"] = str(game.id)
+                    all_references.append(game_references)
 
-    return all_references, num_existing_games, num_new_games
+    return all_references, new_games, total_games
 
 
 def add_game_reference(session: Session, game: Game, emulator: Emulator, field: str, target_game_name: str):
@@ -376,11 +374,9 @@ def process_dats(session: Session, dats: list[str]):
         session.commit()
         source = shared.get_source_contents(dat_file)
         root = shared.get_source_root(source)
-        all_references, num_existing_games, num_new_games = process_games(session, root, emulator)
+        all_references, new_games, total_games = process_games(session, root, emulator)
         add_all_game_references(session, emulator, all_references)
-        print(
-            f"Emulator: {emulator_name} {emulator_version} - Existing Games: {num_existing_games}, New Games: {num_new_games}"
-        )
+        print(f"Emulator: {emulator_name} {emulator_version} - Total Games: {total_games}, New Games: {new_games}")
 
 
 def extract_mame_version(filename):
@@ -403,10 +399,10 @@ def create_db():
 #     session.close()
 
 # TODO: Fix rom cross-referencing
+# Move cloneof and romof to game_emulator/have a collection with a primary
 # Add sourcefile to game/machine
 # Add disk model and read from DATs. Use validation script to get all possible attributes
 # Add bios field to rom model. Work out what biosset in game elements is for
-# Normalise underscoring in Game field names (is_bios etc)
 # Time each DAT and get an average time per game
 # Count the number of games in the validation script so we can calculate a total build time
 # Log any unhandled references
