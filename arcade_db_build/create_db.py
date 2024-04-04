@@ -353,21 +353,21 @@ def add_game_references(session: Session, emulator: Emulator, game_references: d
 
 
 def add_all_game_references(session: Session, emulator: Emulator, all_references: list[dict[str, str]]):
-    reference_count = len(all_references)
+    total_refs = len(all_references)
+    remaining_refs = len(all_references)
     for game_references in all_references:
         game = session.query(Game).filter(Game.id == game_references["id"]).first()
         if game:
             add_game_references(session, emulator, game_references, game)
             session.commit()
             if list(game_references.keys()) == ["id"]:
-                reference_count -= 1
+                remaining_refs -= 1
             # Log the unhandled references so they can be investigated
-    print(f"Unhandled references: {reference_count}")
+    return total_refs, remaining_refs
 
 
 def process_dats(session: Session, dats: list[str]):
     for dat_file in dats:
-        print(f"Processing: {dat_file}")
         emulator_name, emulator_version = get_mame_emulator_details(dat_file)
         emulator = Emulator(name=emulator_name, version=emulator_version)
         session.add(emulator)
@@ -375,8 +375,13 @@ def process_dats(session: Session, dats: list[str]):
         source = shared.get_source_contents(dat_file)
         root = shared.get_source_root(source)
         all_references, new_games, total_games = process_games(session, root, emulator)
-        add_all_game_references(session, emulator, all_references)
-        print(f"Emulator: {emulator_name} {emulator_version} - Total Games: {total_games}, New Games: {new_games}")
+        (
+            total_refs,
+            unhandled_refs,
+        ) = add_all_game_references(session, emulator, all_references)
+        print(
+            f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games} - Total Refs: {total_refs}, Unhandled Refs: {unhandled_refs}"
+        )
 
 
 def extract_mame_version(filename):
