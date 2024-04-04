@@ -73,7 +73,16 @@ def create_game_fixture(game_element: ET.Element, emulator_version: str = "1", g
         )
         for rom_element in rom_elements
     ]
-    game = create_db.Game(name=game_name if game_name else game_element.get("name"), roms=roms)
+    disk_elements = [element for element in game_element if element.tag == "disk"]
+    disks = [
+        create_db.Disk(
+            name=disk_element.get("name"),
+            md5=disk_element.get("md5"),
+            sha1=disk_element.get("sha1"),
+        )
+        for disk_element in disk_elements
+    ]
+    game = create_db.Game(name=game_name if game_name else game_element.get("name"), roms=roms, disks=disks)
     emulator = create_db.Emulator(name="MAME", version=emulator_version)
     game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
     game.game_emulators.append(game_emulator)
@@ -157,6 +166,71 @@ class TestGetRecords(unittest.TestCase):
         self.session.commit()
         self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, {"name": "005"}), [game])
 
+    def test_get_existing_disk_returns_disk_with_same_name_and_sha1(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[0])
+        self.session.add(game)
+        self.session.commit()
+        disk_elements = [element for element in root[0] if element.tag == "disk"]
+        for disk_element in disk_elements:
+            self.assertIn(create_db.get_existing_disk(self.session, disk_element), game.disks)
+
+    def test_get_existing_disk_returns_disk_with_same_name_and_md5(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[1])
+        self.session.add(game)
+        self.session.commit()
+        disk_elements = [element for element in root[1] if element.tag == "disk"]
+        for disk_element in disk_elements:
+            self.assertIn(create_db.get_existing_disk(self.session, disk_element), game.disks)
+
+    def test_get_existing_disk_returns_none_if_sha1_different(self):
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[0])
+        self.session.add(game_1)
+        self.session.commit()
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        root_2 = tree_2.getroot()
+        disk_elements = [element for element in root_2[0] if element.tag == "disk"]
+        for disk_element in disk_elements:
+            self.assertIsNone(create_db.get_existing_disk(self.session, disk_element))
+
+    def test_get_existing_disk_returns_none_if_md5_different(self):
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[1])
+        self.session.add(game_1)
+        self.session.commit()
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        root_2 = tree_2.getroot()
+        disk_elements = [element for element in root_2[1] if element.tag == "disk"]
+        for disk_element in disk_elements:
+            self.assertIsNone(create_db.get_existing_disk(self.session, disk_element))
+
+    # def test_get_existing_disk_adds_sh1_to_disk_with_only_md5(self):
+    #     tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+    #     root_1 = tree_1.getroot()
+    #     game_element_1 = root_1[3]
+    #     disk_element_1 = game_element_1.find("disk")
+    #     sha1 = disk_element_1.attrib["sha1"]
+    #     del disk_element_1.attrib["sha1"]
+    #     game = create_game_fixture(game_element_1)
+    #     self.session.add(game)
+    #     self.session.commit()
+    #     disk_1 = self.session.query(create_db.Disk).one()
+    #     self.assertIsNone(disk_1.sha1)
+    #     # Fresh read of XML since none of disk, game or root elements now contain the sha1
+    #     tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+    #     root_2 = tree_2.getroot()
+    #     game_element_2 = root_2[3]
+    #     disk_element_2 = game_element_2.find("disk")
+    #     disk_2 = create_db.get_existing_disk(self.session, disk_element_2)
+    #     self.assertIsNotNone(disk_2.sha1)
+    #     self.assertEqual(disk_2.sha1, sha1)
+
     def test_get_existing_game_returns_none_when_no_game_exists(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
@@ -206,6 +280,24 @@ class TestGetRecords(unittest.TestCase):
         root_3 = tree_3.getroot()
         self.assertIsNone(create_db.get_existing_game(self.session, root_3[0]))
 
+    def test_get_existing_game_matches_game_with_same_roms_and_disks(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[0])
+        self.session.add(game)
+        self.session.commit()
+        self.assertEqual(create_db.get_existing_game(self.session, root[0]), game)
+
+    def test_get_existing_game_returns_none_when_disk_has_different_sha1(self):
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[0])
+        self.session.add(game_1)
+        self.session.commit()
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        root_2 = tree_2.getroot()
+        self.assertIsNone(create_db.get_existing_game(self.session, root_2[0]))
+
 
 class TestCreateRecords(unittest.TestCase):
     def setUp(self):
@@ -229,13 +321,6 @@ class TestCreateRecords(unittest.TestCase):
         self.assertEqual(len(set(roms_1).intersection(set(roms_2))), 1)
         self.assertEqual(len(all_roms), 3)
 
-    def test_create_game_with_roms(self):
-        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
-        root = tree.getroot()
-        game = create_db.create_game(self.session, root[0])
-        self.assertEqual(game.name, "005")
-        self.assertEqual(len(game.roms), 22)
-
     def test_get_or_create_roms_adds_sha1_to_existing_rom(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_rom_twice_add_sha1.xml"))
         root = tree.getroot()
@@ -248,6 +333,21 @@ class TestCreateRecords(unittest.TestCase):
         roms_2 = create_db.get_or_create_roms(self.session, rom_elements_2)
         self.assertEqual(roms_1[0].sha1, "123456789012345678901234567890")
         self.assertEqual(roms_1, roms_2)
+
+    def test_create_game_with_roms(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
+        root = tree.getroot()
+        game = create_db.create_game(self.session, root[0])
+        self.assertEqual(game.name, "005")
+        self.assertEqual(len(game.roms), 22)
+
+    # def test_create_game_with_roms_and_disks(self):
+    #     tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+    #     root = tree.getroot()
+    #     game = create_db.create_game(self.session, root[0])
+    #     self.assertEqual(game.name, "2spicy")
+    #     self.assertEqual(len(game.roms), 6)
+    #     self.assertEqual(len(game.disks), 2)
 
     def test_create_features(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
@@ -315,6 +415,124 @@ class TestCreateRecords(unittest.TestCase):
         create_db.add_driver(self.session, game_emulator_2, root[0])
         self.session.commit()
         self.assertEqual(game_emulator_1.driver, game_emulator_2.driver)
+
+
+class TestDiskMatching(unittest.TestCase):
+    def setUp(self):
+        engine = create_engine("sqlite:///:memory:")
+        create_db.Base.metadata.create_all(engine)
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
+
+    # These can be improved. They're depenent on the order of the disks in the XML
+    # files and the order of the disks in the game objects. They're solid but a
+    # bit hard to work with.
+
+    def test_match_disk_with_disk_element_matches_existing_disk_when_no_sha1_or_md5(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[2])
+        self.session.add(game)
+        self.session.commit()
+        disk_element = [element for element in root[2] if element.tag == "disk"].pop()
+        disk = [disk for disk in game.disks if disk.sha1 is None].pop()
+        self.assertTrue(create_db.match_disk_with_disk_element(disk, disk_element))
+
+    def test_match_disk_with_disk_element_matches_existing_disk_by_sha1(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[0])
+        self.session.add(game)
+        self.session.commit()
+        disk_elements = [element for element in root[0] if element.tag == "disk"]
+        disk_element = [element for element in disk_elements if element.attrib["name"] == "dvp-0027a"].pop()
+        disk = [disk for disk in game.disks if disk.name == "dvp-0027a"].pop()
+        self.assertTrue(create_db.match_disk_with_disk_element(disk, disk_element))
+
+    def test_match_disk_with_disk_element_matches_existing_disk_by_md5(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[1])
+        self.session.add(game)
+        self.session.commit()
+        disk_element = [element for element in root[1] if element.tag == "disk"].pop()
+        disk = game.disks[0]
+        self.assertTrue(create_db.match_disk_with_disk_element(disk, disk_element))
+
+    def test_match_disk_with_disk_element_returns_none_when_sha1_different(self):
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[0])
+        self.session.add(game_1)
+        self.session.commit()
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        root_2 = tree_2.getroot()
+        disk_elements = [element for element in root_2[0] if element.tag == "disk"]
+        disk_element = [element for element in disk_elements if element.attrib["name"] == "dvp-0027a"].pop()
+        disk = [disk for disk in game_1.disks if disk.name == "dvp-0027a"].pop()
+        self.assertFalse(create_db.match_disk_with_disk_element(disk, disk_element))
+
+    def test_match_disk_with_disk_element_returns_none_when_md5_different(self):
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root_1 = tree_1.getroot()
+        game = create_game_fixture(root_1[1])
+        self.session.add(game)
+        self.session.commit()
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        root_2 = tree_2.getroot()
+        disk_element = [element for element in root_2[1] if element.tag == "disk"].pop()
+        disk = game.disks[0]
+        self.assertFalse(create_db.match_disk_with_disk_element(disk, disk_element))
+
+    def test_match_disk_in_disk_elements_matches_existing_disk(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[0])
+        self.session.add(game)
+        self.session.commit()
+        disk_elements = [element for element in root[0] if element.tag == "disk"]
+        for disk in game.disks:
+            self.assertTrue(create_db.match_disk_in_disk_elements(disk, disk_elements))
+
+    def test_match_disk_in_disk_elements_does_not_match_disk_not_in_elements(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[0])
+        self.session.add(game)
+        self.session.commit()
+        disk_elements = [element for element in root[1] if element.tag == "disk"]
+        for disk in game.disks:
+            self.assertFalse(create_db.match_disk_in_disk_elements(disk, disk_elements))
+
+    def test_match_disk_in_disk_elements_does_not_match_existing_disk_when_sha1_different(self):
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root_1 = tree_1.getroot()
+        game = create_game_fixture(root_1[0])
+        self.session.add(game)
+        self.session.commit()
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        root_2 = tree_2.getroot()
+        disk_elements = [element for element in root_2[0] if element.tag == "disk"]
+        for disk in game.disks:
+            self.assertFalse(create_db.match_disk_in_disk_elements(disk, disk_elements))
+
+    def test_match_game_disks_returns_true_when_all_same(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_game_fixture(root[0])
+        self.session.add(game)
+        self.session.commit()
+        self.assertTrue(create_db.match_game_disks(game, root[0]))
+
+    def test_match_game_disks_returns_false_when_disk_has_different_sha1(self):
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root_1 = tree_1.getroot()
+        game_1 = create_game_fixture(root_1[0])
+        self.session.add(game_1)
+        self.session.commit()
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        root_2 = tree_2.getroot()
+        self.assertFalse(create_db.match_game_disks(game_1, root_2[0]))
 
 
 class TestCreateGameReferences(unittest.TestCase):
@@ -438,6 +656,7 @@ class TestProcessGames(unittest.TestCase):
 
     # TODO: Test num_added and num_updated values
     # Test all_references is properly populated
+    # Test populates disks correctly
 
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")

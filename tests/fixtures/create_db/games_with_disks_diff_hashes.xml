@@ -1,3 +1,4 @@
+<!-- Each of the sha1 and md5 values in disk elements differs from games_with_disks.xml -->
 <datafile>
     <machine name="2spicy" sourcefile="lindbergh.cpp" romof="lindbios">
 		<description>2 Spicy</description>
@@ -12,8 +13,8 @@
 		<rom name="fpr-24370b.ic6" merge="fpr-24370b.ic6" size="4194304" crc="c3b021a4" sha1="1b6938a50fe0e4ae813864649eb103838c399ac0" region=":pci:1e.0:03.0" offset="0"/>
 		<rom name="vid_bios.u504" merge="vid_bios.u504" size="65536" crc="f78d14d7" sha1="f129787e487984edd23bf344f2e9500c85052275" region=":pci:01.0:00.0" offset="0"/>
 		<rom name="317-0491-com.bin" size="8192" status="nodump" region=":pic" offset="0"/>
-		<disk name="mda-c0004a_revb_lindyellow_v2.4.20_mvl31a_boot_2.01" merge="mda-c0004a_revb_lindyellow_v2.4.20_mvl31a_boot_2.01" sha1="e13da5f827df852e742b594729ee3f933b387410" region="cf" index="0" writable="no"/>
-		<disk name="dvp-0027a" sha1="da1aacee9e32e813844f4d434981e69cc5c80682" region="dvd" index="0" writable="no"/>
+		<disk name="mda-c0004a_revb_lindyellow_v2.4.20_mvl31a_boot_2.01" merge="mda-c0004a_revb_lindyellow_v2.4.20_mvl31a_boot_2.01" sha1="e13da5xx27df852e742b594729ee3f933b387410" region="cf" index="0" writable="no"/>
+		<disk name="dvp-0027a" sha1="da1xxcee9e32e813844f4d434981e69cc5c80682" region="dvd" index="0" writable="no"/>
 		<device_ref name="pentium4"/>
 		<device_ref name="pci_root"/>
 		<device_ref name="i82875p_host"/>
@@ -55,7 +56,7 @@
 		<rom name="1.0_r3k_max-a51_kit_lh.lh" size="524288" crc="d7d94dac" sha1="2060a74715f36a0d7f5dd0855eda48ad1f20f095" region="maincpu" offset="2"/>
 		<rom name="1.0_r3k_max-a51_kit_ll.ll" size="524288" crc="ece9e5ae" sha1="7e44402726f5afa6d1670b27aa43ad13d21c4ad9" region="maincpu" offset="3"/>
 		<rom name="jagwave.rom" merge="jagwave.rom" size="4096" crc="7a25ee5b" sha1="58117e11fd6478c521fbd3fdbe157f39567552f0" region="waverom" offset="0"/>
-		<disk name="area51mx" merge="area51mx" md5="f4a5d6ae738c277cdb8146baf74310df" region="ide:0:hdd:image" index="0" writable="yes"/>
+		<disk name="area51mx" merge="area51mx" md5="f4a5d6ae738cxx7cdb8146baf74310df" region="ide:0:hdd:image" index="0" writable="yes"/>
 		<device_ref name="r3041"/>
 		<device_ref name="jaguargpu"/>
 		<device_ref name="jaguardsp"/>
@@ -173,7 +174,7 @@
 		<rom name="coh-1000a.353" merge="coh-1000a.353" size="524288" crc="8d8d0764" sha1="7ee83d317190bb1cef2f8f01c81eaaae47150ebb" region="user1" offset="0"/>
 		<rom name="j-dread.u36" size="131072" crc="37addbf9" sha1="a4061a1ba9e230f080f0bfea69bf77efe9264a92" region="user2" offset="1"/>
 		<rom name="j-dread.u35" size="131072" crc="c1e17191" sha1="82901439b1a51b9aadb4df4b9d944f26697a1460" region="user2" offset="0"/>
-		<disk name="jdreddc" sha1="83ed8df25d100b1c060f4dde2f162ba31803db7d" md5="b66074f3df1e90ec4e3ff09dcdf33033" region="disks" index="0"/>
+		<disk name="jdreddc" sha1="83ed8df25d100b1c0xxf4dde2f162ba31803db7d" md5="b66074f3df1xx0ec4e3ff09dcdf33033" region="disks" index="0"/>
 		<chip type="cpu" name="PSX CPU" clock="16934400"/>
 		<chip type="audio" name="PSX SPU"/>
 		<video screen="raster" orientation="horizontal" width="640" height="480" aspectx="4" aspecty="3" refresh="60.000000"/>
