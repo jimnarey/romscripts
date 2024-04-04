@@ -29,10 +29,11 @@ def validate_tag_names(path: str, element_tags: list[str]) -> None:
         print("Unrecognised element tag: ", path, et)
 
 
-def validate_tag_attributes(path: str, elements: list[ET.Element]) -> tuple[set, set, set]:
+def validate_tag_attributes(path: str, elements: list[ET.Element]) -> tuple[set, set, set, set]:
     game_attributes: set[str] = set()
     driver_attributes: set[str] = set()
     feature_attributes: set[str] = set()
+    disk_attributes: set[str] = set()
     for element in elements:
         game_attributes.update(element.attrib.keys())
         driver_elements = [subelement for subelement in element if subelement.tag == "driver"]
@@ -43,10 +44,13 @@ def validate_tag_attributes(path: str, elements: list[ET.Element]) -> tuple[set,
         feature_elements = [subelement for subelement in element if subelement.tag == "feature"]
         for feature_element in feature_elements:
             feature_attributes.update(feature_element.attrib.keys())
-    return game_attributes, driver_attributes, feature_attributes
+        disk_elements = [subelement for subelement in element if subelement.tag == "disk"]
+        for disk_element in disk_elements:
+            disk_attributes.update(disk_element.attrib.keys())
+    return game_attributes, driver_attributes, feature_attributes, disk_attributes
 
 
-def process_dat(path: str) -> Optional[tuple[set, set, set]]:
+def process_dat(path: str) -> Optional[tuple[set, set, set, set]]:
     print(os.path.basename(path))
     source = shared.get_source_contents(path)
     try:
@@ -70,12 +74,14 @@ def process_files():
     game_attributes = set()
     driver_attributes = set()
     feature_attributes = set()
+    disk_attributes = set()
 
     for result in results:
         if result:
             game_attributes.update(result[0])
             driver_attributes.update(result[1])
             feature_attributes.update(result[2])
+            disk_attributes.update(result[3])
 
     known_game_attributes = set(
         ["rom", "isdevice", "name", "cloneof", "runnable", "isbios", "sourcefile", "ismechanical", "romof", "sampleof"]
@@ -103,12 +109,18 @@ def process_files():
 
     known_feature_attributes = set(["overall", "type", "status"])
 
+    known_disk_attributes = set(
+        ["sha1", "optional", "index", "writable", "region", "md5", "name", "status", "writeable", "merge"]
+    )
+
     if not game_attributes == known_game_attributes:
         print("Unrecognised game attributes: ", game_attributes - known_game_attributes)
     if not driver_attributes == known_driver_attributes:
         print("Unrecognised driver attributes: ", driver_attributes - known_driver_attributes)
     if not feature_attributes == known_feature_attributes:
         print("Unrecognised feature attributes: ", feature_attributes - known_feature_attributes)
+    if not disk_attributes == known_disk_attributes:
+        print("Unrecognised disk attributes: ", disk_attributes - known_disk_attributes)
 
 
 if __name__ == "__main__":
