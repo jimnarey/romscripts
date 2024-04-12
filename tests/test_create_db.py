@@ -334,6 +334,36 @@ class TestCreateRecords(unittest.TestCase):
         self.assertEqual(roms_1[0].sha1, "123456789012345678901234567890")
         self.assertEqual(roms_1, roms_2)
 
+    def test_get_or_create_disks_with_a_common_disk_sha1(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_overlapping_disks.xml"))
+        root = tree.getroot()
+        disk_elements_1 = [element for element in root[0] if element.tag == "disk"]
+        disks_1 = create_db.get_or_create_disks(self.session, disk_elements_1)
+        self.session.add_all(disks_1)
+        self.session.commit()
+        disk_elements_2 = [element for element in root[1] if element.tag == "disk"]
+        disks_2 = create_db.get_or_create_disks(self.session, disk_elements_2)
+        self.session.add_all(disks_2)
+        self.session.commit()
+        all_disks = self.session.query(create_db.Disk).all()
+        self.assertEqual(len(set(disks_1).intersection(set(disks_2))), 1)
+        self.assertEqual(len(all_disks), 3)
+
+    def test_get_or_create_disks_with_a_common_disk_md5(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_overlapping_disks.xml"))
+        root = tree.getroot()
+        disk_elements_1 = [element for element in root[2] if element.tag == "disk"]
+        disks_1 = create_db.get_or_create_disks(self.session, disk_elements_1)
+        self.session.add_all(disks_1)
+        self.session.commit()
+        disk_elements_2 = [element for element in root[3] if element.tag == "disk"]
+        disks_2 = create_db.get_or_create_disks(self.session, disk_elements_2)
+        self.session.add_all(disks_2)
+        self.session.commit()
+        all_disks = self.session.query(create_db.Disk).all()
+        self.assertEqual(len(set(disks_1).intersection(set(disks_2))), 1)
+        self.assertEqual(len(all_disks), 3)
+
     def test_create_game_with_roms(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
@@ -341,13 +371,13 @@ class TestCreateRecords(unittest.TestCase):
         self.assertEqual(game.name, "005")
         self.assertEqual(len(game.roms), 22)
 
-    # def test_create_game_with_roms_and_disks(self):
-    #     tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
-    #     root = tree.getroot()
-    #     game = create_db.create_game(self.session, root[0])
-    #     self.assertEqual(game.name, "2spicy")
-    #     self.assertEqual(len(game.roms), 6)
-    #     self.assertEqual(len(game.disks), 2)
+    def test_create_game_with_roms_and_disks(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        game = create_db.create_game(self.session, root[0])
+        self.assertEqual(game.name, "2spicy")
+        self.assertEqual(len(game.roms), 6)
+        self.assertEqual(len(game.disks), 2)
 
     def test_create_features(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
@@ -685,7 +715,7 @@ class TestProcessGames(unittest.TestCase):
         game = self.session.query(create_db.Game).filter_by(id=game_id).one()
         self.assertIsNotNone(game)
 
-    def test_adds_emulator_to_existing_game_with_same_attributes(self):
+    def test_adds_emulator_to_existing_game_with_same_attributes_and_roms(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
         emulator_1 = create_db.Emulator(name="MAME", version="1")
@@ -693,6 +723,20 @@ class TestProcessGames(unittest.TestCase):
         emulator_2 = create_db.Emulator(name="MAME", version="2")
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(create_db.Game).filter_by(name="005").all()
+        game_emulators = games[0].game_emulators
+        self.assertEqual(len(games), 1)
+        self.assertEqual(len(game_emulators), 2)
+        self.assertIn(emulator_1, [ge.emulator for ge in game_emulators])
+        self.assertIn(emulator_2, [ge.emulator for ge in game_emulators])
+
+    def test_adds_emulator_to_existing_game_with_same_attributes_and_disks(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        emulator_1 = create_db.Emulator(name="MAME", version="1")
+        create_db.process_games(self.session, root, emulator_1)
+        emulator_2 = create_db.Emulator(name="MAME", version="2")
+        create_db.process_games(self.session, root, emulator_2)
+        games = self.session.query(create_db.Game).filter_by(name="2spicy").all()
         game_emulators = games[0].game_emulators
         self.assertEqual(len(games), 1)
         self.assertEqual(len(game_emulators), 2)
@@ -709,6 +753,22 @@ class TestProcessGames(unittest.TestCase):
         emulator_2 = create_db.Emulator(name="MAME", version="2")
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(create_db.Game).filter_by(name="005").all()
+        game_emulators_1 = games[0].game_emulators
+        game_emulators_2 = games[1].game_emulators
+        self.assertEqual(len(games), 2)
+        self.assertEqual([emulator_1], [ge.emulator for ge in game_emulators_1])
+        self.assertEqual([emulator_2], [ge.emulator for ge in game_emulators_2])
+
+    def test_creates_new_game_when_one_disk_is_different(self):
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        root = tree.getroot()
+        emulator_1 = create_db.Emulator(name="MAME", version="1")
+        create_db.process_games(self.session, root, emulator_1)
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        root = tree.getroot()
+        emulator_2 = create_db.Emulator(name="MAME", version="2")
+        create_db.process_games(self.session, root, emulator_2)
+        games = self.session.query(create_db.Game).filter_by(name="2spicy").all()
         game_emulators_1 = games[0].game_emulators
         game_emulators_2 = games[1].game_emulators
         self.assertEqual(len(games), 2)

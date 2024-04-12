@@ -1,0 +1,243 @@
+<datafile>
+    <machine name="2spicy" sourcefile="lindbergh.cpp" romof="lindbios">
+		<description>2 Spicy</description>
+		<year>2007</year>
+		<manufacturer>Sega</manufacturer>
+		<biosset name="bios0" description="6.0.0010 alternate version"/>
+		<biosset name="bios1" description="6.0.0009"/>
+		<biosset name="bios2" description="6.0.0010"/>
+		<rom name="6.0.0010a.bin" merge="6.0.0010a.bin" bios="bios0" size="1048576" crc="10dd9b76" sha1="1fdf1f921bc395846a7c3180fbdbc4ca287a9670" region=":pci:1f.0" offset="0"/>
+		<rom name="6.0.0009.bin" merge="6.0.0009.bin" bios="bios1" size="1048576" crc="5ffdfbf8" sha1="605bc4967b749b4e6d13fc2ebb845ba956a259a7" region=":pci:1f.0" offset="0"/>
+		<rom name="6.0.0010.bin" merge="6.0.0010.bin" bios="bios2" size="1048576" crc="ea2bf888" sha1="c9c5b6f0d4f4f36620939b15dd2f128a74347e37" region=":pci:1f.0" offset="0"/>
+		<rom name="fpr-24370b.ic6" merge="fpr-24370b.ic6" size="4194304" crc="c3b021a4" sha1="1b6938a50fe0e4ae813864649eb103838c399ac0" region=":pci:1e.0:03.0" offset="0"/>
+		<rom name="vid_bios.u504" merge="vid_bios.u504" size="65536" crc="f78d14d7" sha1="f129787e487984edd23bf344f2e9500c85052275" region=":pci:01.0:00.0" offset="0"/>
+		<rom name="317-0491-com.bin" size="8192" status="nodump" region=":pic" offset="0"/>
+		<disk name="mda-c0004a_revb_lindyellow_v2.4.20_mvl31a_boot_2.01" merge="mda-c0004a_revb_lindyellow_v2.4.20_mvl31a_boot_2.01" sha1="e13da5f827df852e742b594729ee3f933b387410" region="cf" index="0" writable="no"/>
+		<disk name="dvp-0027a" sha1="da1aacee9e32e813844f4d434981e69cc5c80682" region="dvd" index="0" writable="no"/>
+		<device_ref name="pentium4"/>
+		<device_ref name="pci_root"/>
+		<device_ref name="i82875p_host"/>
+		<device_ref name="i82875p_agp"/>
+		<device_ref name="geforce_7600gs"/>
+		<device_ref name="i82875p_overflow"/>
+		<device_ref name="pci_bridge"/>
+		<device_ref name="i82541_device"/>
+		<device_ref name="usb_uhci"/>
+		<device_ref name="usb_uhci"/>
+		<device_ref name="i6300esb_watchdog"/>
+		<device_ref name="apic"/>
+		<device_ref name="usb_ehci"/>
+		<device_ref name="pci_bridge"/>
+		<device_ref name="sb0400"/>
+		<device_ref name="lindbergh_baseboard"/>
+		<device_ref name="i6300esb_lpc"/>
+		<device_ref name="lpc_acpi"/>
+		<device_ref name="lpc_rpc"/>
+		<device_ref name="lpc_pit"/>
+		<device_ref name="sata"/>
+		<device_ref name="smbus"/>
+		<device_ref name="ac97"/>
+		<chip type="cpu" tag="maincpu" name="Intel Pentium 4" clock="140000000"/>
+		<sound channels="0"/>
+		<input players="0">
+		</input>
+		<driver status="preliminary" emulation="preliminary" savestate="unsupported"/>
+		<feature type="protection" status="imperfect"/>
+		<feature type="sound" status="unemulated"/>
+	</machine>
+	<machine name="2spicy1" sourcefile="lindbergh.cpp" romof="lindbios">
+		<description>2 Spicy</description>
+		<year>2007</year>
+		<manufacturer>Sega</manufacturer>
+		<biosset name="bios0" description="6.0.0010 alternate version"/>
+		<biosset name="bios1" description="6.0.0009"/>
+		<biosset name="bios2" description="6.0.0010"/>
+		<rom name="6.0.0010a.bin" merge="6.0.0010a.bin" bios="bios0" size="1048576" crc="10dd9b76" sha1="1fdf1f921bc395846a7c3180fbdbc4ca287a9670" region=":pci:1f.0" offset="0"/>
+		<rom name="6.0.0009.bin" merge="6.0.0009.bin" bios="bios1" size="1048576" crc="5ffdfbf8" sha1="605bc4967b749b4e6d13fc2ebb845ba956a259a7" region=":pci:1f.0" offset="0"/>
+		<rom name="6.0.0010.bin" merge="6.0.0010.bin" bios="bios2" size="1048576" crc="ea2bf888" sha1="c9c5b6f0d4f4f36620939b15dd2f128a74347e37" region=":pci:1f.0" offset="0"/>
+		<rom name="fpr-24370b.ic6" merge="fpr-24370b.ic6" size="4194304" crc="c3b021a4" sha1="1b6938a50fe0e4ae813864649eb103838c399ac0" region=":pci:1e.0:03.0" offset="0"/>
+		<rom name="vid_bios.u504" merge="vid_bios.u504" size="65536" crc="f78d14d7" sha1="f129787e487984edd23bf344f2e9500c85052275" region=":pci:01.0:00.0" offset="0"/>
+		<rom name="317-0491-com.bin" size="8192" status="nodump" region=":pic" offset="0"/>
+		<disk name="mda-c0004a_revb_lindyellow_v2.4.20_mvl31a_boot_2.01" merge="mda-c0004a_revb_lindyellow_v2.4.20_mvl31a_boot_2.01" sha1="e13da5f827df852e742b594729ee3f933b387410" region="cf" index="0" writable="no"/>
+		<disk name="dvp-0027a" sha1="da1aacee9e32e813844f4d434981e69cc5c806ff" region="dvd" index="0" writable="no"/>
+		<device_ref name="pentium4"/>
+		<device_ref name="pci_root"/>
+		<device_ref name="i82875p_host"/>
+		<device_ref name="i82875p_agp"/>
+		<device_ref name="geforce_7600gs"/>
+		<device_ref name="i82875p_overflow"/>
+		<device_ref name="pci_bridge"/>
+		<device_ref name="i82541_device"/>
+		<device_ref name="usb_uhci"/>
+		<device_ref name="usb_uhci"/>
+		<device_ref name="i6300esb_watchdog"/>
+		<device_ref name="apic"/>
+		<device_ref name="usb_ehci"/>
+		<device_ref name="pci_bridge"/>
+		<device_ref name="sb0400"/>
+		<device_ref name="lindbergh_baseboard"/>
+		<device_ref name="i6300esb_lpc"/>
+		<device_ref name="lpc_acpi"/>
+		<device_ref name="lpc_rpc"/>
+		<device_ref name="lpc_pit"/>
+		<device_ref name="sata"/>
+		<device_ref name="smbus"/>
+		<device_ref name="ac97"/>
+		<chip type="cpu" tag="maincpu" name="Intel Pentium 4" clock="140000000"/>
+		<sound channels="0"/>
+		<input players="0">
+		</input>
+		<driver status="preliminary" emulation="preliminary" savestate="unsupported"/>
+		<feature type="protection" status="imperfect"/>
+		<feature type="sound" status="unemulated"/>
+	</machine>
+
+
+	<!-- Disk has an md5 and no sha1 -->
+    <machine name="a51mxr3k" sourcefile="jaguar.cpp" cloneof="area51mx" romof="area51mx">
+		<description>Area 51 / Maximum Force Duo (R3000, 2/10/98)</description>
+		<year>1998</year>
+		<manufacturer>Atari Games</manufacturer>
+		<rom name="1.0_r3k_max-a51_kit_hh.hh" size="524288" crc="a984dab2" sha1="debb3bc11ff49e87a52e89a69533a1bab7db700e" region="maincpu" offset="0"/>
+		<rom name="1.0_r3k_max-a51_kit_hl.hl" size="524288" crc="0af49d74" sha1="c19f26056a823fd32293e9a7b3ea868640eabf49" region="maincpu" offset="1"/>
+		<rom name="1.0_r3k_max-a51_kit_lh.lh" size="524288" crc="d7d94dac" sha1="2060a74715f36a0d7f5dd0855eda48ad1f20f095" region="maincpu" offset="2"/>
+		<rom name="1.0_r3k_max-a51_kit_ll.ll" size="524288" crc="ece9e5ae" sha1="7e44402726f5afa6d1670b27aa43ad13d21c4ad9" region="maincpu" offset="3"/>
+		<rom name="jagwave.rom" merge="jagwave.rom" size="4096" crc="7a25ee5b" sha1="58117e11fd6478c521fbd3fdbe157f39567552f0" region="waverom" offset="0"/>
+		<disk name="area51mx" merge="area51mx" md5="f4a5d6ae738c277cdb8146baf74310df" region="ide:0:hdd:image" index="0" writable="yes"/>
+		<disk name="blah" md5="b66074f3df1e90ec4e3ff09dcdf33033" region="disks" index="0"/>
+		<device_ref name="r3041"/>
+		<device_ref name="jaguargpu"/>
+		<device_ref name="jaguardsp"/>
+		<device_ref name="jag_blitter"/>
+		<device_ref name="nvram"/>
+		<device_ref name="watchdog"/>
+		<device_ref name="vt83c461"/>
+		<device_ref name="ata_slot"/>
+		<device_ref name="cojag_hdd"/>
+		<device_ref name="harddisk_image"/>
+		<device_ref name="ata_slot"/>
+		<device_ref name="screen"/>
+		<device_ref name="palette"/>
+		<device_ref name="speaker"/>
+		<device_ref name="speaker"/>
+		<device_ref name="dac_16bit_r2r_tc"/>
+		<device_ref name="dac_16bit_r2r_tc"/>
+		<chip type="cpu" tag="maincpu" name="IDT R3041" clock="40000000"/>
+		<chip type="cpu" tag="gpu" name="Motorola Atari Jaguar GPU &quot;Tom&quot;" clock="26000000"/>
+		<chip type="cpu" tag="dsp" name="Motorola Atari Jaguar DSP &quot;Jerry&quot;" clock="26000000"/>
+		<chip type="audio" tag="lspeaker" name="Speaker"/>
+		<chip type="audio" tag="rspeaker" name="Speaker"/>
+		<chip type="audio" tag="ldac" name="16-Bit R-2R Twos Complement DAC"/>
+		<chip type="audio" tag="rdac" name="16-Bit R-2R Twos Complement DAC"/>
+		<display tag="screen" type="raster" rotate="0" width="360" height="240" refresh="59.922743" pixclock="7159090" htotal="456" hbend="42" hbstart="402" vtotal="262" vbend="17" vbstart="257" />
+		<sound channels="2"/>
+		<input players="2" coins="4">
+			<control type="lightgun" player="1" buttons="1" minimum="0" maximum="255" sensitivity="70" keydelta="10"/>
+			<control type="lightgun" player="2" buttons="1" minimum="0" maximum="255" sensitivity="70" keydelta="10"/>
+		</input>
+		<dipswitch name="Service Mode" tag="SYSTEM" mask="64">
+			<dipvalue name="Off" value="64" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<port tag=":FAKE1_X">
+			<analog mask="255"/>
+		</port>
+		<port tag=":FAKE1_Y">
+			<analog mask="255"/>
+		</port>
+		<port tag=":FAKE2_X">
+			<analog mask="255"/>
+		</port>
+		<port tag=":FAKE2_Y">
+			<analog mask="255"/>
+		</port>
+		<port tag=":IN3">
+		</port>
+		<port tag=":P1_P2">
+		</port>
+		<port tag=":SYSTEM">
+		</port>
+		<driver status="good" emulation="good" savestate="unsupported"/>
+		<device type="harddisk" tag="ide:0:hdd:image" interface="ide_hdd">
+			<instance name="harddisk" briefname="hard"/>
+			<extension name="chd"/>
+			<extension name="hd"/>
+			<extension name="hdv"/>
+			<extension name="2mg"/>
+			<extension name="hdi"/>
+		</device>
+	</machine>
+	<machine name="a51mxr3k1" sourcefile="jaguar.cpp" cloneof="area51mx" romof="area51mx">
+		<description>Area 51 / Maximum Force Duo (R3000, 2/10/98)</description>
+		<year>1998</year>
+		<manufacturer>Atari Games</manufacturer>
+		<rom name="1.0_r3k_max-a51_kit_hh.hh" size="524288" crc="a984dab2" sha1="debb3bc11ff49e87a52e89a69533a1bab7db700e" region="maincpu" offset="0"/>
+		<rom name="1.0_r3k_max-a51_kit_hl.hl" size="524288" crc="0af49d74" sha1="c19f26056a823fd32293e9a7b3ea868640eabf49" region="maincpu" offset="1"/>
+		<rom name="1.0_r3k_max-a51_kit_lh.lh" size="524288" crc="d7d94dac" sha1="2060a74715f36a0d7f5dd0855eda48ad1f20f095" region="maincpu" offset="2"/>
+		<rom name="1.0_r3k_max-a51_kit_ll.ll" size="524288" crc="ece9e5ae" sha1="7e44402726f5afa6d1670b27aa43ad13d21c4ad9" region="maincpu" offset="3"/>
+		<rom name="jagwave.rom" merge="jagwave.rom" size="4096" crc="7a25ee5b" sha1="58117e11fd6478c521fbd3fdbe157f39567552f0" region="waverom" offset="0"/>
+		<disk name="area51mx" merge="area51mx" md5="f4a5d6ae738c277cdb8146baf74310df" region="ide:0:hdd:image" index="0" writable="yes"/>
+		<disk name="blah" md5="b66074f3df1e90ec4e3ff09dcdf330ff" region="disks" index="0"/>
+		<device_ref name="r3041"/>
+		<device_ref name="jaguargpu"/>
+		<device_ref name="jaguardsp"/>
+		<device_ref name="jag_blitter"/>
+		<device_ref name="nvram"/>
+		<device_ref name="watchdog"/>
+		<device_ref name="vt83c461"/>
+		<device_ref name="ata_slot"/>
+		<device_ref name="cojag_hdd"/>
+		<device_ref name="harddisk_image"/>
+		<device_ref name="ata_slot"/>
+		<device_ref name="screen"/>
+		<device_ref name="palette"/>
+		<device_ref name="speaker"/>
+		<device_ref name="speaker"/>
+		<device_ref name="dac_16bit_r2r_tc"/>
+		<device_ref name="dac_16bit_r2r_tc"/>
+		<chip type="cpu" tag="maincpu" name="IDT R3041" clock="40000000"/>
+		<chip type="cpu" tag="gpu" name="Motorola Atari Jaguar GPU &quot;Tom&quot;" clock="26000000"/>
+		<chip type="cpu" tag="dsp" name="Motorola Atari Jaguar DSP &quot;Jerry&quot;" clock="26000000"/>
+		<chip type="audio" tag="lspeaker" name="Speaker"/>
+		<chip type="audio" tag="rspeaker" name="Speaker"/>
+		<chip type="audio" tag="ldac" name="16-Bit R-2R Twos Complement DAC"/>
+		<chip type="audio" tag="rdac" name="16-Bit R-2R Twos Complement DAC"/>
+		<display tag="screen" type="raster" rotate="0" width="360" height="240" refresh="59.922743" pixclock="7159090" htotal="456" hbend="42" hbstart="402" vtotal="262" vbend="17" vbstart="257" />
+		<sound channels="2"/>
+		<input players="2" coins="4">
+			<control type="lightgun" player="1" buttons="1" minimum="0" maximum="255" sensitivity="70" keydelta="10"/>
+			<control type="lightgun" player="2" buttons="1" minimum="0" maximum="255" sensitivity="70" keydelta="10"/>
+		</input>
+		<dipswitch name="Service Mode" tag="SYSTEM" mask="64">
+			<dipvalue name="Off" value="64" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<port tag=":FAKE1_X">
+			<analog mask="255"/>
+		</port>
+		<port tag=":FAKE1_Y">
+			<analog mask="255"/>
+		</port>
+		<port tag=":FAKE2_X">
+			<analog mask="255"/>
+		</port>
+		<port tag=":FAKE2_Y">
+			<analog mask="255"/>
+		</port>
+		<port tag=":IN3">
+		</port>
+		<port tag=":P1_P2">
+		</port>
+		<port tag=":SYSTEM">
+		</port>
+		<driver status="good" emulation="good" savestate="unsupported"/>
+		<device type="harddisk" tag="ide:0:hdd:image" interface="ide_hdd">
+			<instance name="harddisk" briefname="hard"/>
+			<extension name="chd"/>
+			<extension name="hd"/>
+			<extension name="hdv"/>
+			<extension name="2mg"/>
+			<extension name="hdi"/>
+		</device>
+	</machine>
+</datafile>

@@ -177,6 +177,7 @@ def get_instance_attributes(instance: DeclarativeBase, model_class: Type[Declara
 def get_existing_records(
     session: Session, model_class: Type[DeclarativeBase], instance_attrs: dict[str, str]
 ) -> list[DeclarativeBase]:
+    # Warning in MAME 0.85
     existing_records = session.query(model_class).filter_by(**instance_attrs).all()
     return existing_records
 
@@ -466,13 +467,6 @@ def process_games(session: Session, root: ET.Element, emulator: Emulator):
                 new_games += 1
             if game:
                 add_game_emulator_relationship(session, element, game, emulator)
-                # add_game_disk_relationships(session, element, game)
-                # Somewhere by this point we end up creating multiple GameDisk instances with
-                # the same game and disk ids. This is likely due to the way the disk elements
-                # are being processed. It's also possible that the same disk is being added to
-                # the database multiple times.
-                # if game.name == "primrag2":
-                #     breakpoint()
                 session.commit()
                 total_games += 1
                 if game_references := create_game_references(element):
@@ -546,9 +540,9 @@ def extract_mame_version(filename):
 
 def create_db():
     session = get_session(DATABASE_PATH)
-    # sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
-    # process_dats(session, sorted_dats)
+    sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
+    process_dats(session, sorted_dats)
 
-    test_dats = ["/home/jimnarey/projects/romscripts/arcade_db_build/mame_db_source/dats/MAME 0.86.xml.bz2"]
-    process_dats(session, test_dats)
+    # test_dats = ["/home/jimnarey/projects/romscripts/arcade_db_build/mame_db_source/dats/MAME 0.86.xml.bz2"]
+    # process_dats(session, test_dats)
     session.close()
