@@ -24,3 +24,9 @@ jobs:
 
     - name: Run build.py
       run: python -u build.py
+
+    - name: Upload arcade.db
+      uses: actions/upload-artifact@v2
+      with:
+        name: arcade.db
+        path: arcade_db_build/arcade.db
