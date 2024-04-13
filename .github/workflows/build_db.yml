@@ -23,4 +23,4 @@ jobs:
         poetry install
 
     - name: Run build.py
-      run: python build.py
+      run: python -u build.py
