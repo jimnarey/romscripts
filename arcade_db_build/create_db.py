@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Generate a database from a collection of arcade DAT files.
 
@@ -157,6 +158,45 @@ class Driver(Base):
     game_emulators = relationship("GameEmulator", back_populates="driver")
 
 
+def create_features(game_element: ET.Element) -> list[Feature]:
+    features = []
+    feature_elements = [element for element in game_element if element.tag == "feature"]
+    for feature_element in feature_elements:
+        feature = Feature(
+            overall=feature_element.get("overall", None),
+            type=feature_element.get("type", None),
+            status=feature_element.get("status", None),
+        )
+        features.append(feature)
+    return features
+
+
+def create_driver(game_element: ET.Element) -> Optional[Driver]:
+    driver_element = game_element.find("driver")
+    # instances of ET.Element are falsey
+    if driver_element is not None:
+        driver = Driver(
+            palettesize=driver_element.get("palettesize", None),
+            hiscoresave=driver_element.get("hiscoresave", None),
+            requiresartwork=driver_element.get("requiresartwork", None),
+            unofficial=driver_element.get("unofficial", None),
+            good=driver_element.get("good", None),
+            status=driver_element.get("status", None),
+            graphic=driver_element.get("graphic", None),
+            cocktailmode=driver_element.get("cocktailmode", None),
+            savestate=driver_element.get("savestate", None),
+            protection=driver_element.get("protection", None),
+            emulation=driver_element.get("emulation", None),
+            cocktail=driver_element.get("cocktail", None),
+            color=driver_element.get("color", None),
+            nosoundhardware=driver_element.get("nosoundhardware", None),
+            sound=driver_element.get("sound", None),
+            incomplete=driver_element.get("incomplete", None),
+        )
+        return driver
+    return None
+
+
 def get_session(db_path: str) -> Session:
     engine = create_engine(f"sqlite:///{db_path}")
     Base.metadata.create_all(engine)
@@ -193,16 +233,42 @@ def get_disk_elements(game_element: ET.Element) -> list[ET.Element]:
     return [element for element in game_element if element.tag == "disk"]
 
 
-def match_game_roms(existing_game: Game, rom_elements: list[ET.Element]) -> bool:
-    """
-    This matches only using CRC and size. Not all roms have a sha1 value. It may be better
-    to additionally match with sha1 when both the element and the existing record have one.
-    """
-    existing_game_roms = [(rom.name, rom.size, rom.crc) for rom in existing_game.roms]
-    roms = [(rom.get("name"), int(rom.get("size")), rom.get("crc")) for rom in rom_elements]  # type: ignore
-    if set(existing_game_roms) == set(roms):
-        return True
+# def match_game_roms(existing_game: Game, rom_elements: list[ET.Element]) -> bool:
+#     """
+#     This matches only using CRC and size. Not all roms have a sha1 value. It may be better
+#     to additionally match with sha1 when both the element and the existing record have one.
+#     """
+#     existing_game_roms = [(rom.name, rom.size, rom.crc) for rom in existing_game.roms]
+#     roms = [(rom.get("name"), int(rom.get("size")), rom.get("crc")) for rom in rom_elements]  # type: ignore
+#     if set(existing_game_roms) == set(roms):
+#         return True
+#     return False
+
+
+def match_rom_with_rom_element(rom: Rom, rom_element: ET.Element) -> bool:
+    if bool(rom.name == rom_element.get("name")):
+        if bool(rom.size) and bool(rom_element.get("size")) and bool(rom.size == int(rom_element.get("size"))):  # type: ignore
+            if bool(rom.crc == rom_element.get("crc")):
+                return True
+        if not any((bool(rom.crc), bool(rom_element.get("crc")))):
+            return True
     return False
+
+
+def match_rom_in_rom_elements(rom: Rom, rom_elements: list[ET.Element]) -> bool:
+    for rom_element in rom_elements:
+        if match_rom_with_rom_element(rom, rom_element):
+            return True
+    return False
+
+
+def match_game_roms(existing_game: Game, rom_elements: list[ET.Element]) -> bool:
+    if len(existing_game.roms) != len(rom_elements):
+        return False
+    for rom in existing_game.roms:
+        if not match_rom_in_rom_elements(rom, rom_elements):
+            return False
+    return True
 
 
 def match_disk_with_disk_element(disk: Disk, disk_element: ET.Element) -> bool:
@@ -264,45 +330,6 @@ def get_existing_game(session: Session, game_element: ET.Element) -> Optional[Ga
     return None
 
 
-def create_features(game_element: ET.Element) -> list[Feature]:
-    features = []
-    feature_elements = [element for element in game_element if element.tag == "feature"]
-    for feature_element in feature_elements:
-        feature = Feature(
-            overall=feature_element.get("overall", None),
-            type=feature_element.get("type", None),
-            status=feature_element.get("status", None),
-        )
-        features.append(feature)
-    return features
-
-
-def create_driver(game_element: ET.Element) -> Optional[Driver]:
-    driver_element = game_element.find("driver")
-    # instances of ET.Element are falsey
-    if driver_element is not None:
-        driver = Driver(
-            palettesize=driver_element.get("palettesize", None),
-            hiscoresave=driver_element.get("hiscoresave", None),
-            requiresartwork=driver_element.get("requiresartwork", None),
-            unofficial=driver_element.get("unofficial", None),
-            good=driver_element.get("good", None),
-            status=driver_element.get("status", None),
-            graphic=driver_element.get("graphic", None),
-            cocktailmode=driver_element.get("cocktailmode", None),
-            savestate=driver_element.get("savestate", None),
-            protection=driver_element.get("protection", None),
-            emulation=driver_element.get("emulation", None),
-            cocktail=driver_element.get("cocktail", None),
-            color=driver_element.get("color", None),
-            nosoundhardware=driver_element.get("nosoundhardware", None),
-            sound=driver_element.get("sound", None),
-            incomplete=driver_element.get("incomplete", None),
-        )
-        return driver
-    return None
-
-
 # This is needed to keep the type checker happy
 def get_rom_size(rom_element: ET.Element) -> Optional[int]:
     if size := rom_element.get("size"):
@@ -317,52 +344,73 @@ def get_inner_element_text(outer_element: ET.Element, inner_element_name: str) -
     return None
 
 
+# # Decide what to do when later MAME versions add attributes to an existing rom
+# def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list[Rom]:
+#     """
+#     Looks for roms in the database with the same name, size and crc as the each of the
+#     roms in the rom_elements list. If a match is found but does not have a sha1 value,
+#     and the rom element does, the sha1 is added to the rom in the database.
+
+#     Other attributes in a rom element which are not included in a match are not added,
+#     pending further work to understand how version-specific these are.
+#     """
+#     roms = []
+#     for rom_element in rom_elements:
+#         attributes = {key: value for key, value in rom_element.items() if key in ("name", "size", "crc")}
+#         if existing_roms := get_existing_records(session, Rom, attributes):
+#             if len(existing_roms) > 1:
+#                 print("Warning: Multiple roms found with the same name, size and crc ", existing_roms[0].name)  # type: ignore
+#                 breakpoint()
+#             if rom_element.get("sha1") and not existing_roms[0].sha1:  # type: ignore
+#                 existing_roms[0].sha1 = rom_element.get("sha1")  # type: ignore
+#             roms.append(existing_roms[0])  # Ugly
+#         else:
+#             rom = Rom(**attributes)
+#             roms.append(rom)
+#     return roms
+
+
+# def get_existing_disk(session: Session, disk_element: ET.Element) -> Optional[Disk]:
+#     """
+#     Retrieves a list of Disk records from the database which share the same name as that of
+#     the provided disk element. Then check for matching md5 or sha1 in that order. MAME DATs
+#     up to (very roughly) around 0.7 use md5, from there to around 0.125 use both, and after
+#     that sha1 only. Add the sha1 to any md5 matches where the sha1 exists in the disk element
+#     but not the database record. This will maximise the number of records with a sha1.
+
+#     Further research is needed on which other Disk fields are emulator version dependent
+#     before deciding whether to add them to existing records as with sha1.
+#     """
+#     try:
+#         disk_name_matches: list[Disk] = get_existing_records(session, Disk, {"name": disk_element.get("name", "")})  # type: ignore
+#         for match in disk_name_matches:
+#             if match_disk_with_disk_element(match, disk_element):
+#                 # if not bool(match.sha1) and bool(sha1 := disk_element.get("sha1", "")):
+#                 #     match.sha1 = sha1  # type: ignore
+#                 return match
+#     except NoResultFound:
+#         pass
+#     return None
+
+
 # Decide what to do when later MAME versions add attributes to an existing rom
 def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list[Rom]:
-    """
-    Looks for roms in the database with the same name, size and crc as the each of the
-    roms in the rom_elements list. If a match is found but does not have a sha1 value,
-    and the rom element does, the sha1 is added to the rom in the database.
-
-    Other attributes in a rom element which are not included in a match are not added,
-    pending further work to understand how version-specific these are.
-    """
     roms = []
     for rom_element in rom_elements:
-        attributes = {key: value for key, value in rom_element.items() if key in ("name", "size", "crc")}
-        if existing_roms := get_existing_records(session, Rom, attributes):
-            if len(existing_roms) > 1:
-                print("Warning: Multiple roms found with the same name, size and crc ", existing_roms[0].name)  # type: ignore
-            if rom_element.get("sha1") and not existing_roms[0].sha1:  # type: ignore
-                existing_roms[0].sha1 = rom_element.get("sha1")  # type: ignore
-            roms.append(existing_roms[0])  # Ugly
-        else:
-            rom = Rom(**attributes)
-            roms.append(rom)
+        matched_rom = None
+        if name_matches := get_existing_records(session, Rom, {"name": rom_element.get("name")}):  # type: ignore
+            for match in name_matches:
+                if match_rom_with_rom_element(match, rom_element):  # type: ignore
+                    matched_rom = match
+        if not matched_rom:
+            matched_rom = Rom(
+                name=rom_element.get("name", None),
+                size=get_rom_size(rom_element),
+                crc=rom_element.get("crc", None),
+                sha1=rom_element.get("sha1", None),
+            )
+        roms.append(matched_rom)
     return roms
-
-
-def get_existing_disk(session: Session, disk_element: ET.Element) -> Optional[Disk]:
-    """
-    Retrieves a list of Disk records from the database which share the same name as that of
-    the provided disk element. Then check for matching md5 or sha1 in that order. MAME DATs
-    up to (very roughly) around 0.7 use md5, from there to around 0.125 use both, and after
-    that sha1 only. Add the sha1 to any md5 matches where the sha1 exists in the disk element
-    but not the database record. This will maximise the number of records with a sha1.
-
-    Further research is needed on which other Disk fields are emulator version dependent
-    before deciding whether to add them to existing records as with sha1.
-    """
-    try:
-        disk_name_matches: list[Disk] = get_existing_records(session, Disk, {"name": disk_element.get("name", "")})  # type: ignore
-        for match in disk_name_matches:
-            if match_disk_with_disk_element(match, disk_element):
-                # if not bool(match.sha1) and bool(sha1 := disk_element.get("sha1", "")):
-                #     match.sha1 = sha1  # type: ignore
-                return match
-    except NoResultFound:
-        pass
-    return None
 
 
 def get_or_create_disks(session: Session, disk_elements: list[ET.Element]) -> list[Disk]:
@@ -374,23 +422,13 @@ def get_or_create_disks(session: Session, disk_elements: list[ET.Element]) -> li
                 if match_disk_with_disk_element(disk, disk_element):  # type: ignore
                     matched_disk = disk
         if not matched_disk:
-            disk = Disk(
+            matched_disk = Disk(
                 name=disk_element.get("name", None),
                 sha1=disk_element.get("sha1", None),
                 md5=disk_element.get("md5", None),
             )
-        disks.append(disk)
+        disks.append(matched_disk)
     return disks
-
-
-def create_game_references(game_element: ET.Element) -> Optional[dict[str, str]]:
-    references = {}
-    for reference in ("cloneof", "romof"):
-        if reference_target := game_element.get(reference, None):
-            references[reference] = reference_target
-    if references:
-        return references
-    return None
 
 
 # Get description, year and manufacturer
@@ -413,11 +451,14 @@ def create_game(session: Session, game_element: ET.Element) -> Optional[Game]:  
     return None
 
 
-def get_mame_emulator_details(dat_file: str) -> list[str]:
-    emulator = os.path.basename(dat_file)
-    for substring in (".dat", ".xml", ".bz2"):
-        emulator = emulator.replace(substring, "")
-    return emulator.split()
+def create_game_references(game_element: ET.Element) -> Optional[dict[str, str]]:
+    references = {}
+    for reference in ("cloneof", "romof"):
+        if reference_target := game_element.get(reference, None):
+            references[reference] = reference_target
+    if references:
+        return references
+    return None
 
 
 def add_features(session: Session, game_emulator: GameEmulator, game_element: ET.Element):
@@ -512,6 +553,13 @@ def add_all_game_references(session: Session, emulator: Emulator, all_references
                 remaining_refs -= 1
             # Log the unhandled references so they can be investigated
     return total_refs, remaining_refs
+
+
+def get_mame_emulator_details(dat_file: str) -> list[str]:
+    emulator = os.path.basename(dat_file)
+    for substring in (".dat", ".xml", ".bz2"):
+        emulator = emulator.replace(substring, "")
+    return emulator.split()
 
 
 def process_dats(session: Session, dats: list[str]):

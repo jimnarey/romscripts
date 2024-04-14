@@ -1,0 +1,20 @@
+<datafile>
+    <game name="ABC">
+        <description>005</description>
+        <year>1981</year>
+        <manufacturer>Sega</manufacturer>
+        <rom name="1346b.u25" size="2048"/>
+    </game>
+        <game name="DEF">
+        <description>005</description>
+        <year>1981</year>
+        <manufacturer>Sega</manufacturer>
+        <rom name="1346b.u25" size="2048" crc="8e68533e"/>
+    </game>
+        <game name="GHI">
+        <description>005</description>
+        <year>1981</year>
+        <manufacturer>Sega</manufacturer>
+        <rom name="1346b.u25" size="2048" crc="8e6853ff"/>
+    </game>
+</datafile>
