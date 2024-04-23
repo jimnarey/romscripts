@@ -506,3 +506,4 @@ def process_dats(session: Session, dats: list[str]):
         print(
             f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games} - Total Refs: {total_refs}, Unhandled Refs: {unhandled_refs}"
         )
+        session.expunge_all()
