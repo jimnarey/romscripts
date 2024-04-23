@@ -12,6 +12,15 @@ def extract_mame_version(filename):
     return float(version) if version else 0
 
 
+def print_job_summary(start, end, filepath, source_dats):
+    print(f"Start index: {start}")
+    print(f"End index: {end}")
+    print(f"Filepath: {filepath}")
+    print(f"Source dats length: {len(source_dats)}")
+    print(f"First DAT: {source_dats[0]}")
+    print(f"Last DAT: {source_dats[-1]}")
+
+
 SOURCE_DATS = {
     "mame": shared.MAME_DATS,
 }
@@ -35,5 +44,6 @@ if __name__ == "__main__":
     end = options.end_index if options.end_index else len(sorted_dats)
     session = create_db.get_session(filepath)
     source_dats = sorted_dats[start:end]
+    print_job_summary(start, end, filepath, source_dats)
     create_db.process_dats(session, source_dats)
     session.close()
