@@ -9,7 +9,8 @@ types.
 """
 
 from typing import Optional, Type
-import re
+
+# import re
 import os
 import functools
 import xml.etree.ElementTree as ET
@@ -19,9 +20,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.exc import NoResultFound
 
 from .shared import shared
-
-DATABASE_FILENAME = "arcade.db"
-DATABASE_PATH = os.path.join(shared.PARENT_PATH, DATABASE_FILENAME)
 
 
 class Base(DeclarativeBase):
@@ -59,15 +57,6 @@ class GameEmulator(Base):
     emulator = relationship("Emulator", back_populates="game_emulators")
     driver = relationship("Driver", back_populates="game_emulators")
     features = relationship("Feature", secondary=game_emulator_feature, back_populates="game_emulators")
-
-
-# class GameDisk(Base):
-#     __tablename__ = "game_disk"
-#     game_id = Column(Integer, ForeignKey("games.id"), primary_key=True)
-#     disk_id = Column(Integer, ForeignKey("disks.id"), primary_key=True)
-#     game = relationship("Game", back_populates="game_disks")
-#     disk = relationship("Disk", back_populates="game_disks")
-#     status = Column(String)
 
 
 class Emulator(Base):
@@ -233,18 +222,6 @@ def get_disk_elements(game_element: ET.Element) -> list[ET.Element]:
     return [element for element in game_element if element.tag == "disk"]
 
 
-# def match_game_roms(existing_game: Game, rom_elements: list[ET.Element]) -> bool:
-#     """
-#     This matches only using CRC and size. Not all roms have a sha1 value. It may be better
-#     to additionally match with sha1 when both the element and the existing record have one.
-#     """
-#     existing_game_roms = [(rom.name, rom.size, rom.crc) for rom in existing_game.roms]
-#     roms = [(rom.get("name"), int(rom.get("size")), rom.get("crc")) for rom in rom_elements]  # type: ignore
-#     if set(existing_game_roms) == set(roms):
-#         return True
-#     return False
-
-
 def match_rom_with_rom_element(rom: Rom, rom_element: ET.Element) -> bool:
     if bool(rom.name == rom_element.get("name")):
         if bool(rom.size) and bool(rom_element.get("size")) and bool(rom.size == int(rom_element.get("size"))):  # type: ignore
@@ -342,55 +319,6 @@ def get_inner_element_text(outer_element: ET.Element, inner_element_name: str) -
     if inner_element is not None:
         return inner_element.text
     return None
-
-
-# # Decide what to do when later MAME versions add attributes to an existing rom
-# def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list[Rom]:
-#     """
-#     Looks for roms in the database with the same name, size and crc as the each of the
-#     roms in the rom_elements list. If a match is found but does not have a sha1 value,
-#     and the rom element does, the sha1 is added to the rom in the database.
-
-#     Other attributes in a rom element which are not included in a match are not added,
-#     pending further work to understand how version-specific these are.
-#     """
-#     roms = []
-#     for rom_element in rom_elements:
-#         attributes = {key: value for key, value in rom_element.items() if key in ("name", "size", "crc")}
-#         if existing_roms := get_existing_records(session, Rom, attributes):
-#             if len(existing_roms) > 1:
-#                 print("Warning: Multiple roms found with the same name, size and crc ", existing_roms[0].name)  # type: ignore
-#                 breakpoint()
-#             if rom_element.get("sha1") and not existing_roms[0].sha1:  # type: ignore
-#                 existing_roms[0].sha1 = rom_element.get("sha1")  # type: ignore
-#             roms.append(existing_roms[0])  # Ugly
-#         else:
-#             rom = Rom(**attributes)
-#             roms.append(rom)
-#     return roms
-
-
-# def get_existing_disk(session: Session, disk_element: ET.Element) -> Optional[Disk]:
-#     """
-#     Retrieves a list of Disk records from the database which share the same name as that of
-#     the provided disk element. Then check for matching md5 or sha1 in that order. MAME DATs
-#     up to (very roughly) around 0.7 use md5, from there to around 0.125 use both, and after
-#     that sha1 only. Add the sha1 to any md5 matches where the sha1 exists in the disk element
-#     but not the database record. This will maximise the number of records with a sha1.
-
-#     Further research is needed on which other Disk fields are emulator version dependent
-#     before deciding whether to add them to existing records as with sha1.
-#     """
-#     try:
-#         disk_name_matches: list[Disk] = get_existing_records(session, Disk, {"name": disk_element.get("name", "")})  # type: ignore
-#         for match in disk_name_matches:
-#             if match_disk_with_disk_element(match, disk_element):
-#                 # if not bool(match.sha1) and bool(sha1 := disk_element.get("sha1", "")):
-#                 #     match.sha1 = sha1  # type: ignore
-#                 return match
-#     except NoResultFound:
-#         pass
-#     return None
 
 
 # Decide what to do when later MAME versions add attributes to an existing rom
@@ -578,19 +506,3 @@ def process_dats(session: Session, dats: list[str]):
         print(
             f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games} - Total Refs: {total_refs}, Unhandled Refs: {unhandled_refs}"
         )
-
-
-def extract_mame_version(filename):
-    version = filename.replace("MAME ", "").replace(".xml.bz2", "")
-    version = re.sub(r"\D", "", version)
-    return float(version) if version else 0
-
-
-def create_db():
-    session = get_session(DATABASE_PATH)
-    sorted_dats = sorted(shared.MAME_DATS, key=extract_mame_version)
-    process_dats(session, sorted_dats)
-
-    # test_dats = ["/home/jimnarey/projects/romscripts/arcade_db_build/mame_db_source/dats/MAME 0.86.xml.bz2"]
-    # process_dats(session, test_dats)
-    session.close()
