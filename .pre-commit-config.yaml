@@ -3,6 +3,7 @@ repos:
     rev: v4.4.0
     hooks:
     -   id: check-yaml
+        exclude: (^arcade_db_build/workflow_templates/)
         args: [--allow-multiple-documents]
     -   id: end-of-file-fixer
         exclude: (^tests/fixtures/)
