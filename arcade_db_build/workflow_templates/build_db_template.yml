@@ -1,0 +1,42 @@
+name: Run build.py
+
+on:
+  workflow_dispatch:
+
+jobs:
+  {% for i in range(total_jobs) %}
+  build{{ i }}:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    {% if i > 0 %}
+    - name: Download arcade.db
+      uses: actions/download-artifact@v2
+      with:
+        name: arcade.db
+        path: arcade_db_build/
+    {% endif %}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Run build.py
+      run: python -u build.py -p {{ db_filename }} -d {{ dat_type }} -s {{ jobs[i][0] }} {% if jobs[i][1] %} -e {{ jobs[i][1] }} {% endif %}
+
+    - name: Upload arcade.db
+      uses: actions/upload-artifact@v2
+      with:
+        name: arcade.db
+        path: {{ db_filename }}
+  {% endfor %}
