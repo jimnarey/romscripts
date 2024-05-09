@@ -27,8 +27,8 @@ for i in range(total_jobs):
         end = None
     jobs.append((start, end))
 
-db_filename = f"arcade_{datetime.now().strftime('%Y%m%d%H%M%S')}.db"
-rendered_template = template.render(total_jobs=total_jobs, jobs=jobs, dat_type=args.dat_type, db_filename=db_filename)
+date_time = datetime.now().strftime("%Y%m%d%H%M%S")
+rendered_template = template.render(total_jobs=total_jobs, jobs=jobs, dat_type=args.dat_type, date_time=date_time)
 
 output_filename = os.path.join("..", ".github", "workflows", f"build_db_{total_jobs}_{args.dat_type}.yml")
 with open(output_filename, "w") as f:
