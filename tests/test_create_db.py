@@ -321,19 +321,6 @@ class TestCreateRecords(unittest.TestCase):
         self.assertEqual(len(set(roms_1).intersection(set(roms_2))), 1)
         self.assertEqual(len(all_roms), 3)
 
-    # def test_get_or_create_roms_adds_sha1_to_existing_rom(self):
-    #     tree = ET.parse(os.path.join(FIXTURES_PATH, "one_rom_twice_add_sha1.xml"))
-    #     root = tree.getroot()
-    #     rom_elements_1 = [root[0]]
-    #     rom_elements_2 = [root[1]]
-    #     roms_1 = create_db.get_or_create_roms(self.session, rom_elements_1)
-    #     self.session.add_all(roms_1)
-    #     self.session.commit()
-    #     self.assertIsNone(roms_1[0].sha1)
-    #     roms_2 = create_db.get_or_create_roms(self.session, rom_elements_2)
-    #     self.assertEqual(roms_1[0].sha1, "123456789012345678901234567890")
-    #     self.assertEqual(roms_1, roms_2)
-
     def test_get_or_create_disks_with_a_common_disk_sha1(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_overlapping_disks.xml"))
         root = tree.getroot()
@@ -799,61 +786,85 @@ class TestProcessGames(unittest.TestCase):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
         emulator_1 = create_db.Emulator(name="MAME", version="1")
+        self.session.add(emulator_1)
+        self.session.commit()
+        emulator_1_id = emulator_1.id
         create_db.process_games(self.session, root, emulator_1)
         emulator_2 = create_db.Emulator(name="MAME", version="2")
+        self.session.add(emulator_2)
+        self.session.commit()
+        emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(create_db.Game).filter_by(name="005").all()
-        game_emulators = games[0].game_emulators
+        game_emulator_ids = [ge.emulator_id for ge in games[0].game_emulators]
         self.assertEqual(len(games), 1)
-        self.assertEqual(len(game_emulators), 2)
-        self.assertIn(emulator_1, [ge.emulator for ge in game_emulators])
-        self.assertIn(emulator_2, [ge.emulator for ge in game_emulators])
+        self.assertEqual(len(game_emulator_ids), 2)
+        self.assertIn(emulator_1_id, game_emulator_ids)
+        self.assertIn(emulator_2_id, game_emulator_ids)
 
     def test_adds_emulator_to_existing_game_with_same_attributes_and_disks(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
         root = tree.getroot()
         emulator_1 = create_db.Emulator(name="MAME", version="1")
+        self.session.add(emulator_1)
+        self.session.commit()
+        emulator_1_id = emulator_1.id
         create_db.process_games(self.session, root, emulator_1)
         emulator_2 = create_db.Emulator(name="MAME", version="2")
+        self.session.add(emulator_2)
+        self.session.commit()
+        emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(create_db.Game).filter_by(name="2spicy").all()
-        game_emulators = games[0].game_emulators
+        game_emulator_ids = [ge.emulator_id for ge in games[0].game_emulators]
         self.assertEqual(len(games), 1)
-        self.assertEqual(len(game_emulators), 2)
-        self.assertIn(emulator_1, [ge.emulator for ge in game_emulators])
-        self.assertIn(emulator_2, [ge.emulator for ge in game_emulators])
+        self.assertEqual(len(game_emulator_ids), 2)
+        self.assertIn(emulator_1_id, game_emulator_ids)
+        self.assertIn(emulator_2_id, game_emulator_ids)
 
     def test_creates_new_game_when_one_rom_is_different(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
         emulator_1 = create_db.Emulator(name="MAME", version="1")
+        self.session.add(emulator_1)
+        self.session.commit()
+        emulator_1_id = emulator_1.id
         create_db.process_games(self.session, root, emulator_1)
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc.xml"))
         root = tree.getroot()
         emulator_2 = create_db.Emulator(name="MAME", version="2")
+        self.session.add(emulator_2)
+        self.session.commit()
+        emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(create_db.Game).filter_by(name="005").all()
-        game_emulators_1 = games[0].game_emulators
-        game_emulators_2 = games[1].game_emulators
         self.assertEqual(len(games), 2)
-        self.assertEqual([emulator_1], [ge.emulator for ge in game_emulators_1])
-        self.assertEqual([emulator_2], [ge.emulator for ge in game_emulators_2])
+        game_emulator_1_ids = [ge.emulator_id for ge in games[0].game_emulators]
+        game_emulator_2_ids = [ge.emulator_id for ge in games[1].game_emulators]
+        self.assertIn(emulator_1_id, game_emulator_1_ids)
+        self.assertIn(emulator_2_id, game_emulator_2_ids)
 
     def test_creates_new_game_when_one_disk_is_different(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
         root = tree.getroot()
         emulator_1 = create_db.Emulator(name="MAME", version="1")
+        self.session.add(emulator_1)
+        self.session.commit()
+        emulator_1_id = emulator_1.id
         create_db.process_games(self.session, root, emulator_1)
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
         root = tree.getroot()
         emulator_2 = create_db.Emulator(name="MAME", version="2")
+        self.session.add(emulator_2)
+        self.session.commit()
+        emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(create_db.Game).filter_by(name="2spicy").all()
-        game_emulators_1 = games[0].game_emulators
-        game_emulators_2 = games[1].game_emulators
         self.assertEqual(len(games), 2)
-        self.assertEqual([emulator_1], [ge.emulator for ge in game_emulators_1])
-        self.assertEqual([emulator_2], [ge.emulator for ge in game_emulators_2])
+        game_emulator_1_ids = [ge.emulator_id for ge in games[0].game_emulators]
+        game_emulator_2_ids = [ge.emulator_id for ge in games[1].game_emulators]
+        self.assertIn(emulator_1_id, game_emulator_1_ids)
+        self.assertIn(emulator_2_id, game_emulator_2_ids)
 
 
 if __name__ == "__main__":

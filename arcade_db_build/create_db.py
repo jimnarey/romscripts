@@ -441,11 +441,17 @@ def process_games(session: Session, root: ET.Element, emulator: Emulator):
                 if game_references := create_game_references(element):
                     game_references["id"] = str(game.id)
                     all_references.append(game_references)
-
+        session.commit()
+        session.expunge_all()
     return all_references, new_games, total_games
 
 
 def add_game_reference(session: Session, game: Game, emulator: Emulator, field: str, target_game_name: str):
+    """
+    Add a reference to another game to a game object.
+
+    field: either "cloneof" or "romof"
+    """
     if bool(game.name != target_game_name):
         target_game = (
             session.query(Game)
@@ -463,15 +469,29 @@ def add_game_reference(session: Session, game: Game, emulator: Emulator, field: 
 
 
 def add_game_references(session: Session, emulator: Emulator, game_references: dict[str, str], game: Game):
+    """
+    Resolves the game > game references for a single game.
+    """
     for key in ["cloneof", "romof"]:
         if target_game_name := game_references.get(key):
             if add_game_reference(session, game, emulator, key, target_game_name):
                 del game_references[key]
 
 
-def add_all_game_references(session: Session, emulator: Emulator, all_references: list[dict[str, str]]):
+def add_all_game_references(session: Session, emulator_id: str, all_references: list[dict[str, str]]):
+
+    """
+    Resolve all game > game references for the games in a single DAT file.
+
+    The all_referernces list of dictionaries is compiled as each DAT is processed by recording the
+    values of the "cloneof" and "romof" keys for each game (each game is represented by one dict).
+    The cross-references are handled after all games in the DAT have been committed to the database
+    to avoid trying to create a reference to a game which does not yet exist
+    """
     total_refs = len(all_references)
     remaining_refs = len(all_references)
+    emulator = session.query(Emulator).filter(Emulator.id == emulator_id).first()
+    assert emulator is not None
     for game_references in all_references:
         game = session.query(Game).filter(Game.id == game_references["id"]).first()
         if game:
@@ -490,20 +510,25 @@ def get_mame_emulator_details(dat_file: str) -> list[str]:
     return emulator.split()
 
 
+def create_emulator(session: Session, dat_file: str) -> tuple[Emulator, str]:
+    emulator_name, emulator_version = get_mame_emulator_details(dat_file)
+    emulator = Emulator(name=emulator_name, version=emulator_version)
+    session.add(emulator)
+    session.commit()
+    return emulator, str(emulator.id)
+
+
 def process_dats(session: Session, dats: list[str]):
     for dat_file in dats:
-        emulator_name, emulator_version = get_mame_emulator_details(dat_file)
-        emulator = Emulator(name=emulator_name, version=emulator_version)
-        session.add(emulator)
-        session.commit()
+        # We need the emulator_id because we expunge the emulator from the session after
+        # each game is processed and need to retrieve it again later
+        emulator, emulator_id = create_emulator(session, dat_file)
         source = shared.get_source_contents(dat_file)
         root = shared.get_source_root(source)
         all_references, new_games, total_games = process_games(session, root, emulator)
-        (
-            total_refs,
-            unhandled_refs,
-        ) = add_all_game_references(session, emulator, all_references)
+        (total_refs, unhandled_refs,) = add_all_game_references(
+            session, emulator_id, all_references
+        )  # type: ignore
         print(
             f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games} - Total Refs: {total_refs}, Unhandled Refs: {unhandled_refs}"
         )
-        session.expunge_all()
