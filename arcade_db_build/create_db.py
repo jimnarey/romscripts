@@ -10,10 +10,11 @@ types.
 
 from typing import Optional, Type
 
-# import re
+import warnings
 import os
 import functools
 import xml.etree.ElementTree as ET
+import psutil
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, create_engine, inspect
 from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase, backref
 from sqlalchemy.orm import relationship
@@ -145,6 +146,19 @@ class Driver(Base):
     sound = Column(String)
     incomplete = Column(String)
     game_emulators = relationship("GameEmulator", back_populates="driver")
+
+
+def check_cpu_utilization(threshold=90):
+    cpu_usages = psutil.cpu_percent(percpu=True)
+    for i, cpu_usage in enumerate(cpu_usages):
+        if cpu_usage > threshold:
+            warnings.warn(f"CPU core {i} usage is {cpu_usage}%")
+
+
+def check_memory_utilization(threshold=90):
+    memory_usage = psutil.virtual_memory().percent
+    if memory_usage > threshold:
+        warnings.warn(f"Memory usage is {memory_usage}%")
 
 
 def create_features(game_element: ET.Element) -> list[Feature]:
@@ -442,6 +456,7 @@ def process_games(session: Session, root: ET.Element, emulator: Emulator):
                     game_references["id"] = str(game.id)
                     all_references.append(game_references)
         session.commit()
+        check_memory_utilization()
         session.expunge_all()
     return all_references, new_games, total_games
 
@@ -526,6 +541,7 @@ def process_dats(session: Session, dats: list[str]):
         source = shared.get_source_contents(dat_file)
         root = shared.get_source_root(source)
         all_references, new_games, total_games = process_games(session, root, emulator)
+        check_memory_utilization()
         (total_refs, unhandled_refs,) = add_all_game_references(
             session, emulator_id, all_references
         )  # type: ignore
