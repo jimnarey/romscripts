@@ -1,7 +1,10 @@
 To do:
 
 Immediate:
-- Add disk model and read from DATs. Use validation script to get all possible attributes
+- Use lxml in place of built-in library
+- Replace all list comprehensions with .findall()
+- Create rom index based on hash of name, size, md5
+- Create game indexes. Consider one based on name, roms and disk(s)
 - Time each DAT and get an average time per game
 - Count the number of games in the validation script so we can calculate a total build time
 - Log any unhandled references
