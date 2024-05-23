@@ -5,6 +5,7 @@ from xml.etree import ElementTree as ET
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from arcade_db_build import create_db
+from arcade_db_build.shared import db
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 FIXTURES_PATH = os.path.join(SCRIPT_PATH, "fixtures", "create_db")
@@ -13,7 +14,7 @@ FIXTURES_PATH = os.path.join(SCRIPT_PATH, "fixtures", "create_db")
 class TestModels(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
@@ -26,17 +27,17 @@ class TestModels(unittest.TestCase):
         """
         This doesn't add every field on Game. It tests the realtionships
         """
-        emulator = create_db.Emulator(name="emu1", version="1.0")
+        emulator = db.Emulator(name="emu1", version="1.0")
         roms = [
-            create_db.Rom(name="rom1", size=100, crc="crc1", sha1="sha1"),
-            create_db.Rom(name="rom2", size=200, crc="crc2", sha1="sha2"),
+            db.Rom(name="rom1", size=100, crc="crc1", sha1="sha1"),
+            db.Rom(name="rom2", size=200, crc="crc2", sha1="sha2"),
         ]
-        game = create_db.Game(isbios=False, name="game1", year="2000", manufacturer="man1", roms=roms)
-        game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
+        game = db.Game(isbios=False, name="game1", year="2000", manufacturer="man1", roms=roms)
+        game_emulator = db.GameEmulator(game=game, emulator=emulator)
         self.session.add(game_emulator)
         self.session.commit()
-        db_game = self.session.query(create_db.Game).filter_by(name="game1").one()
-        db_emulator = self.session.query(create_db.Emulator).filter_by(name="emu1").one()
+        db_game = self.session.query(db.Game).filter_by(name="game1").one()
+        db_emulator = self.session.query(db.Emulator).filter_by(name="emu1").one()
         self.assertEqual(db_game, game)
         self.assertEqual(db_emulator, emulator)
         self.assertEqual(db_game.game_emulators[0], game_emulator)
@@ -65,7 +66,7 @@ class TestGetInnerElementText(unittest.TestCase):
 def create_game_fixture(game_element: ET.Element, emulator_version: str = "1", game_name: Optional[str] = None):
     rom_elements = [element for element in game_element if element.tag == "rom"]
     roms = [
-        create_db.Rom(
+        db.Rom(
             name=rom_element.get("name"),
             size=rom_element.get("size"),
             crc=rom_element.get("crc"),
@@ -75,16 +76,16 @@ def create_game_fixture(game_element: ET.Element, emulator_version: str = "1", g
     ]
     disk_elements = [element for element in game_element if element.tag == "disk"]
     disks = [
-        create_db.Disk(
+        db.Disk(
             name=disk_element.get("name"),
             md5=disk_element.get("md5"),
             sha1=disk_element.get("sha1"),
         )
         for disk_element in disk_elements
     ]
-    game = create_db.Game(name=game_name if game_name else game_element.get("name"), roms=roms, disks=disks)
-    emulator = create_db.Emulator(name="MAME", version=emulator_version)
-    game_emulator = create_db.GameEmulator(game=game, emulator=emulator)
+    game = db.Game(name=game_name if game_name else game_element.get("name"), roms=roms, disks=disks)
+    emulator = db.Emulator(name="MAME", version=emulator_version)
+    game_emulator = db.GameEmulator(game=game, emulator=emulator)
     game.game_emulators.append(game_emulator)
     return game
 
@@ -92,7 +93,7 @@ def create_game_fixture(game_element: ET.Element, emulator_version: str = "1", g
 class TestGetRecords(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
@@ -100,7 +101,7 @@ class TestGetRecords(unittest.TestCase):
         self.session.rollback()
 
     def test_get_all_instance_attributes(self):
-        driver = create_db.Driver(
+        driver = db.Driver(
             palettesize="abc",
             hiscoresave="def",
             requiresartwork="ghi",
@@ -118,7 +119,7 @@ class TestGetRecords(unittest.TestCase):
             sound="pqr",
             incomplete="stu",
         )
-        all_attrs = create_db.get_instance_attributes(driver, create_db.Driver)
+        all_attrs = create_db.get_instance_attributes(driver, db.Driver)
         # Confirm the driver has an id attribute which is not returned
         self.assertIsNone(driver.id)
         # Confirm the driver has a game_emulators attribute which is not returned
@@ -152,11 +153,11 @@ class TestGetRecords(unittest.TestCase):
         self.session.add(game)
         self.session.commit()
         instance_attrs = {c.key: getattr(game, c.key) for c in inspect(game).mapper.column_attrs}
-        instance_attrs.pop(inspect(create_db.Game).primary_key[0].key, None)
-        self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, instance_attrs), [game])
+        instance_attrs.pop(inspect(db.Game).primary_key[0].key, None)
+        self.assertEqual(create_db.get_existing_records(self.session, db.Game, instance_attrs), [game])
 
     def test_get_existing_record_returns_none_when_no_record_exists(self):
-        self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, {"name": "game"}), [])
+        self.assertEqual(create_db.get_existing_records(self.session, db.Game, {"name": "game"}), [])
 
     def test_get_existing_record_returns_record_when_passed_some_attributes(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
@@ -164,7 +165,7 @@ class TestGetRecords(unittest.TestCase):
         game = create_game_fixture(root[0])
         self.session.add(game)
         self.session.commit()
-        self.assertEqual(create_db.get_existing_records(self.session, create_db.Game, {"name": "005"}), [game])
+        self.assertEqual(create_db.get_existing_records(self.session, db.Game, {"name": "005"}), [game])
 
     # def test_get_existing_disk_returns_disk_with_same_name_and_sha1(self):
     #     tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
@@ -302,7 +303,7 @@ class TestGetRecords(unittest.TestCase):
 class TestCreateRecords(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
@@ -317,7 +318,7 @@ class TestCreateRecords(unittest.TestCase):
         roms_2 = create_db.get_or_create_roms(self.session, rom_elements_2)
         self.session.add_all(roms_2)
         self.session.commit()
-        all_roms = self.session.query(create_db.Rom).all()
+        all_roms = self.session.query(db.Rom).all()
         self.assertEqual(len(set(roms_1).intersection(set(roms_2))), 1)
         self.assertEqual(len(all_roms), 3)
 
@@ -332,7 +333,7 @@ class TestCreateRecords(unittest.TestCase):
         disks_2 = create_db.get_or_create_disks(self.session, disk_elements_2)
         self.session.add_all(disks_2)
         self.session.commit()
-        all_disks = self.session.query(create_db.Disk).all()
+        all_disks = self.session.query(db.Disk).all()
         self.assertEqual(len(set(disks_1).intersection(set(disks_2))), 1)
         self.assertEqual(len(all_disks), 3)
 
@@ -347,7 +348,7 @@ class TestCreateRecords(unittest.TestCase):
         disks_2 = create_db.get_or_create_disks(self.session, disk_elements_2)
         self.session.add_all(disks_2)
         self.session.commit()
-        all_disks = self.session.query(create_db.Disk).all()
+        all_disks = self.session.query(db.Disk).all()
         self.assertEqual(len(set(disks_1).intersection(set(disks_2))), 1)
         self.assertEqual(len(all_disks), 3)
 
@@ -408,7 +409,7 @@ class TestCreateRecords(unittest.TestCase):
         self.session.commit()
         self.assertEqual(len(game_emulator_1.features), 2)
         self.assertEqual(len(game_emulator_2.features), 2)
-        self.assertEqual((len(self.session.query(create_db.Feature).all())), 2)
+        self.assertEqual((len(self.session.query(db.Feature).all())), 2)
         self.assertEqual(set(game_emulator_1.features), set(game_emulator_2.features))
 
     def test_add_driver_no_existing_driver(self):
@@ -437,7 +438,7 @@ class TestCreateRecords(unittest.TestCase):
 class TestRomMatching(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
@@ -517,7 +518,7 @@ class TestRomMatching(unittest.TestCase):
 class TestDiskMatching(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
@@ -652,13 +653,13 @@ class TestCreateGameReferences(unittest.TestCase):
 class TestAddGameReference(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
-        self.game_1 = create_db.Game(name="Test Game")
-        self.emulator = create_db.Emulator(name="Test Emulator")
-        self.game_2 = create_db.Game(name="Target Game")
-        self.game_emulator = create_db.GameEmulator(game=self.game_2, emulator=self.emulator)
+        self.game_1 = db.Game(name="Test Game")
+        self.emulator = db.Emulator(name="Test Emulator")
+        self.game_2 = db.Game(name="Target Game")
+        self.game_emulator = db.GameEmulator(game=self.game_2, emulator=self.emulator)
         self.session.add_all([self.game_1, self.emulator, self.game_2, self.game_emulator])
         self.session.commit()
 
@@ -678,13 +679,13 @@ class TestAddGameReference(unittest.TestCase):
 class TestAddGameReferences(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
-        self.game_1 = create_db.Game(name="Test Game")
-        self.emulator = create_db.Emulator(name="Test Emulator")
-        self.game_2 = create_db.Game(name="Target Game")
-        self.game_emulator = create_db.GameEmulator(game=self.game_2, emulator=self.emulator)
+        self.game_1 = db.Game(name="Test Game")
+        self.emulator = db.Emulator(name="Test Emulator")
+        self.game_2 = db.Game(name="Target Game")
+        self.game_emulator = db.GameEmulator(game=self.game_2, emulator=self.emulator)
         self.session.add_all([self.game_1, self.emulator, self.game_2, self.game_emulator])
         self.session.commit()
 
@@ -723,13 +724,13 @@ class TestGetEmulatorDetails(unittest.TestCase):
 class TestAddGameEmulatorRelationship(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
     def test_add_game_emulator_relationship_creates_relationship(self):
-        game = create_db.Game(name="Test Game")
-        emulator = create_db.Emulator(name="Test Emulator")
+        game = db.Game(name="Test Game")
+        emulator = db.Emulator(name="Test Emulator")
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
         game_element = root[0]
@@ -738,8 +739,8 @@ class TestAddGameEmulatorRelationship(unittest.TestCase):
         self.assertEqual(emulator, game.game_emulators[0].emulator)
 
     def test_add_game_emulator_relationship_adds_driver_and_features(self):
-        game = create_db.Game(name="Test Game")
-        emulator = create_db.Emulator(name="Test Emulator")
+        game = db.Game(name="Test Game")
+        emulator = db.Emulator(name="Test Emulator")
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
         root = tree.getroot()
         game_element = root[0]
@@ -757,45 +758,45 @@ class TestProcessGames(unittest.TestCase):
 
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
-        create_db.Base.metadata.create_all(engine)
+        db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
     def test_creates_game(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
-        emulator = create_db.Emulator(name="MAME", version="1")
+        emulator = db.Emulator(name="MAME", version="1")
         create_db.process_games(self.session, root, emulator)
-        game = self.session.query(create_db.Game).filter_by(name="005").one()
+        game = self.session.query(db.Game).filter_by(name="005").one()
         self.assertEqual(game.name, "005")
         self.assertEqual(len(game.roms), 22)
 
     def test_process_games_game_references_id(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_cloneof_romof_rels.xml"))
         root = tree.getroot()
-        emulator = create_db.Emulator(name="MAME", version="1")
+        emulator = db.Emulator(name="MAME", version="1")
         all_references, _, _ = create_db.process_games(self.session, root, emulator)
         self.assertEqual(len(all_references), 1)
         game_reference = all_references[0]
         self.assertDictEqual(game_reference, {"cloneof": "columns", "romof": "columns", "id": "1"})
         game_id = game_reference["id"]
-        game = self.session.query(create_db.Game).filter_by(id=game_id).one()
+        game = self.session.query(db.Game).filter_by(id=game_id).one()
         self.assertIsNotNone(game)
 
     def test_adds_emulator_to_existing_game_with_same_attributes_and_roms(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
-        emulator_1 = create_db.Emulator(name="MAME", version="1")
+        emulator_1 = db.Emulator(name="MAME", version="1")
         self.session.add(emulator_1)
         self.session.commit()
         emulator_1_id = emulator_1.id
         create_db.process_games(self.session, root, emulator_1)
-        emulator_2 = create_db.Emulator(name="MAME", version="2")
+        emulator_2 = db.Emulator(name="MAME", version="2")
         self.session.add(emulator_2)
         self.session.commit()
         emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
-        games = self.session.query(create_db.Game).filter_by(name="005").all()
+        games = self.session.query(db.Game).filter_by(name="005").all()
         game_emulator_ids = [ge.emulator_id for ge in games[0].game_emulators]
         self.assertEqual(len(games), 1)
         self.assertEqual(len(game_emulator_ids), 2)
@@ -805,17 +806,17 @@ class TestProcessGames(unittest.TestCase):
     def test_adds_emulator_to_existing_game_with_same_attributes_and_disks(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
         root = tree.getroot()
-        emulator_1 = create_db.Emulator(name="MAME", version="1")
+        emulator_1 = db.Emulator(name="MAME", version="1")
         self.session.add(emulator_1)
         self.session.commit()
         emulator_1_id = emulator_1.id
         create_db.process_games(self.session, root, emulator_1)
-        emulator_2 = create_db.Emulator(name="MAME", version="2")
+        emulator_2 = db.Emulator(name="MAME", version="2")
         self.session.add(emulator_2)
         self.session.commit()
         emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
-        games = self.session.query(create_db.Game).filter_by(name="2spicy").all()
+        games = self.session.query(db.Game).filter_by(name="2spicy").all()
         game_emulator_ids = [ge.emulator_id for ge in games[0].game_emulators]
         self.assertEqual(len(games), 1)
         self.assertEqual(len(game_emulator_ids), 2)
@@ -825,19 +826,19 @@ class TestProcessGames(unittest.TestCase):
     def test_creates_new_game_when_one_rom_is_different(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game.xml"))
         root = tree.getroot()
-        emulator_1 = create_db.Emulator(name="MAME", version="1")
+        emulator_1 = db.Emulator(name="MAME", version="1")
         self.session.add(emulator_1)
         self.session.commit()
         emulator_1_id = emulator_1.id
         create_db.process_games(self.session, root, emulator_1)
         tree = ET.parse(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc.xml"))
         root = tree.getroot()
-        emulator_2 = create_db.Emulator(name="MAME", version="2")
+        emulator_2 = db.Emulator(name="MAME", version="2")
         self.session.add(emulator_2)
         self.session.commit()
         emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
-        games = self.session.query(create_db.Game).filter_by(name="005").all()
+        games = self.session.query(db.Game).filter_by(name="005").all()
         self.assertEqual(len(games), 2)
         game_emulator_1_ids = [ge.emulator_id for ge in games[0].game_emulators]
         game_emulator_2_ids = [ge.emulator_id for ge in games[1].game_emulators]
@@ -847,19 +848,19 @@ class TestProcessGames(unittest.TestCase):
     def test_creates_new_game_when_one_disk_is_different(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
         root = tree.getroot()
-        emulator_1 = create_db.Emulator(name="MAME", version="1")
+        emulator_1 = db.Emulator(name="MAME", version="1")
         self.session.add(emulator_1)
         self.session.commit()
         emulator_1_id = emulator_1.id
         create_db.process_games(self.session, root, emulator_1)
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
         root = tree.getroot()
-        emulator_2 = create_db.Emulator(name="MAME", version="2")
+        emulator_2 = db.Emulator(name="MAME", version="2")
         self.session.add(emulator_2)
         self.session.commit()
         emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
-        games = self.session.query(create_db.Game).filter_by(name="2spicy").all()
+        games = self.session.query(db.Game).filter_by(name="2spicy").all()
         self.assertEqual(len(games), 2)
         game_emulator_1_ids = [ge.emulator_id for ge in games[0].game_emulators]
         game_emulator_2_ids = [ge.emulator_id for ge in games[1].game_emulators]
