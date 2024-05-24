@@ -63,22 +63,32 @@ def validate_tag_names(path: str, element_tags: list[str]) -> None:
         print("Unrecognised element tag: ", path, et)
 
 
-def validate_cloneof_rules(path: str, root: ET._Element, elements: list[ET._Element]) -> None:
+def validate_cloneof_rules(path: str, root: ET._Element, elements: list[ET._Element]) -> list[dict[str, str]]:
     """
     This is particularly slow. It loops through a list of parents as well as all elements. However, it's a trade-off
     between that and doing a find by name on the same element multiple times (where one element is the parent of
-    many children). This seemed to be slower but wasn't properly profiled.
+    many children). That seemed to be slower but wasn't properly profiled.
+
+    This confirms that cloneof parents are never cloneof children. This simplifies the element sorting which is
+    done to speed up database builds.
+
+    It generates a list, printed at the end, of romsets which have a cloneof but no romof. This is relatively
+    rare.
     """
+    cloneofs_no_rom_ofs = []
     clone_parent_names = set()
     for element in elements:
         if (cloneof := element.get("cloneof")) is not None:
             clone_parent_names.add(cloneof)
             if element.get("romof") is None:
-                print(f"{os.path.basename(path)}: cloneof without romof: {element.get('name')}, cloneof {cloneof}")
+                cloneofs_no_rom_ofs.append(
+                    {"dat": os.path.basename(path), "name": element.get("name"), "cloneof": cloneof}
+                )
     for parent_name in clone_parent_names:
         parent_element = root.find(f"./*[@name='{parent_name}']")
         if parent_element is not None and (parent_clone_name := parent_element.get("cloneof")) is not None:
             print(f"{os.path.basename(path)}: cloneof parent has cloneof: {parent_name} -> {parent_clone_name}")
+    return cloneofs_no_rom_ofs
 
 
 def validate_romof_parents_are_never_cloneof_children(
@@ -86,6 +96,9 @@ def validate_romof_parents_are_never_cloneof_children(
 ) -> None:
     """
     This has the same issues as validate_clone_parents_are_never_clones
+
+    This identifies only one game, karnovj, which is a romof parent and has a populated cloneof attribute (karnov),
+    and then only in a handful of DATs in the 31-33 range (as of MAME 262).
 
     A romof parent can be a romof child, so we don't check for that.
     """
@@ -99,6 +112,24 @@ def validate_romof_parents_are_never_cloneof_children(
         if parent_element is not None:
             if (parent_cloneof_name := parent_element.get("cloneof")) is not None:
                 print(f"{os.path.basename(path)}: romof parent has cloneof: {parent_name} -> {parent_cloneof_name}")
+
+
+def validate_romof_chain_lengths(path: str, root: ET._Element) -> None:
+    """
+    Another slow one. This validates the assumption that romof chains are never longer than 3.
+    The typical (only?) use-case for a 3-length chain is clone > parent > bios. In any case, the fact
+    that they're never longer than three simplifies the sorting of the elements done to speed up
+    database builds.
+    """
+    romof_dict = {game.get("name"): game.get("romof") for game in root.findall("game")}
+    for game, romof in romof_dict.items():
+        chain = [game]
+        while romof and romof != game:
+            chain.append(romof)
+            game = romof
+            romof = romof_dict.get(game)
+        if len(chain) > 3:
+            print(f"{os.path.basename(path)}: romof chain longer than 3: {chain}")
 
 
 def validate_tag_attributes(path: str, elements: list[ET._Element]) -> tuple[set, set, set, set]:
@@ -134,21 +165,29 @@ def find_different_romof_clone_ofs(path: str, elements: list[ET._Element]) -> li
     return results
 
 
-def process_dat(path: str) -> Optional[tuple[set, set, set, set, list]]:
+def process_dat(path: str) -> Optional[tuple[set, set, set, set, list, list]]:
     print(os.path.basename(path))
-    if (root := shared.get_dat_root(path)) is not None:
+    if (root := shared.get_dat_root(path, concurrent=True)) is not None:
         elements = list(root)
         element_tags = [element.tag for element in elements]
         validate_root_tag(root)
         validate_num_headers(path, element_tags)
         validate_tag_names(path, element_tags)
-        validate_cloneof_rules(path, root, elements)
+        cloneofs_no_rom_ofs = validate_cloneof_rules(path, root, elements)
         validate_romof_parents_are_never_cloneof_children(path, root, elements)
+        validate_romof_chain_lengths(path, root)
         diff_parent_results = find_different_romof_clone_ofs(path, elements)
         game_attributes, driver_attributes, feature_attributes, disk_attributes = validate_tag_attributes(
             path, elements
         )
-    return game_attributes, driver_attributes, feature_attributes, disk_attributes, diff_parent_results
+    return (
+        game_attributes,
+        driver_attributes,
+        feature_attributes,
+        disk_attributes,
+        diff_parent_results,
+        cloneofs_no_rom_ofs,
+    )
 
 
 def process_files():
@@ -160,6 +199,7 @@ def process_files():
     feature_attributes = set()
     disk_attributes = set()
     diff_parent_results = []
+    cloneofs_no_rom_ofs = []
 
     for result in results:
         if result:
@@ -168,6 +208,7 @@ def process_files():
             feature_attributes.update(result[2])
             disk_attributes.update(result[3])
             diff_parent_results.extend(result[4])
+            cloneofs_no_rom_ofs.extend(result[5])
 
     if not game_attributes == KNOWN_GAME_ATTRIBUTES:
         print("Unrecognised game attributes: ", game_attributes - KNOWN_GAME_ATTRIBUTES)
@@ -177,16 +218,15 @@ def process_files():
         print("Unrecognised feature attributes: ", feature_attributes - KNOWN_FEATURE_ATTRIBUTES)
     if not disk_attributes == KNOWN_DISK_ATTRIBUTES:
         print("Unrecognised disk attributes: ", disk_attributes - KNOWN_DISK_ATTRIBUTES)
-    # This list does not include:
-    # - romset with romof but no cloneof
-    # - romset where romof is self-referential
-    # - romset where romof is the same as cloneof
     print(f"{len(diff_parent_results)} romsets with different cloneof and romof attributes")
-    # for result in diff_parent_results:
-    #     print(result)
     print(f"{'Dat':<10}\t{'Name':<10}\t{'Romof':<10}\t{'Cloneof':<10}")
     for result in diff_parent_results:
         print(f"{result['dat']:<10}\t{result['name']:<10}\t{result['romof']:<10}\t{result['cloneof']:<10}")
+
+    print(f"{len(cloneofs_no_rom_ofs)} romsets with cloneof but no romof")
+    print(f"{'Dat':<10}\t{'Name':<10}\t{'Cloneof':<10}")
+    for result in cloneofs_no_rom_ofs:
+        print(f"{result['dat']:<10}\t{result['name']:<10}\t{result['cloneof']:<10}")
 
 
 if __name__ == "__main__":
