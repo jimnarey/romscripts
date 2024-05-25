@@ -13,7 +13,7 @@ from typing import Optional, Type
 import warnings
 import os
 import functools
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import psutil
 
 from sqlalchemy import create_engine, inspect
@@ -36,7 +36,7 @@ def check_memory_utilization(threshold=90):
         warnings.warn(f"Memory usage is {memory_usage}%")
 
 
-def create_features(game_element: ET.Element) -> list[db.Feature]:
+def create_features(game_element: ET._Element) -> list[db.Feature]:
     features = []
     feature_elements = [element for element in game_element if element.tag == "feature"]
     for feature_element in feature_elements:
@@ -49,7 +49,7 @@ def create_features(game_element: ET.Element) -> list[db.Feature]:
     return features
 
 
-def create_driver(game_element: ET.Element) -> Optional[db.Driver]:
+def create_driver(game_element: ET._Element) -> Optional[db.Driver]:
     driver_element = game_element.find("driver")
     # instances of ET.Element are falsey
     if driver_element is not None:
@@ -102,16 +102,16 @@ def get_existing_records(
 
 # Merge these two functions
 @functools.cache
-def get_rom_elements(game_element: ET.Element) -> list[ET.Element]:
+def get_rom_elements(game_element: ET._Element) -> list[ET._Element]:
     return [element for element in game_element if element.tag == "rom"]
 
 
 @functools.cache
-def get_disk_elements(game_element: ET.Element) -> list[ET.Element]:
+def get_disk_elements(game_element: ET._Element) -> list[ET._Element]:
     return [element for element in game_element if element.tag == "disk"]
 
 
-def match_rom_with_rom_element(rom: db.Rom, rom_element: ET.Element) -> bool:
+def match_rom_with_rom_element(rom: db.Rom, rom_element: ET._Element) -> bool:
     if bool(rom.name == rom_element.get("name")):
         if bool(rom.size) and bool(rom_element.get("size")) and bool(rom.size == int(rom_element.get("size"))):  # type: ignore
             if bool(rom.crc == rom_element.get("crc")):
@@ -121,14 +121,14 @@ def match_rom_with_rom_element(rom: db.Rom, rom_element: ET.Element) -> bool:
     return False
 
 
-def match_rom_in_rom_elements(rom: db.Rom, rom_elements: list[ET.Element]) -> bool:
+def match_rom_in_rom_elements(rom: db.Rom, rom_elements: list[ET._Element]) -> bool:
     for rom_element in rom_elements:
         if match_rom_with_rom_element(rom, rom_element):
             return True
     return False
 
 
-def match_game_roms(existing_game: db.Game, rom_elements: list[ET.Element]) -> bool:
+def match_game_roms(existing_game: db.Game, rom_elements: list[ET._Element]) -> bool:
     if len(existing_game.roms) != len(rom_elements):
         return False
     for rom in existing_game.roms:
@@ -137,7 +137,7 @@ def match_game_roms(existing_game: db.Game, rom_elements: list[ET.Element]) -> b
     return True
 
 
-def match_disk_with_disk_element(disk: db.Disk, disk_element: ET.Element) -> bool:
+def match_disk_with_disk_element(disk: db.Disk, disk_element: ET._Element) -> bool:
     """
     Checks a provided disk object against a disk elements. An element is
     considered a match if the disk name matches the element name and either the md5
@@ -157,14 +157,14 @@ def match_disk_with_disk_element(disk: db.Disk, disk_element: ET.Element) -> boo
     return False
 
 
-def match_disk_in_disk_elements(disk: db.Disk, disk_elements: list[ET.Element]) -> bool:
+def match_disk_in_disk_elements(disk: db.Disk, disk_elements: list[ET._Element]) -> bool:
     for disk_element in disk_elements:
         if match_disk_with_disk_element(disk, disk_element):
             return True
     return False
 
 
-def match_game_disks(existing_game: db.Game, game_element: ET.Element) -> bool:
+def match_game_disks(existing_game: db.Game, game_element: ET._Element) -> bool:
     """
     Checks that the number of disks in the existing game matches the number of disk
     elements in the provided list. Then checks each disk in the existing game against
@@ -183,7 +183,7 @@ def match_game_disks(existing_game: db.Game, game_element: ET.Element) -> bool:
 
 
 # What happens if None is passed as the game name to get_existing_records?
-def get_existing_game(session: Session, game_element: ET.Element) -> Optional[db.Game]:
+def get_existing_game(session: Session, game_element: ET._Element) -> Optional[db.Game]:
     # Reduce the number of checks for rom_elements
     if rom_elements := get_rom_elements(game_element):
         try:
@@ -197,13 +197,13 @@ def get_existing_game(session: Session, game_element: ET.Element) -> Optional[db
 
 
 # This is needed to keep the type checker happy
-def get_rom_size(rom_element: ET.Element) -> Optional[int]:
+def get_rom_size(rom_element: ET._Element) -> Optional[int]:
     if size := rom_element.get("size"):
         return int(size)
     return None
 
 
-def get_inner_element_text(outer_element: ET.Element, inner_element_name: str) -> Optional[str]:
+def get_inner_element_text(outer_element: ET._Element, inner_element_name: str) -> Optional[str]:
     inner_element = outer_element.find(inner_element_name)  # Using := confuses type checker
     if inner_element is not None:
         return inner_element.text
@@ -211,7 +211,7 @@ def get_inner_element_text(outer_element: ET.Element, inner_element_name: str) -
 
 
 # Decide what to do when later MAME versions add attributes to an existing rom
-def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list[db.Rom]:
+def get_or_create_roms(session: Session, rom_elements: list[ET._Element]) -> list[db.Rom]:
     roms = []
     for rom_element in rom_elements:
         matched_rom = None
@@ -230,7 +230,7 @@ def get_or_create_roms(session: Session, rom_elements: list[ET.Element]) -> list
     return roms
 
 
-def get_or_create_disks(session: Session, disk_elements: list[ET.Element]) -> list[db.Disk]:
+def get_or_create_disks(session: Session, disk_elements: list[ET._Element]) -> list[db.Disk]:
     disks = []
     for disk_element in disk_elements:
         matched_disk = None
@@ -249,7 +249,7 @@ def get_or_create_disks(session: Session, disk_elements: list[ET.Element]) -> li
 
 
 # Get description, year and manufacturer
-def create_game(session: Session, game_element: ET.Element) -> Optional[db.Game]:  # Tighten this
+def create_game(session: Session, game_element: ET._Element) -> Optional[db.Game]:  # Tighten this
     if rom_elements := get_rom_elements(game_element):  # Also checked in process_games
         game = db.Game(
             name=game_element.get("name"),
@@ -268,7 +268,7 @@ def create_game(session: Session, game_element: ET.Element) -> Optional[db.Game]
     return None
 
 
-def create_game_references(game_element: ET.Element) -> Optional[dict[str, str]]:
+def create_game_references(game_element: ET._Element) -> Optional[dict[str, str]]:
     references = {}
     for reference in ("cloneof", "romof"):
         if reference_target := game_element.get(reference, None):
@@ -278,7 +278,7 @@ def create_game_references(game_element: ET.Element) -> Optional[dict[str, str]]
     return None
 
 
-def add_features(session: Session, game_emulator: db.GameEmulator, game_element: ET.Element):
+def add_features(session: Session, game_emulator: db.GameEmulator, game_element: ET._Element):
     added_features = []
     if found_features := create_features(game_element):
         for feature in found_features:
@@ -292,7 +292,7 @@ def add_features(session: Session, game_emulator: db.GameEmulator, game_element:
         session.add_all(added_features)
 
 
-def add_driver(session: Session, game_emulator: db.GameEmulator, game_element: ET.Element):
+def add_driver(session: Session, game_emulator: db.GameEmulator, game_element: ET._Element):
     added_driver = None
     if found_driver := create_driver(game_element):
         if driver_query_result := get_existing_records(
@@ -305,14 +305,14 @@ def add_driver(session: Session, game_emulator: db.GameEmulator, game_element: E
         session.add(added_driver)
 
 
-def add_game_emulator_relationship(session: Session, game_element: ET.Element, game: db.Game, emulator: db.Emulator):
+def add_game_emulator_relationship(session: Session, game_element: ET._Element, game: db.Game, emulator: db.Emulator):
     game_emulator = db.GameEmulator(game=game, emulator=emulator)
     session.add(game_emulator)
     add_features(session, game_emulator, game_element)
     add_driver(session, game_emulator, game_element)
 
 
-def process_games(session: Session, root: ET.Element, emulator: db.Emulator):
+def process_games(session: Session, root: ET._Element, emulator: db.Emulator):
     all_references = []
     new_games = 0
     total_games = 0
@@ -415,7 +415,7 @@ def process_dats(session: Session, dats: list[str]):
         # We need the emulator_id because we expunge the emulator from the session after
         # each game is processed and need to retrieve it again later
         emulator, emulator_id = create_emulator(session, dat_file)
-        if root := shared.get_dat_root(dat_file):
+        if (root := shared.get_dat_root(dat_file)) is not None:
             all_references, new_games, total_games = process_games(session, root, emulator)
             check_memory_utilization()
             (total_refs, unhandled_refs,) = add_all_game_references(

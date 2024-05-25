@@ -4,7 +4,7 @@ from typing import Optional
 import os
 import re
 import bz2
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 PARENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAME_SOURCES = os.path.join(PARENT_PATH, "mame_db_source", "dats")
@@ -23,7 +23,7 @@ def get_xml_contents(path: str) -> str:
         return bzip_file.read().decode("utf-8")
 
 
-def get_dat_root(path: str) -> Optional[ET.Element]:
+def get_dat_root(path: str) -> Optional[ET._Element]:
     try:
         contents = get_xml_contents(path)
         root = ET.fromstring(contents)

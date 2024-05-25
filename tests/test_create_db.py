@@ -1,7 +1,10 @@
 import os
 import unittest
 from typing import Optional
-from xml.etree import ElementTree as ET
+from lxml import etree as ET
+from lxml.etree import XMLParser
+
+# from xml.etree import ElementTree as ET
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from arcade_db_build import create_db
@@ -63,7 +66,7 @@ class TestGetInnerElementText(unittest.TestCase):
         self.assertEqual(create_db.get_inner_element_text(outer_element, "inner"), "text1")
 
 
-def create_game_fixture(game_element: ET.Element, emulator_version: str = "1", game_name: Optional[str] = None):
+def create_game_fixture(game_element: ET._Element, emulator_version: str = "1", game_name: Optional[str] = None):
     rom_elements = [element for element in game_element if element.tag == "rom"]
     roms = [
         db.Rom(
@@ -306,6 +309,7 @@ class TestCreateRecords(unittest.TestCase):
         db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
+        self.parser = XMLParser(remove_comments=True)
 
     def test_get_or_create_roms_with_a_common_rom(self):
         tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_overlapping_roms.xml"))
@@ -338,7 +342,7 @@ class TestCreateRecords(unittest.TestCase):
         self.assertEqual(len(all_disks), 3)
 
     def test_get_or_create_disks_with_a_common_disk_md5(self):
-        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_overlapping_disks.xml"))
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_overlapping_disks.xml"), self.parser)
         root = tree.getroot()
         disk_elements_1 = [element for element in root[2] if element.tag == "disk"]
         disks_1 = create_db.get_or_create_disks(self.session, disk_elements_1)
@@ -521,13 +525,17 @@ class TestDiskMatching(unittest.TestCase):
         db.Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
+        self.parser = XMLParser(remove_comments=True)
 
     # These can be improved. They're depenent on the order of the disks in the XML
     # files and the order of the disks in the game objects. They're solid but a
     # bit hard to work with.
 
+    # Consider using the shared module to get the root here and specifiy a no comments
+    # parser there. No DAT files used so far have comments, but that could change
+
     def test_match_disk_with_disk_element_matches_existing_disk_when_no_sha1_or_md5(self):
-        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"), self.parser)
         root = tree.getroot()
         game = create_game_fixture(root[2])
         self.session.add(game)
@@ -537,7 +545,7 @@ class TestDiskMatching(unittest.TestCase):
         self.assertTrue(create_db.match_disk_with_disk_element(disk, disk_element))
 
     def test_match_disk_with_disk_element_matches_existing_disk_by_sha1(self):
-        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"), self.parser)
         root = tree.getroot()
         game = create_game_fixture(root[0])
         self.session.add(game)
@@ -548,7 +556,7 @@ class TestDiskMatching(unittest.TestCase):
         self.assertTrue(create_db.match_disk_with_disk_element(disk, disk_element))
 
     def test_match_disk_with_disk_element_matches_existing_disk_by_md5(self):
-        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        tree = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"), self.parser)
         root = tree.getroot()
         game = create_game_fixture(root[1])
         self.session.add(game)
@@ -571,12 +579,12 @@ class TestDiskMatching(unittest.TestCase):
         self.assertFalse(create_db.match_disk_with_disk_element(disk, disk_element))
 
     def test_match_disk_with_disk_element_returns_none_when_md5_different(self):
-        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        tree_1 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks.xml"), self.parser)
         root_1 = tree_1.getroot()
         game = create_game_fixture(root_1[1])
         self.session.add(game)
         self.session.commit()
-        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        tree_2 = ET.parse(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"), self.parser)
         root_2 = tree_2.getroot()
         disk_element = [element for element in root_2[1] if element.tag == "disk"].pop()
         disk = game.disks[0]
