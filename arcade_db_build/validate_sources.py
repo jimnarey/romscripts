@@ -52,12 +52,7 @@ def validate_tag_attributes(path: str, elements: list[ET.Element]) -> tuple[set,
 
 def process_dat(path: str) -> Optional[tuple[set, set, set, set]]:
     print(os.path.basename(path))
-    source = shared.get_source_contents(path)
-    try:
-        root = shared.get_source_root(source)
-    except Exception as e:
-        print("Error: ", type(e), path)
-    if root:
+    if root := shared.get_dat_root(path):
         elements = [element for element in root]
         element_tags = [element.tag for element in root]
         validate_root_tag(root)

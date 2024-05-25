@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from typing import Optional
 import os
 import re
 import bz2
@@ -17,13 +18,18 @@ def extract_mame_version(filename):
     return float(version) if version else 0
 
 
-def get_source_contents(path: str) -> str:
+def get_xml_contents(path: str) -> str:
     with bz2.open(path, "r") as bzip_file:
         return bzip_file.read().decode("utf-8")
 
 
-def get_source_root(dat_contents: str) -> ET.Element:
-    root = ET.fromstring(dat_contents)
+def get_dat_root(path: str) -> Optional[ET.Element]:
+    try:
+        contents = get_xml_contents(path)
+        root = ET.fromstring(contents)
+    except Exception as e:
+        print("Error: ", type(e), path)
+        return None
     return root
 
 

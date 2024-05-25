@@ -415,13 +415,12 @@ def process_dats(session: Session, dats: list[str]):
         # We need the emulator_id because we expunge the emulator from the session after
         # each game is processed and need to retrieve it again later
         emulator, emulator_id = create_emulator(session, dat_file)
-        source = shared.get_source_contents(dat_file)
-        root = shared.get_source_root(source)
-        all_references, new_games, total_games = process_games(session, root, emulator)
-        check_memory_utilization()
-        (total_refs, unhandled_refs,) = add_all_game_references(
-            session, emulator_id, all_references
-        )  # type: ignore
-        print(
-            f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games} - Total Refs: {total_refs}, Unhandled Refs: {unhandled_refs}"
-        )
+        if root := shared.get_dat_root(dat_file):
+            all_references, new_games, total_games = process_games(session, root, emulator)
+            check_memory_utilization()
+            (total_refs, unhandled_refs,) = add_all_game_references(
+                session, emulator_id, all_references
+            )  # type: ignore
+            print(
+                f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games} - Total Refs: {total_refs}, Unhandled Refs: {unhandled_refs}"
+            )
