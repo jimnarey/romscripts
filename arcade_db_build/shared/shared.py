@@ -11,6 +11,8 @@ MAME_SOURCES = os.path.join(PARENT_PATH, "mame_db_source", "dats")
 FBA_SOURCES = os.path.join(PARENT_PATH, "fba_db_source", "dats")
 MAME_DATS = [os.path.join(MAME_SOURCES, file) for file in os.listdir(MAME_SOURCES)]
 
+PARSER = ET.XMLParser(remove_comments=True)
+
 
 def extract_mame_version(filename):
     version = filename.replace("MAME ", "").replace(".xml.bz2", "")
@@ -18,18 +20,15 @@ def extract_mame_version(filename):
     return float(version) if version else 0
 
 
-def get_xml_contents(path: str) -> str:
-    with bz2.open(path, "r") as bzip_file:
-        return bzip_file.read().decode("utf-8")
+def get_xml_contents(path: str) -> bytes:
+    with bz2.open(path, "rb") as bzip_file:
+        return bzip_file.read()
 
 
-def get_dat_root(path: str) -> Optional[ET._Element]:
-    try:
-        contents = get_xml_contents(path)
-        root = ET.fromstring(contents)
-    except Exception as e:
-        print("Error: ", type(e), path)
-        return None
+def get_dat_root(path: str, concurrent: bool = False) -> Optional[ET._Element]:
+    parser = PARSER if not concurrent else ET.XMLParser(remove_comments=True)
+    contents = get_xml_contents(path)
+    root = ET.fromstring(contents, parser)
     return root
 
 
