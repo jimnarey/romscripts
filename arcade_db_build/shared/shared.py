@@ -7,7 +7,8 @@ import bz2
 from lxml import etree as ET
 
 PARENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MAME_SOURCES = os.path.join(PARENT_PATH, "mame_db_source", "dats")
+# Use the MAME DATs sorted with parents before clones
+MAME_SOURCES = os.path.join(PARENT_PATH, "mame_db_source", "clones_sorted_dats")
 FBA_SOURCES = os.path.join(PARENT_PATH, "fba_db_source", "dats")
 MAME_DATS = [os.path.join(MAME_SOURCES, file) for file in os.listdir(MAME_SOURCES)]
 

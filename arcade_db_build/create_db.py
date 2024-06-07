@@ -268,16 +268,6 @@ def create_game(session: Session, game_element: ET._Element) -> Optional[db.Game
     return None
 
 
-def create_game_references(game_element: ET._Element) -> Optional[dict[str, str]]:
-    references = {}
-    for reference in ("cloneof", "romof"):
-        if reference_target := game_element.get(reference, None):
-            references[reference] = reference_target
-    if references:
-        return references
-    return None
-
-
 def add_features(session: Session, game_emulator: db.GameEmulator, game_element: ET._Element):
     added_features = []
     if found_features := create_features(game_element):
@@ -312,87 +302,62 @@ def add_game_emulator_relationship(session: Session, game_element: ET._Element, 
     add_driver(session, game_emulator, game_element)
 
 
-def process_games(session: Session, root: ET._Element, emulator: db.Emulator):
-    all_references = []
-    new_games = 0
-    total_games = 0
-    for element in root:
-        rom_elements = get_rom_elements(element)
-        if rom_elements:
-            game = get_existing_game(session, element)
-            if not game:
-                # Returns None if no rom elements are found
-                game = create_game(session, element)
-                session.add(game)
-                new_games += 1
-            if game:
-                add_game_emulator_relationship(session, element, game, emulator)
-                session.commit()
-                total_games += 1
-                if game_references := create_game_references(element):
-                    game_references["id"] = str(game.id)
-                    all_references.append(game_references)
-        session.commit()
-        check_memory_utilization()
-        session.expunge_all()
-    return all_references, new_games, total_games
-
-
-def add_game_reference(session: Session, game: db.Game, emulator: db.Emulator, field: str, target_game_name: str):
+def add_game_reference(
+    session: Session, game: db.Game, emulator: db.Emulator, attribute: str, target_game_name: str
+) -> bool:
     """
     Add a reference to another game to a game object.
 
     field: either "cloneof" or "romof"
     """
-    if bool(game.name != target_game_name):
-        target_game = (
-            session.query(db.Game)
-            .filter(db.Game.name == target_game_name, db.Game.game_emulators.any(emulator=emulator))
-            .first()
-        )
-        if target_game:
-            setattr(game, field, target_game)
-            return True
-    else:
-        # Consider adding the reference as a success so it's not added to the remaining references
-        # There's probably a better way to handle this
+
+    target_game = (
+        session.query(db.Game)
+        .filter(db.Game.name == target_game_name, db.Game.game_emulators.any(emulator=emulator))
+        .first()
+    )
+    if target_game:
+        setattr(game, attribute, target_game)
         return True
+
     return False
 
 
-def add_game_references(session: Session, emulator: db.Emulator, game_references: dict[str, str], game: db.Game):
+def add_game_references(session: Session, emulator: db.Emulator, game: db.Game, game_element: ET._Element):
     """
     Resolves the game > game references for a single game.
     """
-    for key in ["cloneof", "romof"]:
-        if target_game_name := game_references.get(key):
-            if add_game_reference(session, game, emulator, key, target_game_name):
-                del game_references[key]
+    unhandled_references = []
+    for attribute in ("cloneof", "romof"):
+        if target_game_name := game_element.get(attribute):
+            if bool(game.name != target_game_name):
+                if not add_game_reference(session, game, emulator, attribute, target_game_name):
+                    unhandled_references.append({"game": game.name, "attribute": attribute, "target": target_game_name})
+    return unhandled_references
 
 
-def add_all_game_references(session: Session, emulator_id: str, all_references: list[dict[str, str]]):
-
-    """
-    Resolve all game > game references for the games in a single DAT file.
-
-    The all_referernces list of dictionaries is compiled as each DAT is processed by recording the
-    values of the "cloneof" and "romof" keys for each game (each game is represented by one dict).
-    The cross-references are handled after all games in the DAT have been committed to the database
-    to avoid trying to create a reference to a game which does not yet exist
-    """
-    total_refs = len(all_references)
-    remaining_refs = len(all_references)
-    emulator = session.query(db.Emulator).filter(db.Emulator.id == emulator_id).first()
-    assert emulator is not None
-    for game_references in all_references:
-        game = session.query(db.Game).filter(db.Game.id == game_references["id"]).first()
-        if game:
-            add_game_references(session, emulator, game_references, game)
-            session.commit()
-            if list(game_references.keys()) == ["id"]:
-                remaining_refs -= 1
-            # Log the unhandled references so they can be investigated
-    return total_refs, remaining_refs
+def process_games(session: Session, root: ET._Element, emulator: db.Emulator):
+    unhanded_references = []
+    new_games = 0
+    total_games = 0
+    for game_element in root:
+        rom_elements = get_rom_elements(game_element)
+        if rom_elements:
+            game = get_existing_game(session, game_element)
+            if not game:
+                # Returns None if no rom elements are found
+                game = create_game(session, game_element)
+                session.add(game)
+                new_games += 1
+            if game:
+                add_game_emulator_relationship(session, game_element, game, emulator)
+                session.commit()  # Is this needed!?
+                total_games += 1
+                unhanded_references.extend(add_game_references(session, emulator, game, game_element))
+        session.commit()
+        check_memory_utilization()
+        session.expunge_all()
+    return new_games, total_games, unhanded_references
 
 
 def get_mame_emulator_details(dat_file: str) -> list[str]:
@@ -402,25 +367,22 @@ def get_mame_emulator_details(dat_file: str) -> list[str]:
     return emulator.split()
 
 
-def create_emulator(session: Session, dat_file: str) -> tuple[db.Emulator, str]:
+def create_emulator(session: Session, dat_file: str) -> db.Emulator:
     emulator_name, emulator_version = get_mame_emulator_details(dat_file)
     emulator = db.Emulator(name=emulator_name, version=emulator_version)
     session.add(emulator)
     session.commit()
-    return emulator, str(emulator.id)
+    return emulator
 
 
 def process_dats(session: Session, dats: list[str]):
     for dat_file in dats:
-        # We need the emulator_id because we expunge the emulator from the session after
-        # each game is processed and need to retrieve it again later
-        emulator, emulator_id = create_emulator(session, dat_file)
+        emulator = create_emulator(session, dat_file)
         if (root := shared.get_dat_root(dat_file)) is not None:
-            all_references, new_games, total_games = process_games(session, root, emulator)
+            new_games, total_games, unhandled_references = process_games(session, root, emulator)
             check_memory_utilization()
-            (total_refs, unhandled_refs,) = add_all_game_references(
-                session, emulator_id, all_references
-            )  # type: ignore
-            print(
-                f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games} - Total Refs: {total_refs}, Unhandled Refs: {unhandled_refs}"
-            )
+            print(f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games}")
+            if unhandled_references:
+                print(f"{'Name':<10}\t{'Attribute':<10}\t{'Target Game':<10}")
+                for ref in unhandled_references:
+                    print(f"{ref['game']:<10}\t{ref['attribute']:<10}\t{ref['target']:<10}")

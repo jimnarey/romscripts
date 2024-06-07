@@ -525,21 +525,21 @@ class TestDiskMatching(unittest.TestCase):
         self.assertFalse(create_db.match_game_disks(game_1, root_2[0]))
 
 
-class TestCreateGameReferences(unittest.TestCase):
-    def test_create_game_references_with_cloneof_and_romof(self):
-        game_element = ET.Element("game", {"cloneof": "game1", "romof": "game2"})
-        references = create_db.create_game_references(game_element)
-        self.assertEqual(references, {"cloneof": "game1", "romof": "game2"})
+# class TestCreateGameReferences(unittest.TestCase):
+#     def test_create_game_references_with_cloneof_and_romof(self):
+#         game_element = ET.Element("game", {"cloneof": "game1", "romof": "game2"})
+#         references = create_db.create_game_references(game_element)
+#         self.assertEqual(references, {"cloneof": "game1", "romof": "game2"})
 
-    def test_create_game_references_with_only_cloneof(self):
-        game_element = ET.Element("game", {"cloneof": "game1"})
-        references = create_db.create_game_references(game_element)
-        self.assertEqual(references, {"cloneof": "game1"})
+#     def test_create_game_references_with_only_cloneof(self):
+#         game_element = ET.Element("game", {"cloneof": "game1"})
+#         references = create_db.create_game_references(game_element)
+#         self.assertEqual(references, {"cloneof": "game1"})
 
-    def test_create_game_references_with_no_references(self):
-        game_element = ET.Element("game")
-        references = create_db.create_game_references(game_element)
-        self.assertIsNone(references)
+#     def test_create_game_references_with_no_references(self):
+#         game_element = ET.Element("game")
+#         references = create_db.create_game_references(game_element)
+#         self.assertIsNone(references)
 
 
 class TestAddGameReference(unittest.TestCase):
@@ -582,25 +582,33 @@ class TestAddGameReferences(unittest.TestCase):
         self.session.commit()
 
     def test_add_game_references_sets_references_when_all_valid(self):
-        references = {"cloneof": "Target Game", "romof": "Target Game"}
-        create_db.add_game_references(self.session, self.emulator, references, self.game_1)
+        game_element = ET.Element("game", name="Test Game", cloneof="Target Game", romof="Target Game")
+        unhandled_references = create_db.add_game_references(self.session, self.emulator, self.game_1, game_element)
         self.assertEqual(self.game_1.cloneof, self.game_2)
         self.assertEqual(self.game_1.romof, self.game_2)
-        self.assertDictEqual(references, {})
+        self.assertListEqual(unhandled_references, [])
 
     def test_add_game_references_sets_references_when_one_valid(self):
-        references = {"cloneof": "Target Game", "romof": "Nonexistent Game"}
-        create_db.add_game_references(self.session, self.emulator, references, self.game_1)
+        game_element = ET.Element("game", name="Test Game", cloneof="Target Game", romof="Nonexistent Game")
+        unhandled_references = create_db.add_game_references(self.session, self.emulator, self.game_1, game_element)
         self.assertEqual(self.game_1.cloneof, self.game_2)
         self.assertIsNone(self.game_1.romof)
-        self.assertDictEqual(references, {"romof": "Nonexistent Game"})
+        self.assertListEqual(
+            unhandled_references, [{"game": "Test Game", "attribute": "romof", "target": "Nonexistent Game"}]
+        )
 
     def test_add_game_references_when_none_valid(self):
-        references = {"cloneof": "Nonexistent Game", "romof": "Nonexistent Game"}
-        create_db.add_game_references(self.session, self.emulator, references, self.game_1)
+        game_element = ET.Element("game", name="Test Game", cloneof="Nonexistent Game", romof="Nonexistent Game")
+        unhandled_references = create_db.add_game_references(self.session, self.emulator, self.game_1, game_element)
         self.assertIsNone(self.game_1.cloneof)
         self.assertIsNone(self.game_1.romof)
-        self.assertDictEqual(references, {"cloneof": "Nonexistent Game", "romof": "Nonexistent Game"})
+        self.assertListEqual(
+            unhandled_references,
+            [
+                {"game": "Test Game", "attribute": "cloneof", "target": "Nonexistent Game"},
+                {"game": "Test Game", "attribute": "romof", "target": "Nonexistent Game"},
+            ],
+        )
 
 
 class TestGetEmulatorDetails(unittest.TestCase):
@@ -665,13 +673,10 @@ class TestProcessGames(unittest.TestCase):
     def test_process_games_game_references_id(self):
         root = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_cloneof_romof_rels.xml"))
         emulator = db.Emulator(name="MAME", version="1")
-        all_references, _, _ = create_db.process_games(self.session, root, emulator)
-        self.assertEqual(len(all_references), 1)
-        game_reference = all_references[0]
-        self.assertDictEqual(game_reference, {"cloneof": "columns", "romof": "columns", "id": "1"})
-        game_id = game_reference["id"]
-        game = self.session.query(db.Game).filter_by(id=game_id).one()
-        self.assertIsNotNone(game)
+        _, _, unhandled_references = create_db.process_games(self.session, root, emulator)
+        self.assertListEqual(unhandled_references, [])
+        self.assertEqual(self.session.query(db.Game).filter_by(name="columnsj").one().cloneof_id, 1)
+        self.assertEqual(self.session.query(db.Game).filter_by(name="columnsj").one().romof_id, 1)
 
     def test_adds_emulator_to_existing_game_with_same_attributes_and_roms(self):
         root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))

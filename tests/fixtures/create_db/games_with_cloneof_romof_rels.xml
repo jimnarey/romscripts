@@ -1,11 +1,11 @@
 <!-- Declare the clone before the parent to ensure this is tolerated when creating the db -->
 <datafile>
-    <machine name="columnsj" sourcefile="segac2.cpp" cloneof="columns" romof="columns">
-		<description>Columns (Japan)</description>
+    <machine name="columns" sourcefile="segac2.cpp">
+		<description>Columns (World)</description>
 		<year>1990</year>
 		<manufacturer>Sega</manufacturer>
-		<rom name="epr-13112.ic32" size="131072" crc="bae6e53e" sha1="2c2fd621eecd55591f22d076323972a7d0314615" region="maincpu" offset="0"/>
-		<rom name="epr-13111.ic31" size="131072" crc="aa5ccd6d" sha1="480e29e3112282d1790f1fb68075453325ba4336" region="maincpu" offset="1"/>
+		<rom name="epr-13114.ic32" size="131072" crc="ff78f740" sha1="0a034103a4b942f43e62f6e717f5dbf1bfb0b613" region="maincpu" offset="0"/>
+		<rom name="epr-13113.ic31" size="131072" crc="9a426d9b" sha1="3322e65ebf8d0a6047f7d408387c63ea401b8973" region="maincpu" offset="1"/>
 		<device_ref name="m68000"/>
 		<device_ref name="nvram"/>
 		<device_ref name="315_5296"/>
@@ -125,12 +125,12 @@
 		</port>
 		<driver status="good" emulation="good" savestate="unsupported"/>
 	</machine>
-    <machine name="columns" sourcefile="segac2.cpp">
-		<description>Columns (World)</description>
+	<machine name="columnsj" sourcefile="segac2.cpp" cloneof="columns" romof="columns">
+		<description>Columns (Japan)</description>
 		<year>1990</year>
 		<manufacturer>Sega</manufacturer>
-		<rom name="epr-13114.ic32" size="131072" crc="ff78f740" sha1="0a034103a4b942f43e62f6e717f5dbf1bfb0b613" region="maincpu" offset="0"/>
-		<rom name="epr-13113.ic31" size="131072" crc="9a426d9b" sha1="3322e65ebf8d0a6047f7d408387c63ea401b8973" region="maincpu" offset="1"/>
+		<rom name="epr-13112.ic32" size="131072" crc="bae6e53e" sha1="2c2fd621eecd55591f22d076323972a7d0314615" region="maincpu" offset="0"/>
+		<rom name="epr-13111.ic31" size="131072" crc="aa5ccd6d" sha1="480e29e3112282d1790f1fb68075453325ba4336" region="maincpu" offset="1"/>
 		<device_ref name="m68000"/>
 		<device_ref name="nvram"/>
 		<device_ref name="315_5296"/>
