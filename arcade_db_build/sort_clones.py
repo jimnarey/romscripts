@@ -6,10 +6,10 @@ import bz2
 
 import lxml.etree as ET
 
-from shared import shared
+from arcade_db_build.shared import sources
 
 
-WRITE_PATH = os.path.join(shared.PARENT_PATH, "mame_db_source", "clones_sorted_dats")
+WRITE_PATH = os.path.join(sources.PARENT_PATH, "mame_db_source", "clones_sorted_dats")
 
 
 def get_parent_elements(
@@ -86,7 +86,7 @@ def process_dat(path: str) -> tuple[list[dict], list]:
     validation_results = []
     basename = os.path.basename(path)
     print(basename)
-    if (root := shared.get_dat_root(path, concurrent=False)) is not None:
+    if (root := sources.get_dat_root(path, concurrent=False)) is not None:
         header = root.find("header")
         game_elements = set(root.findall("game") + root.findall("machine"))
         groups, not_found = group_romsets(basename, game_elements)
@@ -114,7 +114,7 @@ def process_dat(path: str) -> tuple[list[dict], list]:
 
 def process_files() -> None:
     with multiprocessing.Pool(8) as pool:
-        results = pool.map(process_dat, shared.MAME_DATS)
+        results = pool.map(process_dat, sources.MAME_DATS)
 
     validation_errors = []
     not_found = []

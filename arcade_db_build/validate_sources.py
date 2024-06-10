@@ -10,7 +10,7 @@ from typing import Optional
 import os
 import multiprocessing
 from lxml import etree as ET
-from shared import shared
+from arcade_db_build.shared import sources
 
 KNOWN_GAME_ATTRIBUTES = set(
     ["rom", "isdevice", "name", "cloneof", "runnable", "isbios", "sourcefile", "ismechanical", "romof", "sampleof"]
@@ -167,7 +167,7 @@ def find_different_romof_clone_ofs(path: str, elements: list[ET._Element]) -> li
 
 def process_dat(path: str) -> Optional[tuple[set, set, set, set, list, list]]:
     print(os.path.basename(path))
-    if (root := shared.get_dat_root(path, concurrent=True)) is not None:
+    if (root := sources.get_dat_root(path, concurrent=True)) is not None:
         elements = list(root)
         element_tags = [element.tag for element in elements]
         validate_root_tag(root)
@@ -192,7 +192,7 @@ def process_dat(path: str) -> Optional[tuple[set, set, set, set, list, list]]:
 
 def process_files():
     with multiprocessing.Pool(8) as pool:
-        results = pool.map(process_dat, shared.MAME_DATS)
+        results = pool.map(process_dat, sources.MAME_DATS)
 
     game_attributes = set()
     driver_attributes = set()

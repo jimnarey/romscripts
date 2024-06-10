@@ -6,14 +6,14 @@ import argparse
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime
 
-from shared import shared
+from arcade_db_build.shared import sources
 
 parser = argparse.ArgumentParser()
 parser.add_argument("divisor", type=int, help="Divisor")
 parser.add_argument("dat_type", type=str, help="Dat Type")
 args = parser.parse_args()
 
-total_dats = len(shared.SORTED_DATS[args.dat_type])
+total_dats = len(sources.SORTED_DATS[args.dat_type])
 
 total_jobs = math.ceil(total_dats / args.divisor)
 
