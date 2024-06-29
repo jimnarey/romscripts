@@ -142,12 +142,19 @@ class TestGetRecords(unittest.TestCase):
         root_3 = get_dat_root(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc_2.xml"))
         self.assertIsNone(create_db.get_existing_game(self.session, root_3[0]))
 
-    def test_get_existing_game_matches_game_with_same_roms_and_disks(self):
+    def test_get_existing_game_matches_game_with_same_roms_and_disks_sha1(self):
         root = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
         game = create_game_fixture(root[0])
         self.session.add(game)
         self.session.commit()
         self.assertEqual(create_db.get_existing_game(self.session, root[0]), game)
+
+    def test_get_existing_game_matches_game_with_same_roms_and_disks_md5(self):
+        root = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        game = create_game_fixture(root[1])
+        self.session.add(game)
+        self.session.commit()
+        self.assertEqual(create_db.get_existing_game(self.session, root[1]), game)
 
     def test_get_existing_game_returns_none_when_disk_has_different_sha1(self):
         root_1 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
@@ -157,8 +164,16 @@ class TestGetRecords(unittest.TestCase):
         root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
         self.assertIsNone(create_db.get_existing_game(self.session, root_2[0]))
 
+    def test_get_existing_game_returns_none_when_disk_has_different_md5(self):
+        root_1 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
+        game_1 = create_game_fixture(root_1[1])
+        self.session.add(game_1)
+        self.session.commit()
+        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
+        self.assertIsNone(create_db.get_existing_game(self.session, root_2[1]))
 
-class TestCreateRecords(unittest.TestCase):
+
+class TestGetOrCreateRecords(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
         db.Base.metadata.create_all(engine)
@@ -396,7 +411,7 @@ class TestProcessGames(unittest.TestCase):
         self.assertEqual(game.name, "005")
         self.assertEqual(len(game.roms), 22)
 
-    def test_process_games_game_references_id(self):
+    def test_process_games_adds_game_references_ids(self):
         root = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_cloneof_romof_rels.xml"))
         emulator = db.Emulator(name="MAME", version="1")
         _, _, unhandled_references = create_db.process_games(self.session, root, emulator)
