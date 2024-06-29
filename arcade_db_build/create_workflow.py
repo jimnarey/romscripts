@@ -6,7 +6,7 @@ import argparse
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime
 
-from arcade_db_build.shared import sources
+from shared import sources
 
 parser = argparse.ArgumentParser()
 parser.add_argument("divisor", type=int, help="Divisor")
