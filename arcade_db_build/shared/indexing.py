@@ -36,6 +36,11 @@ def roms_signature_from_roms(roms: list[db.Rom]):
 
 
 def roms_signature_from_elements(roms_elements: list[ET._Element]):
+    # We're using get() on the size attribute solely to deal with
+    # {'name': 'snk880.11a', 'mergesize': '131072', 'crc': 'e70fd906'} in
+    # /home/jimnarey/Data/Retro/MAME-DATS/MAME 0.34.xml
+    # This is clearly an error. So, change all lookups to gets and come back to
+    # the problem later
     return get_roms_signature(
         [
             {"name": rom.get("name", ""), "size": int(rom.get("size", 0)), "crc": rom.get("crc", "")}
