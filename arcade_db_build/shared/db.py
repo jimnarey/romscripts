@@ -8,23 +8,9 @@ handle cases where the type checker was unable to properly handle SQLAlchemy
 types.
 """
 
-# from typing import Optional, Type
-
-# import warnings
-# import os
-# import functools
-# import xml.etree.ElementTree as ET
-# import psutil
-# from sqlalchemy import Column, Integer, String, ForeignKey, Table, create_engine, inspect
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
-
-# from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase, backref
-from sqlalchemy.orm import DeclarativeBase, backref
-from sqlalchemy.orm import relationship
-
-# from sqlalchemy.exc import NoResultFound
-
-# from .shared import shared
+from typing import Literal
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index
+from sqlalchemy.orm import Session, DeclarativeBase, backref, relationship
 
 
 class Base(DeclarativeBase):
@@ -72,10 +58,11 @@ class Emulator(Base):
     game_emulators = relationship("GameEmulator", back_populates="emulator")
 
 
+# TODO: What should happen when no games are associated with a rom?
 class Game(Base):
     __tablename__ = "games"
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String, nullable=False)
     description = Column(String)
     year = Column(Integer)
     manufacturer = Column(String)
@@ -93,18 +80,33 @@ class Game(Base):
     ismechanical = Column(String)
     game_emulators = relationship("GameEmulator", back_populates="game")
     disks = relationship("Disk", secondary=game_disk_association, back_populates="games")
-    # TODO: What should happen when no games are associated with a rom?
     roms = relationship("Rom", secondary=game_rom_association, back_populates="games")
+    # md5 and sha1 refer to the hash of any disk elements. For roms we always use crc
+    data_index_md5 = Column(String)
+    data_index_sha1 = Column(String)
+
+    def set_index(self, hash_type: Literal["md5", "sha1"], index: str):
+        if hash_type == "sha1":
+            self.data_index_sha1 = index
+        else:
+            self.data_index_md5 = index
+
+
+def get_game_by_index(session: Session, index_value: str, index_hash_type: Literal["sha1", "md5"]):
+    if index_hash_type == "sha1":
+        return session.query(Game).filter(Game.data_index_sha1 == index_value).first()
+    return session.query(Game).filter(Game.data_index_md5 == index_value).first()
 
 
 class Rom(Base):
     __tablename__ = "roms"
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    size = Column(Integer)
-    crc = Column(String)
+    name = Column(String, nullable=False)
+    size = Column(Integer, nullable=False)
+    crc = Column(String, nullable=False)
     sha1 = Column(String)
     games = relationship("Game", secondary=game_rom_association, back_populates="roms")
+    _table_args__ = (Index("idx_name_size_crc", "name", "size", "crc"),)
 
 
 class Disk(Base):
@@ -115,38 +117,61 @@ class Disk(Base):
 
     __tablename__ = "disks"
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    sha1 = Column(String)
-    md5 = Column(String)
+    name = Column(String, nullable=False)
+    sha1 = Column(String, nullable=False)
+    md5 = Column(String, nullable=False)
     games = relationship("Game", secondary=game_disk_association, back_populates="disks")
+    _table_args__ = (Index("idx_name_sha1", "name", "sha1"), Index("idx_name_md5", "name", "md5"))
 
 
 class Feature(Base):
     __tablename__ = "features"
     id = Column(Integer, primary_key=True)
-    overall = Column(String)
-    type = Column(String)
-    status = Column(String)
+    overall = Column(String, nullable=False)
+    type = Column(String, nullable=False)
+    status = Column(String, nullable=False)
     game_emulators = relationship("GameEmulator", secondary=game_emulator_feature, back_populates="features")
+    _table_args__ = (Index("idx_overall_type_status", "overall", "type", "status"),)
 
 
 class Driver(Base):
     __tablename__ = "drivers"
     id = Column(Integer, primary_key=True)
-    palettesize = Column(String)
-    hiscoresave = Column(String)
-    requiresartwork = Column(String)
-    unofficial = Column(String)
-    good = Column(String)
-    status = Column(String)
-    graphic = Column(String)
-    cocktailmode = Column(String)
-    savestate = Column(String)
-    protection = Column(String)
-    emulation = Column(String)
-    cocktail = Column(String)
-    color = Column(String)
-    nosoundhardware = Column(String)
-    sound = Column(String)
-    incomplete = Column(String)
+    palettesize = Column(String, nullable=False)
+    hiscoresave = Column(String, nullable=False)
+    requiresartwork = Column(String, nullable=False)
+    unofficial = Column(String, nullable=False)
+    good = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+    graphic = Column(String, nullable=False)
+    cocktailmode = Column(String, nullable=False)
+    savestate = Column(String, nullable=False)
+    protection = Column(String, nullable=False)
+    emulation = Column(String, nullable=False)
+    cocktail = Column(String, nullable=False)
+    color = Column(String, nullable=False)
+    nosoundhardware = Column(String, nullable=False)
+    sound = Column(String, nullable=False)
+    incomplete = Column(String, nullable=False)
     game_emulators = relationship("GameEmulator", back_populates="driver")
+    __table_args__ = (
+        Index(
+            "idx_all_attribs",
+            "palettesize",
+            "hiscoresave",
+            "requiresartwork",
+            "unofficial",
+            "good",
+            "status",
+            "graphic",
+            "cocktailmode",
+            "savestate",
+            "protection",
+            "emulation",
+            "cocktail",
+            "color",
+            "nosoundhardware",
+            "sound",
+            "incomplete",
+        ),
+    )

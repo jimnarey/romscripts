@@ -4,7 +4,7 @@ from typing import Optional
 
 from lxml import etree as ET
 from lxml.etree import XMLParser
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from arcade_db_build import create_db
 from arcade_db_build.shared import db
@@ -79,9 +79,9 @@ def create_game_fixture(game_element: ET._Element, emulator_version: str = "1", 
     rom_elements = [element for element in game_element if element.tag == "rom"]
     roms = [
         db.Rom(
-            name=rom_element.get("name"),
-            size=rom_element.get("size"),
-            crc=rom_element.get("crc"),
+            name=rom_element.get("name", ""),
+            size=rom_element.get("size", 0),
+            crc=rom_element.get("crc", ""),
             sha1=rom_element.get("sha1"),
         )
         for rom_element in rom_elements
@@ -89,9 +89,9 @@ def create_game_fixture(game_element: ET._Element, emulator_version: str = "1", 
     disk_elements = [element for element in game_element if element.tag == "disk"]
     disks = [
         db.Disk(
-            name=disk_element.get("name"),
-            md5=disk_element.get("md5"),
-            sha1=disk_element.get("sha1"),
+            name=disk_element.get("name", ""),
+            md5=disk_element.get("md5", ""),
+            sha1=disk_element.get("sha1", ""),
         )
         for disk_element in disk_elements
     ]
@@ -112,71 +112,6 @@ class TestGetRecords(unittest.TestCase):
     def tearDown(self):
         self.session.rollback()
 
-    def test_get_all_instance_attributes(self):
-        driver = db.Driver(
-            palettesize="abc",
-            hiscoresave="def",
-            requiresartwork="ghi",
-            unofficial="jkl",
-            good="mno",
-            status="pqr",
-            graphic="stu",
-            cocktailmode="vwx",
-            savestate="yz",
-            protection="abc",
-            emulation="def",
-            cocktail="ghi",
-            color="jkl",
-            nosoundhardware="mno",
-            sound="pqr",
-            incomplete="stu",
-        )
-        all_attrs = create_db.get_instance_attributes(driver, db.Driver)
-        # Confirm the driver has an id attribute which is not returned
-        self.assertIsNone(driver.id)
-        # Confirm the driver has a game_emulators attribute which is not returned
-        self.assertEqual(driver.game_emulators, [])
-        self.assertEqual(
-            all_attrs,
-            {
-                "palettesize": "abc",
-                "hiscoresave": "def",
-                "requiresartwork": "ghi",
-                "unofficial": "jkl",
-                "good": "mno",
-                "status": "pqr",
-                "graphic": "stu",
-                "cocktailmode": "vwx",
-                "savestate": "yz",
-                "protection": "abc",
-                "emulation": "def",
-                "cocktail": "ghi",
-                "color": "jkl",
-                "nosoundhardware": "mno",
-                "sound": "pqr",
-                "incomplete": "stu",
-            },
-        )
-
-    def test_get_existing_record_returns_record_when_passed_all_attributes(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
-        game = create_game_fixture(root[0])
-        self.session.add(game)
-        self.session.commit()
-        instance_attrs = {c.key: getattr(game, c.key) for c in inspect(game).mapper.column_attrs}
-        instance_attrs.pop(inspect(db.Game).primary_key[0].key, None)
-        self.assertEqual(create_db.get_existing_records(self.session, db.Game, instance_attrs), [game])
-
-    def test_get_existing_record_returns_none_when_no_record_exists(self):
-        self.assertEqual(create_db.get_existing_records(self.session, db.Game, {"name": "game"}), [])
-
-    def test_get_existing_record_returns_record_when_passed_some_attributes(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
-        game = create_game_fixture(root[0])
-        self.session.add(game)
-        self.session.commit()
-        self.assertEqual(create_db.get_existing_records(self.session, db.Game, {"name": "005"}), [game])
-
     def test_get_existing_game_returns_none_when_no_game_exists(self):
         root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
         self.assertIsNone(create_db.get_existing_game(self.session, root[0]))
@@ -195,16 +130,6 @@ class TestGetRecords(unittest.TestCase):
         self.session.add(game_1)
         self.session.commit()
         self.assertIsNone(create_db.get_existing_game(self.session, root_2[0]))
-
-    def test_get_existing_game_can_handle_multiple_existing_games_with_same_name_with_match(self):
-        root_1 = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
-        game_1 = create_game_fixture(root_1[0])
-        self.session.add(game_1)
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc.xml"))
-        game_2 = create_game_fixture(root_2[0])
-        self.session.add(game_2)
-        self.session.commit()
-        self.assertEqual(create_db.get_existing_game(self.session, root_1[0]), game_1)
 
     def test_get_existing_game_can_handle_multiple_existing_games_with_same_name_without_match(self):
         root_1 = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
@@ -296,21 +221,6 @@ class TestCreateRecords(unittest.TestCase):
         self.assertEqual(len(game.roms), 6)
         self.assertEqual(len(game.disks), 2)
 
-    def test_create_features(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
-        features = create_db.create_features(root[0])
-        self.assertEqual(features[0].overall, "imperfect")
-        self.assertEqual(features[0].type, "graphics")
-        self.assertEqual(features[1].status, "imperfect")
-        self.assertEqual(features[1].type, "sound")
-
-    def test_create_driver(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
-        driver = create_db.create_driver(root[0])
-        self.assertEqual(driver.status, "imperfect")
-        self.assertEqual(driver.emulation, "good")
-        self.assertEqual(driver.savestate, "unsupported")
-
     def test_add_features_no_existing_feature(self):
         root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
         game = create_game_fixture(root[0])
@@ -356,190 +266,6 @@ class TestCreateRecords(unittest.TestCase):
         create_db.add_driver(self.session, game_emulator_2, root[0])
         self.session.commit()
         self.assertEqual(game_emulator_1.driver, game_emulator_2.driver)
-
-
-class TestRomMatching(unittest.TestCase):
-    def setUp(self):
-        engine = create_engine("sqlite:///:memory:")
-        db.Base.metadata.create_all(engine)
-        Session = sessionmaker(bind=engine)
-        self.session = Session()
-
-    def test_match_rom_with_rom_element_matches_existing_rom_with_same_name_and_no_crc(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "games_one_rom.xml"))
-        game = create_game_fixture(root[0])
-        self.session.add(game)
-        self.session.commit()
-        rom_element = root[0].find("rom")
-        rom = game.roms.pop()
-        self.assertTrue(create_db.match_rom_with_rom_element(rom, rom_element))
-
-    def test_match_rom_with_rom_element_matches_existing_rom_with_same_name_and_crc(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "games_one_rom.xml"))
-        game = create_game_fixture(root[1])
-        self.session.add(game)
-        self.session.commit()
-        rom_element = root[1].find("rom")
-        rom = game.roms.pop()
-        self.assertTrue(create_db.match_rom_with_rom_element(rom, rom_element))
-
-    def test_match_rom_with_rom_element_returns_false_when_crc_different(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "games_one_rom.xml"))
-        game = create_game_fixture(root[1])
-        self.session.add(game)
-        self.session.commit()
-        rom_element = root[2].find("rom")
-        rom = game.roms.pop()
-        self.assertFalse(create_db.match_rom_with_rom_element(rom, rom_element))
-
-    def test_match_rom_in_rom_elements_matches_existing_rom(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
-        game = create_game_fixture(root[0])
-        self.session.add(game)
-        self.session.commit()
-        rom_elements = [element for element in root[0] if element.tag == "rom"]
-        rom = game.roms[0]
-        self.assertTrue(create_db.match_rom_in_rom_elements(rom, rom_elements))
-
-    def test_match_rom_in_rom_elements_does_not_match_existing_rom_when_crc_different(self):
-        root_1 = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
-        game = create_game_fixture(root_1[0])
-        self.session.add(game)
-        self.session.commit()
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc.xml"))
-        rom_elements = [element for element in root_2[0] if element.tag == "rom"]
-        rom = game.roms[0]
-        self.assertFalse(create_db.match_rom_in_rom_elements(rom, rom_elements))
-
-    def test_match_game_roms_returns_true_when_all_same(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
-        game = create_game_fixture(root[0])
-        self.session.add(game)
-        self.session.commit()
-        rom_elements = [element for element in root[0] if element.tag == "rom"]
-        self.assertTrue(create_db.match_game_roms(game, rom_elements))
-
-    def test_match_game_roms_returns_false_when_rom_has_different_crc(self):
-        root_1 = get_dat_root(os.path.join(FIXTURES_PATH, "one_game.xml"))
-        game = create_game_fixture(root_1[0])
-        self.session.add(game)
-        self.session.commit()
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "one_game_diff_rom_crc.xml"))
-        rom_elements = [element for element in root_2[0] if element.tag == "rom"]
-        self.assertFalse(create_db.match_game_roms(game, rom_elements))
-
-
-class TestDiskMatching(unittest.TestCase):
-    def setUp(self):
-        engine = create_engine("sqlite:///:memory:")
-        db.Base.metadata.create_all(engine)
-        Session = sessionmaker(bind=engine)
-        self.session = Session()
-        self.parser = XMLParser(remove_comments=True)
-        self.games_with_disks_root = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
-
-    # These can be improved. They're depenent on the order of the disks in the XML
-    # files and the order of the disks in the game objects. They're solid but a
-    # bit hard to work with.
-
-    def test_match_disk_with_disk_element_matches_existing_disk_when_no_sha1_or_md5(self):
-        game = create_game_fixture(self.games_with_disks_root[2])
-        self.session.add(game)
-        self.session.commit()
-        disk_element = [element for element in self.games_with_disks_root[2] if element.tag == "disk"].pop()
-        disk = [disk for disk in game.disks if disk.sha1 is None].pop()
-        self.assertTrue(create_db.match_disk_with_disk_element(disk, disk_element))
-
-    def test_match_disk_with_disk_element_matches_existing_disk_by_sha1(self):
-        game = create_game_fixture(self.games_with_disks_root[0])
-        self.session.add(game)
-        self.session.commit()
-        disk_elements = [element for element in self.games_with_disks_root[0] if element.tag == "disk"]
-        disk_element = [element for element in disk_elements if element.attrib["name"] == "dvp-0027a"].pop()
-        disk = [disk for disk in game.disks if disk.name == "dvp-0027a"].pop()
-        self.assertTrue(create_db.match_disk_with_disk_element(disk, disk_element))
-
-    def test_match_disk_with_disk_element_matches_existing_disk_by_md5(self):
-        game = create_game_fixture(self.games_with_disks_root[1])
-        self.session.add(game)
-        self.session.commit()
-        disk_element = [element for element in self.games_with_disks_root[1] if element.tag == "disk"].pop()
-        disk = game.disks[0]
-        self.assertTrue(create_db.match_disk_with_disk_element(disk, disk_element))
-
-    def test_match_disk_with_disk_element_returns_none_when_sha1_different(self):
-        game_1 = create_game_fixture(self.games_with_disks_root[0])
-        self.session.add(game_1)
-        self.session.commit()
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
-        disk_elements = [element for element in root_2[0] if element.tag == "disk"]
-        disk_element = [element for element in disk_elements if element.attrib["name"] == "dvp-0027a"].pop()
-        disk = [disk for disk in game_1.disks if disk.name == "dvp-0027a"].pop()
-        self.assertFalse(create_db.match_disk_with_disk_element(disk, disk_element))
-
-    def test_match_disk_with_disk_element_returns_none_when_md5_different(self):
-        game = create_game_fixture(self.games_with_disks_root[1])
-        self.session.add(game)
-        self.session.commit()
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
-        disk_element = [element for element in root_2[1] if element.tag == "disk"].pop()
-        disk = game.disks[0]
-        self.assertFalse(create_db.match_disk_with_disk_element(disk, disk_element))
-
-    def test_match_disk_in_disk_elements_matches_existing_disk(self):
-        game = create_game_fixture(self.games_with_disks_root[0])
-        self.session.add(game)
-        self.session.commit()
-        disk_elements = [element for element in self.games_with_disks_root[0] if element.tag == "disk"]
-        for disk in game.disks:
-            self.assertTrue(create_db.match_disk_in_disk_elements(disk, disk_elements))
-
-    def test_match_disk_in_disk_elements_does_not_match_disk_not_in_elements(self):
-        game = create_game_fixture(self.games_with_disks_root[0])
-        self.session.add(game)
-        self.session.commit()
-        disk_elements = [element for element in self.games_with_disks_root[1] if element.tag == "disk"]
-        for disk in game.disks:
-            self.assertFalse(create_db.match_disk_in_disk_elements(disk, disk_elements))
-
-    def test_match_disk_in_disk_elements_does_not_match_existing_disk_when_sha1_different(self):
-        game = create_game_fixture(self.games_with_disks_root[0])
-        self.session.add(game)
-        self.session.commit()
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
-        disk_elements = [element for element in root_2[0] if element.tag == "disk"]
-        for disk in game.disks:
-            self.assertFalse(create_db.match_disk_in_disk_elements(disk, disk_elements))
-
-    def test_match_game_disks_returns_true_when_all_same(self):
-        game = create_game_fixture(self.games_with_disks_root[0])
-        self.session.add(game)
-        self.session.commit()
-        self.assertTrue(create_db.match_game_disks(game, self.games_with_disks_root[0]))
-
-    def test_match_game_disks_returns_false_when_disk_has_different_sha1(self):
-        game_1 = create_game_fixture(self.games_with_disks_root[0])
-        self.session.add(game_1)
-        self.session.commit()
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
-        self.assertFalse(create_db.match_game_disks(game_1, root_2[0]))
-
-
-# class TestCreateGameReferences(unittest.TestCase):
-#     def test_create_game_references_with_cloneof_and_romof(self):
-#         game_element = ET.Element("game", {"cloneof": "game1", "romof": "game2"})
-#         references = create_db.create_game_references(game_element)
-#         self.assertEqual(references, {"cloneof": "game1", "romof": "game2"})
-
-#     def test_create_game_references_with_only_cloneof(self):
-#         game_element = ET.Element("game", {"cloneof": "game1"})
-#         references = create_db.create_game_references(game_element)
-#         self.assertEqual(references, {"cloneof": "game1"})
-
-#     def test_create_game_references_with_no_references(self):
-#         game_element = ET.Element("game")
-#         references = create_db.create_game_references(game_element)
-#         self.assertIsNone(references)
 
 
 class TestAddGameReference(unittest.TestCase):

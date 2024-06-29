@@ -84,3 +84,12 @@ def disk_records_hash_type(game: db.Game) -> Literal["md5", "sha1"]:
     if any(disk.sha1 for disk in game.disks):
         return "sha1"
     return "md5"
+
+
+# This wouldn't be the best event to catch if we were editing Game records because it's
+# called even if attributes unrelated to the indexing function change.
+@event.listens_for(db.Game, "before_insert")
+def update_composite_indexes(mapper, connection, target):
+    disk_hash_type = disk_records_hash_type(target)
+    index = get_game_index_from_records_by_disk_hash_type(target.name, target.roms, target.disks, disk_hash_type)
+    target.set_index(disk_hash_type, index)
