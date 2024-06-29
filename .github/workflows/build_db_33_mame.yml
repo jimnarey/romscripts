@@ -1,0 +1,1220 @@
+name: Run build.py
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build0:
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Run build.py
+      run: |
+
+        python -u build.py -p arcade-20240629194325-0.db -d mame -s 0  -e 10
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-0.db
+        path: arcade-20240629194325-0.db
+
+  build1:
+
+    needs: build0
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-0.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-0.db arcade-20240629194325-1.db
+        python -u build.py -p arcade-20240629194325-1.db -d mame -s 10  -e 20
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-1.db
+        path: arcade-20240629194325-1.db
+
+  build2:
+
+    needs: build1
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-1.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-1.db arcade-20240629194325-2.db
+        python -u build.py -p arcade-20240629194325-2.db -d mame -s 20  -e 30
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-2.db
+        path: arcade-20240629194325-2.db
+
+  build3:
+
+    needs: build2
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-2.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-2.db arcade-20240629194325-3.db
+        python -u build.py -p arcade-20240629194325-3.db -d mame -s 30  -e 40
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-3.db
+        path: arcade-20240629194325-3.db
+
+  build4:
+
+    needs: build3
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-3.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-3.db arcade-20240629194325-4.db
+        python -u build.py -p arcade-20240629194325-4.db -d mame -s 40  -e 50
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-4.db
+        path: arcade-20240629194325-4.db
+
+  build5:
+
+    needs: build4
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-4.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-4.db arcade-20240629194325-5.db
+        python -u build.py -p arcade-20240629194325-5.db -d mame -s 50  -e 60
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-5.db
+        path: arcade-20240629194325-5.db
+
+  build6:
+
+    needs: build5
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-5.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-5.db arcade-20240629194325-6.db
+        python -u build.py -p arcade-20240629194325-6.db -d mame -s 60  -e 70
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-6.db
+        path: arcade-20240629194325-6.db
+
+  build7:
+
+    needs: build6
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-6.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-6.db arcade-20240629194325-7.db
+        python -u build.py -p arcade-20240629194325-7.db -d mame -s 70  -e 80
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-7.db
+        path: arcade-20240629194325-7.db
+
+  build8:
+
+    needs: build7
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-7.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-7.db arcade-20240629194325-8.db
+        python -u build.py -p arcade-20240629194325-8.db -d mame -s 80  -e 90
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-8.db
+        path: arcade-20240629194325-8.db
+
+  build9:
+
+    needs: build8
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-8.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-8.db arcade-20240629194325-9.db
+        python -u build.py -p arcade-20240629194325-9.db -d mame -s 90  -e 100
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-9.db
+        path: arcade-20240629194325-9.db
+
+  build10:
+
+    needs: build9
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-9.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-9.db arcade-20240629194325-10.db
+        python -u build.py -p arcade-20240629194325-10.db -d mame -s 100  -e 110
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-10.db
+        path: arcade-20240629194325-10.db
+
+  build11:
+
+    needs: build10
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-10.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-10.db arcade-20240629194325-11.db
+        python -u build.py -p arcade-20240629194325-11.db -d mame -s 110  -e 120
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-11.db
+        path: arcade-20240629194325-11.db
+
+  build12:
+
+    needs: build11
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-11.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-11.db arcade-20240629194325-12.db
+        python -u build.py -p arcade-20240629194325-12.db -d mame -s 120  -e 130
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-12.db
+        path: arcade-20240629194325-12.db
+
+  build13:
+
+    needs: build12
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-12.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-12.db arcade-20240629194325-13.db
+        python -u build.py -p arcade-20240629194325-13.db -d mame -s 130  -e 140
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-13.db
+        path: arcade-20240629194325-13.db
+
+  build14:
+
+    needs: build13
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-13.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-13.db arcade-20240629194325-14.db
+        python -u build.py -p arcade-20240629194325-14.db -d mame -s 140  -e 150
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-14.db
+        path: arcade-20240629194325-14.db
+
+  build15:
+
+    needs: build14
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-14.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-14.db arcade-20240629194325-15.db
+        python -u build.py -p arcade-20240629194325-15.db -d mame -s 150  -e 160
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-15.db
+        path: arcade-20240629194325-15.db
+
+  build16:
+
+    needs: build15
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-15.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-15.db arcade-20240629194325-16.db
+        python -u build.py -p arcade-20240629194325-16.db -d mame -s 160  -e 170
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-16.db
+        path: arcade-20240629194325-16.db
+
+  build17:
+
+    needs: build16
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-16.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-16.db arcade-20240629194325-17.db
+        python -u build.py -p arcade-20240629194325-17.db -d mame -s 170  -e 180
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-17.db
+        path: arcade-20240629194325-17.db
+
+  build18:
+
+    needs: build17
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-17.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-17.db arcade-20240629194325-18.db
+        python -u build.py -p arcade-20240629194325-18.db -d mame -s 180  -e 190
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-18.db
+        path: arcade-20240629194325-18.db
+
+  build19:
+
+    needs: build18
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-18.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-18.db arcade-20240629194325-19.db
+        python -u build.py -p arcade-20240629194325-19.db -d mame -s 190  -e 200
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-19.db
+        path: arcade-20240629194325-19.db
+
+  build20:
+
+    needs: build19
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-19.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-19.db arcade-20240629194325-20.db
+        python -u build.py -p arcade-20240629194325-20.db -d mame -s 200  -e 210
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-20.db
+        path: arcade-20240629194325-20.db
+
+  build21:
+
+    needs: build20
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-20.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-20.db arcade-20240629194325-21.db
+        python -u build.py -p arcade-20240629194325-21.db -d mame -s 210  -e 220
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-21.db
+        path: arcade-20240629194325-21.db
+
+  build22:
+
+    needs: build21
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-21.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-21.db arcade-20240629194325-22.db
+        python -u build.py -p arcade-20240629194325-22.db -d mame -s 220  -e 230
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-22.db
+        path: arcade-20240629194325-22.db
+
+  build23:
+
+    needs: build22
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-22.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-22.db arcade-20240629194325-23.db
+        python -u build.py -p arcade-20240629194325-23.db -d mame -s 230  -e 240
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-23.db
+        path: arcade-20240629194325-23.db
+
+  build24:
+
+    needs: build23
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-23.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-23.db arcade-20240629194325-24.db
+        python -u build.py -p arcade-20240629194325-24.db -d mame -s 240  -e 250
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-24.db
+        path: arcade-20240629194325-24.db
+
+  build25:
+
+    needs: build24
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-24.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-24.db arcade-20240629194325-25.db
+        python -u build.py -p arcade-20240629194325-25.db -d mame -s 250  -e 260
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-25.db
+        path: arcade-20240629194325-25.db
+
+  build26:
+
+    needs: build25
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-25.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-25.db arcade-20240629194325-26.db
+        python -u build.py -p arcade-20240629194325-26.db -d mame -s 260  -e 270
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-26.db
+        path: arcade-20240629194325-26.db
+
+  build27:
+
+    needs: build26
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-26.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-26.db arcade-20240629194325-27.db
+        python -u build.py -p arcade-20240629194325-27.db -d mame -s 270  -e 280
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-27.db
+        path: arcade-20240629194325-27.db
+
+  build28:
+
+    needs: build27
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-27.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-27.db arcade-20240629194325-28.db
+        python -u build.py -p arcade-20240629194325-28.db -d mame -s 280  -e 290
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-28.db
+        path: arcade-20240629194325-28.db
+
+  build29:
+
+    needs: build28
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-28.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-28.db arcade-20240629194325-29.db
+        python -u build.py -p arcade-20240629194325-29.db -d mame -s 290  -e 300
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-29.db
+        path: arcade-20240629194325-29.db
+
+  build30:
+
+    needs: build29
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-29.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-29.db arcade-20240629194325-30.db
+        python -u build.py -p arcade-20240629194325-30.db -d mame -s 300  -e 310
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-30.db
+        path: arcade-20240629194325-30.db
+
+  build31:
+
+    needs: build30
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-30.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-30.db arcade-20240629194325-31.db
+        python -u build.py -p arcade-20240629194325-31.db -d mame -s 310  -e 320
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-31.db
+        path: arcade-20240629194325-31.db
+
+  build32:
+
+    needs: build31
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20240629194325-31.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20240629194325-31.db arcade-20240629194325-32.db
+        python -u build.py -p arcade-20240629194325-32.db -d mame -s 320
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20240629194325-32.db
+        path: arcade-20240629194325-32.db
