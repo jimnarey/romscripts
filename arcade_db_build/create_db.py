@@ -8,7 +8,9 @@ handle cases where the type checker was unable to properly handle SQLAlchemy
 types.
 """
 
-# TODO: Change calls to .first to .one_or_none
+# TODO: Add Chip table and create records for non-rom machines (e.g. famicom)
+# TODO: Investigate and implement the use of the 'merge' attribute in Rom elements. Validate parameters for merge attributes.
+# TODO: Change calls to .first to .one_or_none or .one
 
 from typing import Optional, Type, Literal
 import warnings
