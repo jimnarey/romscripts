@@ -7,4 +7,4 @@ testing/*
 *.7z
 *.rar
 *.db
-!arcade_db/arcade-latest.db
+!arcade-latest.db
