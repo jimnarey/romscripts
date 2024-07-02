@@ -29,14 +29,20 @@ def get_roms_signature(rom_specs: list[dict]):
     return ",".join(sorted(signatures))
 
 
+def get_index_hash(game_name: str, roms_signature: str):
+    return hashlib.sha256(f"{game_name}{roms_signature}".encode()).hexdigest()
+
+
 def get_game_index_from_records(game_name: str, roms: list[db.Rom]):
     roms_signature = roms_signature_from_roms(roms)
-    return hashlib.sha256(f"{game_name}{roms_signature}".encode()).hexdigest()
+    # return hashlib.sha256(f"{game_name}{roms_signature}".encode()).hexdigest()
+    return get_index_hash(game_name, roms_signature)
 
 
 def get_game_index_from_elements(game_name: str, rom_elements: list[ET._Element]):
     roms_signature = roms_signature_from_elements(rom_elements)
-    return hashlib.sha256(f"{game_name}{roms_signature}".encode()).hexdigest()
+    # return hashlib.sha256(f"{game_name}{roms_signature}".encode()).hexdigest()
+    return get_index_hash(game_name, roms_signature)
 
 
 # This wouldn't be the best event to catch if we were editing Game records because it's
