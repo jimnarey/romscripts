@@ -45,6 +45,13 @@ game_emulator_feature = Table(
     Column("feature_id", Integer, ForeignKey("features.id")),
 )
 
+game_emulator_disk = Table(
+    "game_emulator_disk",
+    Base.metadata,
+    Column("game_emulator_id", Integer, ForeignKey("game_emulator.game_id")),
+    Column("disk_id", Integer, ForeignKey("disks.id")),
+)
+
 
 class GameEmulator(Base):
     __tablename__ = "game_emulator"
@@ -55,6 +62,7 @@ class GameEmulator(Base):
     emulator = relationship("Emulator", back_populates="game_emulators")
     driver = relationship("Driver", back_populates="game_emulators")
     features = relationship("Feature", secondary=game_emulator_feature, back_populates="game_emulators")
+    disks = relationship("Disk", secondary=game_emulator_disk, back_populates="game_emulators")
 
 
 class Emulator(Base):
@@ -86,8 +94,8 @@ class Game(Base):
     runnable = Column(String)
     ismechanical = Column(String)
     game_emulators = relationship("GameEmulator", back_populates="game")
-    disks = relationship("Disk", secondary=game_disk_association, back_populates="games")
     roms = relationship("Rom", secondary=game_rom_association, back_populates="games")
+    # TODO: Make this unique
     name_roms_index = Column(String, index=True)
 
 
@@ -113,7 +121,7 @@ class Disk(Base):
     name = Column(String, nullable=False)
     sha1 = Column(String, nullable=False)
     md5 = Column(String, nullable=False)
-    games = relationship("Game", secondary=game_disk_association, back_populates="disks")
+    game_emulators = relationship("GameEmulator", secondary=game_emulator_disk, back_populates="disks")
     _table_args__ = (Index("idx_name_sha1", "name", "sha1"), Index("idx_name_md5", "name", "md5"))
 
 

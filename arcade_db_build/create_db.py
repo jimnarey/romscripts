@@ -12,7 +12,7 @@ types.
 # TODO: Investigate and implement the use of the 'merge' attribute in Rom elements. Validate parameters for merge attributes.
 # TODO: Change calls to .first to .one_or_none or .one
 
-from typing import Optional, Type, Literal
+from typing import Optional, Type
 import warnings
 import os
 
@@ -45,15 +45,6 @@ def get_instance_attributes(instance: DeclarativeBase, model_class: Type[Declara
     instance_attrs = {c.key: getattr(instance, c.key) for c in inspect(instance).mapper.column_attrs}
     instance_attrs.pop(primary_key_column, None)
     return instance_attrs
-
-
-def disk_elements_hash_type(disk_elements: list[ET._Element]) -> Literal["md5", "sha1"]:
-    """
-    Will return 'md5' if disk_elements is empty
-    """
-    if any("sha1" in disk_element.attrib for disk_element in disk_elements):
-        return "sha1"
-    return "md5"
 
 
 def get_existing_game(session: Session, game_element: ET._Element) -> Optional[db.Game]:
@@ -143,8 +134,6 @@ def create_game(session: Session, game_element: ET._Element) -> Optional[db.Game
             ismechanical=game_element.get("ismechanical"),
         )
         game.roms = get_or_create_roms(session, rom_elements)
-        if disk_elements := utils.get_sub_elements(game_element, "disk"):
-            game.disks = get_or_create_disks(session, disk_elements)
         return game
     return None
 
@@ -196,11 +185,20 @@ def add_driver(session: Session, game_emulator: db.GameEmulator, game_element: E
         session.add(driver)
 
 
+# TODO: Can probably avoid using get_sub_elements.
+def add_disks(session: Session, game_emulator: db.GameEmulator, game_element: ET._Element):
+    if disk_elements := utils.get_sub_elements(game_element, "disk"):
+        disks = get_or_create_disks(session, disk_elements)
+        game_emulator.disks.extend(disks)
+        session.add_all(game_emulator.features)
+
+
 def add_game_emulator_relationship(session: Session, game_element: ET._Element, game: db.Game, emulator: db.Emulator):
     game_emulator = db.GameEmulator(game=game, emulator=emulator)
     session.add(game_emulator)
     add_features(session, game_emulator, game_element)
     add_driver(session, game_emulator, game_element)
+    add_disks(session, game_emulator, game_element)
 
 
 def add_game_reference(

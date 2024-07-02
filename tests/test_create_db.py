@@ -86,16 +86,7 @@ def create_game_fixture(game_element: ET._Element, emulator_version: str = "1", 
         )
         for rom_element in rom_elements
     ]
-    disk_elements = [element for element in game_element if element.tag == "disk"]
-    disks = [
-        db.Disk(
-            name=disk_element.get("name", ""),
-            md5=disk_element.get("md5", ""),
-            sha1=disk_element.get("sha1", ""),
-        )
-        for disk_element in disk_elements
-    ]
-    game = db.Game(name=game_name if game_name else game_element.get("name"), roms=roms, disks=disks)
+    game = db.Game(name=game_name if game_name else game_element.get("name"), roms=roms)
     emulator = db.Emulator(name="MAME", version=emulator_version)
     game_emulator = db.GameEmulator(game=game, emulator=emulator)
     game.game_emulators.append(game_emulator)
@@ -212,13 +203,6 @@ class TestGetOrCreateRecords(unittest.TestCase):
         game = create_db.create_game(self.session, root[0])
         self.assertEqual(game.name, "005")
         self.assertEqual(len(game.roms), 22)
-
-    def test_create_game_with_roms_and_disks(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
-        game = create_db.create_game(self.session, root[0])
-        self.assertEqual(game.name, "2spicy")
-        self.assertEqual(len(game.roms), 6)
-        self.assertEqual(len(game.disks), 2)
 
     def test_add_features_no_existing_feature(self):
         root = get_dat_root(os.path.join(FIXTURES_PATH, "one_game_with_features_driver.xml"))
