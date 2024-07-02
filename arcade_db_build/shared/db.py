@@ -96,7 +96,7 @@ class Game(Base):
     game_emulators = relationship("GameEmulator", back_populates="game")
     roms = relationship("Rom", secondary=game_rom_association, back_populates="games")
     # TODO: Make this unique
-    name_roms_index = Column(String, index=True)
+    name_roms_index = Column(String, index=True, unique=True)
 
 
 class Rom(Base):
