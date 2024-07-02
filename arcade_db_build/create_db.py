@@ -18,8 +18,8 @@ import os
 
 from lxml import etree as ET
 import psutil
-from sqlalchemy import create_engine, inspect
-from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
+from sqlalchemy import inspect
+from sqlalchemy.orm import Session, DeclarativeBase
 
 from .shared import db, sources, utils, indexing
 
@@ -35,13 +35,6 @@ def check_memory_utilization(threshold=90):
     memory_usage = psutil.virtual_memory().percent
     if memory_usage > threshold:
         warnings.warn(f"Memory usage is {memory_usage}%")
-
-
-def get_session(db_path: str) -> Session:
-    engine = create_engine(f"sqlite:///{db_path}")
-    db.Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    return Session()
 
 
 def get_instance_attributes(instance: DeclarativeBase, model_class: Type[DeclarativeBase]) -> dict[str, str]:

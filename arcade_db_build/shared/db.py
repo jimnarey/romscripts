@@ -10,11 +10,19 @@ types.
 
 from typing import Literal
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index
-from sqlalchemy.orm import Session, DeclarativeBase, backref, relationship
+from sqlalchemy.orm import Session, DeclarativeBase, sessionmaker, backref, relationship
+from sqlalchemy import create_engine
 
 
 class Base(DeclarativeBase):
     pass
+
+
+def get_session(db_path: str) -> Session:
+    engine = create_engine(f"sqlite:///{db_path}")
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    return Session()
 
 
 game_rom_association = Table(
