@@ -1,34 +1,9 @@
 #!/usr/bin/env python
 
-from typing import Literal
 import hashlib
 from lxml import etree as ET
 from sqlalchemy import event
 from . import db
-
-
-def get_disks_signature_from_disks(disks: list[db.Disk], hash_type: Literal["md5", "sha1"]):
-    try:
-        disk_signatures = [{"name": disk.name, hash_type: getattr(disk, hash_type)} for disk in disks]
-        if any(not disk[hash_type] for disk in disk_signatures):
-            return None
-        return get_disks_signature(disk_signatures, hash_type)
-    except AttributeError:
-        return None
-
-
-def get_disks_signature_from_elements(disks_elements: list[ET._Element], hash_type: Literal["md5", "sha1"]):
-    try:
-        return get_disks_signature(
-            [{"name": disk.attrib["name"], hash_type: disk.attrib[hash_type]} for disk in disks_elements], hash_type
-        )
-    except KeyError:
-        return None
-
-
-def get_disks_signature(disk_specs: list[dict], hash_type: Literal["md5", "sha1"]):
-    signatures = [f"{disk['name']}/{disk[hash_type]}" for disk in disk_specs]
-    return ",".join(sorted(signatures))
 
 
 def roms_signature_from_roms(roms: list[db.Rom]):
@@ -54,47 +29,18 @@ def get_roms_signature(rom_specs: list[dict]):
     return ",".join(sorted(signatures))
 
 
-def get_data_signature_from_records(roms: list[db.Rom], disks: list[db.Disk], hash_type: Literal["md5", "sha1"]):
-    rom_signatures = roms_signature_from_roms(roms)
-    disk_signatures = get_disks_signature_from_disks(disks, hash_type)
-    return f"{rom_signatures}+{disk_signatures}"
+def get_game_index_from_records(game_name: str, roms: list[db.Rom]):
+    roms_signature = roms_signature_from_roms(roms)
+    return hashlib.sha256(f"{game_name}{roms_signature}".encode()).hexdigest()
 
 
-def get_data_signature_from_elements(
-    rom_elements: list[ET._Element], disks_elements: list[ET._Element], hash_type: Literal["md5", "sha1"]
-):
-    rom_signatures = roms_signature_from_elements(rom_elements)
-    disk_signatures = get_disks_signature_from_elements(disks_elements, hash_type)
-    return f"{rom_signatures}+{disk_signatures}"
-
-
-def get_game_index_from_records_by_disk_hash_type(
-    game_name: str, roms: list[db.Rom], disks: list[db.Disk], hash_type: Literal["md5", "sha1"]
-):
-    data_signature = get_data_signature_from_records(roms, disks, hash_type)
-    return hashlib.sha256(f"{game_name}{data_signature}".encode()).hexdigest()
-
-
-def get_game_index_from_elements_by_disk_hash_type(
-    game_name: str,
-    rom_elements: list[ET._Element],
-    disks_elements: list[ET._Element],
-    hash_type: Literal["md5", "sha1"],
-):
-    data_signature = get_data_signature_from_elements(rom_elements, disks_elements, hash_type)
-    return hashlib.sha256(f"{game_name}{data_signature}".encode()).hexdigest()
-
-
-def disk_records_hash_type(game: db.Game) -> Literal["md5", "sha1"]:
-    if any(disk.sha1 for disk in game.disks):
-        return "sha1"
-    return "md5"
+def get_game_index_from_elements(game_name: str, rom_elements: list[ET._Element]):
+    roms_signature = roms_signature_from_elements(rom_elements)
+    return hashlib.sha256(f"{game_name}{roms_signature}".encode()).hexdigest()
 
 
 # This wouldn't be the best event to catch if we were editing Game records because it's
 # called even if attributes unrelated to the indexing function change.
 @event.listens_for(db.Game, "before_insert")
 def update_composite_indexes(mapper, connection, target):
-    disk_hash_type = disk_records_hash_type(target)
-    index = get_game_index_from_records_by_disk_hash_type(target.name, target.roms, target.disks, disk_hash_type)
-    target.set_index(disk_hash_type, index)
+    target.name_roms_index = get_game_index_from_records(target.name, target.roms)

@@ -62,12 +62,8 @@ def get_existing_game(session: Session, game_element: ET._Element) -> Optional[d
     This is fine for the current implementation. Remember if refactoring.
     """
     rom_elements = utils.get_sub_elements(game_element, "rom")
-    disk_elements = utils.get_sub_elements(game_element, "disk")
-    disk_hash_type = disk_elements_hash_type(disk_elements)
-    index_value = indexing.get_game_index_from_elements_by_disk_hash_type(
-        game_element.get("name", ""), rom_elements, disk_elements, disk_hash_type
-    )
-    if existing_game := db.get_game_by_index(session, index_value, disk_hash_type):
+    index_value = indexing.get_game_index_from_elements(game_element.get("name", ""), rom_elements)
+    if existing_game := session.query(db.Game).filter_by(name_roms_index=index_value).first():
         return existing_game
     return None
 

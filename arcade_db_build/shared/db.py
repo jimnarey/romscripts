@@ -8,7 +8,6 @@ handle cases where the type checker was unable to properly handle SQLAlchemy
 types.
 """
 
-from typing import Literal
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index
 from sqlalchemy.orm import Session, DeclarativeBase, sessionmaker, backref, relationship
 from sqlalchemy import create_engine
@@ -89,21 +88,7 @@ class Game(Base):
     game_emulators = relationship("GameEmulator", back_populates="game")
     disks = relationship("Disk", secondary=game_disk_association, back_populates="games")
     roms = relationship("Rom", secondary=game_rom_association, back_populates="games")
-    # md5 and sha1 refer to the hash of any disk elements. For roms we always use crc
-    data_index_md5 = Column(String)
-    data_index_sha1 = Column(String)
-
-    def set_index(self, hash_type: Literal["md5", "sha1"], index: str):
-        if hash_type == "sha1":
-            self.data_index_sha1 = index
-        else:
-            self.data_index_md5 = index
-
-
-def get_game_by_index(session: Session, index_value: str, index_hash_type: Literal["sha1", "md5"]):
-    if index_hash_type == "sha1":
-        return session.query(Game).filter(Game.data_index_sha1 == index_value).first()
-    return session.query(Game).filter(Game.data_index_md5 == index_value).first()
+    name_roms_index = Column(String, index=True)
 
 
 class Rom(Base):

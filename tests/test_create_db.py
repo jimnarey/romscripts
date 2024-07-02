@@ -156,22 +156,6 @@ class TestGetRecords(unittest.TestCase):
         self.session.commit()
         self.assertEqual(create_db.get_existing_game(self.session, root[1]), game)
 
-    def test_get_existing_game_returns_none_when_disk_has_different_sha1(self):
-        root_1 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
-        game_1 = create_game_fixture(root_1[0])
-        self.session.add(game_1)
-        self.session.commit()
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
-        self.assertIsNone(create_db.get_existing_game(self.session, root_2[0]))
-
-    def test_get_existing_game_returns_none_when_disk_has_different_md5(self):
-        root_1 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
-        game_1 = create_game_fixture(root_1[1])
-        self.session.add(game_1)
-        self.session.commit()
-        root_2 = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
-        self.assertIsNone(create_db.get_existing_game(self.session, root_2[1]))
-
 
 class TestGetOrCreateRecords(unittest.TestCase):
     def setUp(self):
@@ -471,26 +455,6 @@ class TestProcessGames(unittest.TestCase):
         emulator_2_id = emulator_2.id
         create_db.process_games(self.session, root, emulator_2)
         games = self.session.query(db.Game).filter_by(name="005").all()
-        self.assertEqual(len(games), 2)
-        game_emulator_1_ids = [ge.emulator_id for ge in games[0].game_emulators]
-        game_emulator_2_ids = [ge.emulator_id for ge in games[1].game_emulators]
-        self.assertIn(emulator_1_id, game_emulator_1_ids)
-        self.assertIn(emulator_2_id, game_emulator_2_ids)
-
-    def test_creates_new_game_when_one_disk_is_different(self):
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks.xml"))
-        emulator_1 = db.Emulator(name="MAME", version="1")
-        self.session.add(emulator_1)
-        self.session.commit()
-        emulator_1_id = emulator_1.id
-        create_db.process_games(self.session, root, emulator_1)
-        root = get_dat_root(os.path.join(FIXTURES_PATH, "games_with_disks_diff_hashes.xml"))
-        emulator_2 = db.Emulator(name="MAME", version="2")
-        self.session.add(emulator_2)
-        self.session.commit()
-        emulator_2_id = emulator_2.id
-        create_db.process_games(self.session, root, emulator_2)
-        games = self.session.query(db.Game).filter_by(name="2spicy").all()
         self.assertEqual(len(games), 2)
         game_emulator_1_ids = [ge.emulator_id for ge in games[0].game_emulators]
         game_emulator_2_ids = [ge.emulator_id for ge in games[1].game_emulators]
