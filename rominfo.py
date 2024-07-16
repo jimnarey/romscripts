@@ -4,7 +4,7 @@ from pathlib import Path
 from optparse import OptionParser
 from zipfile import ZipFile
 
-from arcade_db_build.shared import db, indexing
+from arcade_db.shared import db, indexing
 
 
 DB_PATH = Path("./arcade_db/arcade-latest.db")

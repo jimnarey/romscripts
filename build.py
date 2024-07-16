@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from optparse import OptionParser
-from arcade_db_build import create_db
-from arcade_db_build.shared import sources, db
+from arcade_db import create_db
+from arcade_db.shared import sources, db
 
 
 def print_job_summary(start, end, filepath, source_dats):

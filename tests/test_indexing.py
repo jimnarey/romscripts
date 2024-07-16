@@ -1,6 +1,6 @@
 import unittest
 from lxml.etree import Element
-from arcade_db_build.shared import indexing, db
+from arcade_db.shared import indexing, db
 
 # TODO: Test for cases where (some of) the XML attributes are empty.
 # Test that e.g. when size is absent in an XML it produces the same hash as when it is absent in a Rom record

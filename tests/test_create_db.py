@@ -6,8 +6,8 @@ from lxml import etree as ET
 from lxml.etree import XMLParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from arcade_db_build import create_db
-from arcade_db_build.shared import db
+from arcade_db import create_db
+from arcade_db.shared import db
 
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))

@@ -6,7 +6,7 @@ import bz2
 
 import lxml.etree as ET
 
-from arcade_db_build.shared import sources
+from arcade_db.shared import sources
 
 
 WRITE_PATH = os.path.join(sources.PARENT_PATH, "mame_db_source", "clones_sorted_dats")

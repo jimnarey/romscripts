@@ -10,7 +10,7 @@ from typing import Optional
 import os
 import multiprocessing
 from lxml import etree as ET
-from arcade_db_build.shared import sources
+from arcade_db.shared import sources
 
 KNOWN_GAME_ATTRIBUTES = set(
     ["rom", "isdevice", "name", "cloneof", "runnable", "isbios", "sourcefile", "ismechanical", "romof", "sampleof"]
