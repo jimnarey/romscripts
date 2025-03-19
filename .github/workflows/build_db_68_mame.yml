@@ -27,13 +27,13 @@ jobs:
     - name: Run build.py
       run: |
 
-        python -u build.py -p arcade-20240521214423-0.db -d mame -s 0  -e 5
+        python -u build.py -p arcade-20250319223120-0.db -d mame -s 0  -e 5
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-0.db
-        path: arcade-20240521214423-0.db
+        name: arcade-20250319223120-0.db
+        path: arcade-20250319223120-0.db
 
   build1:
 
@@ -59,18 +59,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-0.db
+        name: arcade-20250319223120-0.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-0.db arcade-20240521214423-1.db
-        python -u build.py -p arcade-20240521214423-1.db -d mame -s 5  -e 10
+        mv arcade-20250319223120-0.db arcade-20250319223120-1.db
+        python -u build.py -p arcade-20250319223120-1.db -d mame -s 5  -e 10
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-1.db
-        path: arcade-20240521214423-1.db
+        name: arcade-20250319223120-1.db
+        path: arcade-20250319223120-1.db
 
   build2:
 
@@ -96,18 +96,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-1.db
+        name: arcade-20250319223120-1.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-1.db arcade-20240521214423-2.db
-        python -u build.py -p arcade-20240521214423-2.db -d mame -s 10  -e 15
+        mv arcade-20250319223120-1.db arcade-20250319223120-2.db
+        python -u build.py -p arcade-20250319223120-2.db -d mame -s 10  -e 15
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-2.db
-        path: arcade-20240521214423-2.db
+        name: arcade-20250319223120-2.db
+        path: arcade-20250319223120-2.db
 
   build3:
 
@@ -133,18 +133,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-2.db
+        name: arcade-20250319223120-2.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-2.db arcade-20240521214423-3.db
-        python -u build.py -p arcade-20240521214423-3.db -d mame -s 15  -e 20
+        mv arcade-20250319223120-2.db arcade-20250319223120-3.db
+        python -u build.py -p arcade-20250319223120-3.db -d mame -s 15  -e 20
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-3.db
-        path: arcade-20240521214423-3.db
+        name: arcade-20250319223120-3.db
+        path: arcade-20250319223120-3.db
 
   build4:
 
@@ -170,18 +170,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-3.db
+        name: arcade-20250319223120-3.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-3.db arcade-20240521214423-4.db
-        python -u build.py -p arcade-20240521214423-4.db -d mame -s 20  -e 25
+        mv arcade-20250319223120-3.db arcade-20250319223120-4.db
+        python -u build.py -p arcade-20250319223120-4.db -d mame -s 20  -e 25
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-4.db
-        path: arcade-20240521214423-4.db
+        name: arcade-20250319223120-4.db
+        path: arcade-20250319223120-4.db
 
   build5:
 
@@ -207,18 +207,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-4.db
+        name: arcade-20250319223120-4.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-4.db arcade-20240521214423-5.db
-        python -u build.py -p arcade-20240521214423-5.db -d mame -s 25  -e 30
+        mv arcade-20250319223120-4.db arcade-20250319223120-5.db
+        python -u build.py -p arcade-20250319223120-5.db -d mame -s 25  -e 30
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-5.db
-        path: arcade-20240521214423-5.db
+        name: arcade-20250319223120-5.db
+        path: arcade-20250319223120-5.db
 
   build6:
 
@@ -244,18 +244,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-5.db
+        name: arcade-20250319223120-5.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-5.db arcade-20240521214423-6.db
-        python -u build.py -p arcade-20240521214423-6.db -d mame -s 30  -e 35
+        mv arcade-20250319223120-5.db arcade-20250319223120-6.db
+        python -u build.py -p arcade-20250319223120-6.db -d mame -s 30  -e 35
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-6.db
-        path: arcade-20240521214423-6.db
+        name: arcade-20250319223120-6.db
+        path: arcade-20250319223120-6.db
 
   build7:
 
@@ -281,18 +281,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-6.db
+        name: arcade-20250319223120-6.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-6.db arcade-20240521214423-7.db
-        python -u build.py -p arcade-20240521214423-7.db -d mame -s 35  -e 40
+        mv arcade-20250319223120-6.db arcade-20250319223120-7.db
+        python -u build.py -p arcade-20250319223120-7.db -d mame -s 35  -e 40
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-7.db
-        path: arcade-20240521214423-7.db
+        name: arcade-20250319223120-7.db
+        path: arcade-20250319223120-7.db
 
   build8:
 
@@ -318,18 +318,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-7.db
+        name: arcade-20250319223120-7.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-7.db arcade-20240521214423-8.db
-        python -u build.py -p arcade-20240521214423-8.db -d mame -s 40  -e 45
+        mv arcade-20250319223120-7.db arcade-20250319223120-8.db
+        python -u build.py -p arcade-20250319223120-8.db -d mame -s 40  -e 45
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-8.db
-        path: arcade-20240521214423-8.db
+        name: arcade-20250319223120-8.db
+        path: arcade-20250319223120-8.db
 
   build9:
 
@@ -355,18 +355,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-8.db
+        name: arcade-20250319223120-8.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-8.db arcade-20240521214423-9.db
-        python -u build.py -p arcade-20240521214423-9.db -d mame -s 45  -e 50
+        mv arcade-20250319223120-8.db arcade-20250319223120-9.db
+        python -u build.py -p arcade-20250319223120-9.db -d mame -s 45  -e 50
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-9.db
-        path: arcade-20240521214423-9.db
+        name: arcade-20250319223120-9.db
+        path: arcade-20250319223120-9.db
 
   build10:
 
@@ -392,18 +392,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-9.db
+        name: arcade-20250319223120-9.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-9.db arcade-20240521214423-10.db
-        python -u build.py -p arcade-20240521214423-10.db -d mame -s 50  -e 55
+        mv arcade-20250319223120-9.db arcade-20250319223120-10.db
+        python -u build.py -p arcade-20250319223120-10.db -d mame -s 50  -e 55
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-10.db
-        path: arcade-20240521214423-10.db
+        name: arcade-20250319223120-10.db
+        path: arcade-20250319223120-10.db
 
   build11:
 
@@ -429,18 +429,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-10.db
+        name: arcade-20250319223120-10.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-10.db arcade-20240521214423-11.db
-        python -u build.py -p arcade-20240521214423-11.db -d mame -s 55  -e 60
+        mv arcade-20250319223120-10.db arcade-20250319223120-11.db
+        python -u build.py -p arcade-20250319223120-11.db -d mame -s 55  -e 60
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-11.db
-        path: arcade-20240521214423-11.db
+        name: arcade-20250319223120-11.db
+        path: arcade-20250319223120-11.db
 
   build12:
 
@@ -466,18 +466,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-11.db
+        name: arcade-20250319223120-11.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-11.db arcade-20240521214423-12.db
-        python -u build.py -p arcade-20240521214423-12.db -d mame -s 60  -e 65
+        mv arcade-20250319223120-11.db arcade-20250319223120-12.db
+        python -u build.py -p arcade-20250319223120-12.db -d mame -s 60  -e 65
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-12.db
-        path: arcade-20240521214423-12.db
+        name: arcade-20250319223120-12.db
+        path: arcade-20250319223120-12.db
 
   build13:
 
@@ -503,18 +503,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-12.db
+        name: arcade-20250319223120-12.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-12.db arcade-20240521214423-13.db
-        python -u build.py -p arcade-20240521214423-13.db -d mame -s 65  -e 70
+        mv arcade-20250319223120-12.db arcade-20250319223120-13.db
+        python -u build.py -p arcade-20250319223120-13.db -d mame -s 65  -e 70
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-13.db
-        path: arcade-20240521214423-13.db
+        name: arcade-20250319223120-13.db
+        path: arcade-20250319223120-13.db
 
   build14:
 
@@ -540,18 +540,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-13.db
+        name: arcade-20250319223120-13.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-13.db arcade-20240521214423-14.db
-        python -u build.py -p arcade-20240521214423-14.db -d mame -s 70  -e 75
+        mv arcade-20250319223120-13.db arcade-20250319223120-14.db
+        python -u build.py -p arcade-20250319223120-14.db -d mame -s 70  -e 75
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-14.db
-        path: arcade-20240521214423-14.db
+        name: arcade-20250319223120-14.db
+        path: arcade-20250319223120-14.db
 
   build15:
 
@@ -577,18 +577,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-14.db
+        name: arcade-20250319223120-14.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-14.db arcade-20240521214423-15.db
-        python -u build.py -p arcade-20240521214423-15.db -d mame -s 75  -e 80
+        mv arcade-20250319223120-14.db arcade-20250319223120-15.db
+        python -u build.py -p arcade-20250319223120-15.db -d mame -s 75  -e 80
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-15.db
-        path: arcade-20240521214423-15.db
+        name: arcade-20250319223120-15.db
+        path: arcade-20250319223120-15.db
 
   build16:
 
@@ -614,18 +614,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-15.db
+        name: arcade-20250319223120-15.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-15.db arcade-20240521214423-16.db
-        python -u build.py -p arcade-20240521214423-16.db -d mame -s 80  -e 85
+        mv arcade-20250319223120-15.db arcade-20250319223120-16.db
+        python -u build.py -p arcade-20250319223120-16.db -d mame -s 80  -e 85
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-16.db
-        path: arcade-20240521214423-16.db
+        name: arcade-20250319223120-16.db
+        path: arcade-20250319223120-16.db
 
   build17:
 
@@ -651,18 +651,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-16.db
+        name: arcade-20250319223120-16.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-16.db arcade-20240521214423-17.db
-        python -u build.py -p arcade-20240521214423-17.db -d mame -s 85  -e 90
+        mv arcade-20250319223120-16.db arcade-20250319223120-17.db
+        python -u build.py -p arcade-20250319223120-17.db -d mame -s 85  -e 90
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-17.db
-        path: arcade-20240521214423-17.db
+        name: arcade-20250319223120-17.db
+        path: arcade-20250319223120-17.db
 
   build18:
 
@@ -688,18 +688,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-17.db
+        name: arcade-20250319223120-17.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-17.db arcade-20240521214423-18.db
-        python -u build.py -p arcade-20240521214423-18.db -d mame -s 90  -e 95
+        mv arcade-20250319223120-17.db arcade-20250319223120-18.db
+        python -u build.py -p arcade-20250319223120-18.db -d mame -s 90  -e 95
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-18.db
-        path: arcade-20240521214423-18.db
+        name: arcade-20250319223120-18.db
+        path: arcade-20250319223120-18.db
 
   build19:
 
@@ -725,18 +725,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-18.db
+        name: arcade-20250319223120-18.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-18.db arcade-20240521214423-19.db
-        python -u build.py -p arcade-20240521214423-19.db -d mame -s 95  -e 100
+        mv arcade-20250319223120-18.db arcade-20250319223120-19.db
+        python -u build.py -p arcade-20250319223120-19.db -d mame -s 95  -e 100
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-19.db
-        path: arcade-20240521214423-19.db
+        name: arcade-20250319223120-19.db
+        path: arcade-20250319223120-19.db
 
   build20:
 
@@ -762,18 +762,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-19.db
+        name: arcade-20250319223120-19.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-19.db arcade-20240521214423-20.db
-        python -u build.py -p arcade-20240521214423-20.db -d mame -s 100  -e 105
+        mv arcade-20250319223120-19.db arcade-20250319223120-20.db
+        python -u build.py -p arcade-20250319223120-20.db -d mame -s 100  -e 105
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-20.db
-        path: arcade-20240521214423-20.db
+        name: arcade-20250319223120-20.db
+        path: arcade-20250319223120-20.db
 
   build21:
 
@@ -799,18 +799,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-20.db
+        name: arcade-20250319223120-20.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-20.db arcade-20240521214423-21.db
-        python -u build.py -p arcade-20240521214423-21.db -d mame -s 105  -e 110
+        mv arcade-20250319223120-20.db arcade-20250319223120-21.db
+        python -u build.py -p arcade-20250319223120-21.db -d mame -s 105  -e 110
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-21.db
-        path: arcade-20240521214423-21.db
+        name: arcade-20250319223120-21.db
+        path: arcade-20250319223120-21.db
 
   build22:
 
@@ -836,18 +836,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-21.db
+        name: arcade-20250319223120-21.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-21.db arcade-20240521214423-22.db
-        python -u build.py -p arcade-20240521214423-22.db -d mame -s 110  -e 115
+        mv arcade-20250319223120-21.db arcade-20250319223120-22.db
+        python -u build.py -p arcade-20250319223120-22.db -d mame -s 110  -e 115
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-22.db
-        path: arcade-20240521214423-22.db
+        name: arcade-20250319223120-22.db
+        path: arcade-20250319223120-22.db
 
   build23:
 
@@ -873,18 +873,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-22.db
+        name: arcade-20250319223120-22.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-22.db arcade-20240521214423-23.db
-        python -u build.py -p arcade-20240521214423-23.db -d mame -s 115  -e 120
+        mv arcade-20250319223120-22.db arcade-20250319223120-23.db
+        python -u build.py -p arcade-20250319223120-23.db -d mame -s 115  -e 120
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-23.db
-        path: arcade-20240521214423-23.db
+        name: arcade-20250319223120-23.db
+        path: arcade-20250319223120-23.db
 
   build24:
 
@@ -910,18 +910,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-23.db
+        name: arcade-20250319223120-23.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-23.db arcade-20240521214423-24.db
-        python -u build.py -p arcade-20240521214423-24.db -d mame -s 120  -e 125
+        mv arcade-20250319223120-23.db arcade-20250319223120-24.db
+        python -u build.py -p arcade-20250319223120-24.db -d mame -s 120  -e 125
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-24.db
-        path: arcade-20240521214423-24.db
+        name: arcade-20250319223120-24.db
+        path: arcade-20250319223120-24.db
 
   build25:
 
@@ -947,18 +947,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-24.db
+        name: arcade-20250319223120-24.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-24.db arcade-20240521214423-25.db
-        python -u build.py -p arcade-20240521214423-25.db -d mame -s 125  -e 130
+        mv arcade-20250319223120-24.db arcade-20250319223120-25.db
+        python -u build.py -p arcade-20250319223120-25.db -d mame -s 125  -e 130
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-25.db
-        path: arcade-20240521214423-25.db
+        name: arcade-20250319223120-25.db
+        path: arcade-20250319223120-25.db
 
   build26:
 
@@ -984,18 +984,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-25.db
+        name: arcade-20250319223120-25.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-25.db arcade-20240521214423-26.db
-        python -u build.py -p arcade-20240521214423-26.db -d mame -s 130  -e 135
+        mv arcade-20250319223120-25.db arcade-20250319223120-26.db
+        python -u build.py -p arcade-20250319223120-26.db -d mame -s 130  -e 135
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-26.db
-        path: arcade-20240521214423-26.db
+        name: arcade-20250319223120-26.db
+        path: arcade-20250319223120-26.db
 
   build27:
 
@@ -1021,18 +1021,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-26.db
+        name: arcade-20250319223120-26.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-26.db arcade-20240521214423-27.db
-        python -u build.py -p arcade-20240521214423-27.db -d mame -s 135  -e 140
+        mv arcade-20250319223120-26.db arcade-20250319223120-27.db
+        python -u build.py -p arcade-20250319223120-27.db -d mame -s 135  -e 140
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-27.db
-        path: arcade-20240521214423-27.db
+        name: arcade-20250319223120-27.db
+        path: arcade-20250319223120-27.db
 
   build28:
 
@@ -1058,18 +1058,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-27.db
+        name: arcade-20250319223120-27.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-27.db arcade-20240521214423-28.db
-        python -u build.py -p arcade-20240521214423-28.db -d mame -s 140  -e 145
+        mv arcade-20250319223120-27.db arcade-20250319223120-28.db
+        python -u build.py -p arcade-20250319223120-28.db -d mame -s 140  -e 145
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-28.db
-        path: arcade-20240521214423-28.db
+        name: arcade-20250319223120-28.db
+        path: arcade-20250319223120-28.db
 
   build29:
 
@@ -1095,18 +1095,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-28.db
+        name: arcade-20250319223120-28.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-28.db arcade-20240521214423-29.db
-        python -u build.py -p arcade-20240521214423-29.db -d mame -s 145  -e 150
+        mv arcade-20250319223120-28.db arcade-20250319223120-29.db
+        python -u build.py -p arcade-20250319223120-29.db -d mame -s 145  -e 150
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-29.db
-        path: arcade-20240521214423-29.db
+        name: arcade-20250319223120-29.db
+        path: arcade-20250319223120-29.db
 
   build30:
 
@@ -1132,18 +1132,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-29.db
+        name: arcade-20250319223120-29.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-29.db arcade-20240521214423-30.db
-        python -u build.py -p arcade-20240521214423-30.db -d mame -s 150  -e 155
+        mv arcade-20250319223120-29.db arcade-20250319223120-30.db
+        python -u build.py -p arcade-20250319223120-30.db -d mame -s 150  -e 155
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-30.db
-        path: arcade-20240521214423-30.db
+        name: arcade-20250319223120-30.db
+        path: arcade-20250319223120-30.db
 
   build31:
 
@@ -1169,18 +1169,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-30.db
+        name: arcade-20250319223120-30.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-30.db arcade-20240521214423-31.db
-        python -u build.py -p arcade-20240521214423-31.db -d mame -s 155  -e 160
+        mv arcade-20250319223120-30.db arcade-20250319223120-31.db
+        python -u build.py -p arcade-20250319223120-31.db -d mame -s 155  -e 160
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-31.db
-        path: arcade-20240521214423-31.db
+        name: arcade-20250319223120-31.db
+        path: arcade-20250319223120-31.db
 
   build32:
 
@@ -1206,18 +1206,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-31.db
+        name: arcade-20250319223120-31.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-31.db arcade-20240521214423-32.db
-        python -u build.py -p arcade-20240521214423-32.db -d mame -s 160  -e 165
+        mv arcade-20250319223120-31.db arcade-20250319223120-32.db
+        python -u build.py -p arcade-20250319223120-32.db -d mame -s 160  -e 165
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-32.db
-        path: arcade-20240521214423-32.db
+        name: arcade-20250319223120-32.db
+        path: arcade-20250319223120-32.db
 
   build33:
 
@@ -1243,18 +1243,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-32.db
+        name: arcade-20250319223120-32.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-32.db arcade-20240521214423-33.db
-        python -u build.py -p arcade-20240521214423-33.db -d mame -s 165  -e 170
+        mv arcade-20250319223120-32.db arcade-20250319223120-33.db
+        python -u build.py -p arcade-20250319223120-33.db -d mame -s 165  -e 170
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-33.db
-        path: arcade-20240521214423-33.db
+        name: arcade-20250319223120-33.db
+        path: arcade-20250319223120-33.db
 
   build34:
 
@@ -1280,18 +1280,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-33.db
+        name: arcade-20250319223120-33.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-33.db arcade-20240521214423-34.db
-        python -u build.py -p arcade-20240521214423-34.db -d mame -s 170  -e 175
+        mv arcade-20250319223120-33.db arcade-20250319223120-34.db
+        python -u build.py -p arcade-20250319223120-34.db -d mame -s 170  -e 175
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-34.db
-        path: arcade-20240521214423-34.db
+        name: arcade-20250319223120-34.db
+        path: arcade-20250319223120-34.db
 
   build35:
 
@@ -1317,18 +1317,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-34.db
+        name: arcade-20250319223120-34.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-34.db arcade-20240521214423-35.db
-        python -u build.py -p arcade-20240521214423-35.db -d mame -s 175  -e 180
+        mv arcade-20250319223120-34.db arcade-20250319223120-35.db
+        python -u build.py -p arcade-20250319223120-35.db -d mame -s 175  -e 180
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-35.db
-        path: arcade-20240521214423-35.db
+        name: arcade-20250319223120-35.db
+        path: arcade-20250319223120-35.db
 
   build36:
 
@@ -1354,18 +1354,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-35.db
+        name: arcade-20250319223120-35.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-35.db arcade-20240521214423-36.db
-        python -u build.py -p arcade-20240521214423-36.db -d mame -s 180  -e 185
+        mv arcade-20250319223120-35.db arcade-20250319223120-36.db
+        python -u build.py -p arcade-20250319223120-36.db -d mame -s 180  -e 185
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-36.db
-        path: arcade-20240521214423-36.db
+        name: arcade-20250319223120-36.db
+        path: arcade-20250319223120-36.db
 
   build37:
 
@@ -1391,18 +1391,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-36.db
+        name: arcade-20250319223120-36.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-36.db arcade-20240521214423-37.db
-        python -u build.py -p arcade-20240521214423-37.db -d mame -s 185  -e 190
+        mv arcade-20250319223120-36.db arcade-20250319223120-37.db
+        python -u build.py -p arcade-20250319223120-37.db -d mame -s 185  -e 190
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-37.db
-        path: arcade-20240521214423-37.db
+        name: arcade-20250319223120-37.db
+        path: arcade-20250319223120-37.db
 
   build38:
 
@@ -1428,18 +1428,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-37.db
+        name: arcade-20250319223120-37.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-37.db arcade-20240521214423-38.db
-        python -u build.py -p arcade-20240521214423-38.db -d mame -s 190  -e 195
+        mv arcade-20250319223120-37.db arcade-20250319223120-38.db
+        python -u build.py -p arcade-20250319223120-38.db -d mame -s 190  -e 195
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-38.db
-        path: arcade-20240521214423-38.db
+        name: arcade-20250319223120-38.db
+        path: arcade-20250319223120-38.db
 
   build39:
 
@@ -1465,18 +1465,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-38.db
+        name: arcade-20250319223120-38.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-38.db arcade-20240521214423-39.db
-        python -u build.py -p arcade-20240521214423-39.db -d mame -s 195  -e 200
+        mv arcade-20250319223120-38.db arcade-20250319223120-39.db
+        python -u build.py -p arcade-20250319223120-39.db -d mame -s 195  -e 200
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-39.db
-        path: arcade-20240521214423-39.db
+        name: arcade-20250319223120-39.db
+        path: arcade-20250319223120-39.db
 
   build40:
 
@@ -1502,18 +1502,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-39.db
+        name: arcade-20250319223120-39.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-39.db arcade-20240521214423-40.db
-        python -u build.py -p arcade-20240521214423-40.db -d mame -s 200  -e 205
+        mv arcade-20250319223120-39.db arcade-20250319223120-40.db
+        python -u build.py -p arcade-20250319223120-40.db -d mame -s 200  -e 205
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-40.db
-        path: arcade-20240521214423-40.db
+        name: arcade-20250319223120-40.db
+        path: arcade-20250319223120-40.db
 
   build41:
 
@@ -1539,18 +1539,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-40.db
+        name: arcade-20250319223120-40.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-40.db arcade-20240521214423-41.db
-        python -u build.py -p arcade-20240521214423-41.db -d mame -s 205  -e 210
+        mv arcade-20250319223120-40.db arcade-20250319223120-41.db
+        python -u build.py -p arcade-20250319223120-41.db -d mame -s 205  -e 210
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-41.db
-        path: arcade-20240521214423-41.db
+        name: arcade-20250319223120-41.db
+        path: arcade-20250319223120-41.db
 
   build42:
 
@@ -1576,18 +1576,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-41.db
+        name: arcade-20250319223120-41.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-41.db arcade-20240521214423-42.db
-        python -u build.py -p arcade-20240521214423-42.db -d mame -s 210  -e 215
+        mv arcade-20250319223120-41.db arcade-20250319223120-42.db
+        python -u build.py -p arcade-20250319223120-42.db -d mame -s 210  -e 215
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-42.db
-        path: arcade-20240521214423-42.db
+        name: arcade-20250319223120-42.db
+        path: arcade-20250319223120-42.db
 
   build43:
 
@@ -1613,18 +1613,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-42.db
+        name: arcade-20250319223120-42.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-42.db arcade-20240521214423-43.db
-        python -u build.py -p arcade-20240521214423-43.db -d mame -s 215  -e 220
+        mv arcade-20250319223120-42.db arcade-20250319223120-43.db
+        python -u build.py -p arcade-20250319223120-43.db -d mame -s 215  -e 220
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-43.db
-        path: arcade-20240521214423-43.db
+        name: arcade-20250319223120-43.db
+        path: arcade-20250319223120-43.db
 
   build44:
 
@@ -1650,18 +1650,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-43.db
+        name: arcade-20250319223120-43.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-43.db arcade-20240521214423-44.db
-        python -u build.py -p arcade-20240521214423-44.db -d mame -s 220  -e 225
+        mv arcade-20250319223120-43.db arcade-20250319223120-44.db
+        python -u build.py -p arcade-20250319223120-44.db -d mame -s 220  -e 225
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-44.db
-        path: arcade-20240521214423-44.db
+        name: arcade-20250319223120-44.db
+        path: arcade-20250319223120-44.db
 
   build45:
 
@@ -1687,18 +1687,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-44.db
+        name: arcade-20250319223120-44.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-44.db arcade-20240521214423-45.db
-        python -u build.py -p arcade-20240521214423-45.db -d mame -s 225  -e 230
+        mv arcade-20250319223120-44.db arcade-20250319223120-45.db
+        python -u build.py -p arcade-20250319223120-45.db -d mame -s 225  -e 230
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-45.db
-        path: arcade-20240521214423-45.db
+        name: arcade-20250319223120-45.db
+        path: arcade-20250319223120-45.db
 
   build46:
 
@@ -1724,18 +1724,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-45.db
+        name: arcade-20250319223120-45.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-45.db arcade-20240521214423-46.db
-        python -u build.py -p arcade-20240521214423-46.db -d mame -s 230  -e 235
+        mv arcade-20250319223120-45.db arcade-20250319223120-46.db
+        python -u build.py -p arcade-20250319223120-46.db -d mame -s 230  -e 235
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-46.db
-        path: arcade-20240521214423-46.db
+        name: arcade-20250319223120-46.db
+        path: arcade-20250319223120-46.db
 
   build47:
 
@@ -1761,18 +1761,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-46.db
+        name: arcade-20250319223120-46.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-46.db arcade-20240521214423-47.db
-        python -u build.py -p arcade-20240521214423-47.db -d mame -s 235  -e 240
+        mv arcade-20250319223120-46.db arcade-20250319223120-47.db
+        python -u build.py -p arcade-20250319223120-47.db -d mame -s 235  -e 240
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-47.db
-        path: arcade-20240521214423-47.db
+        name: arcade-20250319223120-47.db
+        path: arcade-20250319223120-47.db
 
   build48:
 
@@ -1798,18 +1798,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-47.db
+        name: arcade-20250319223120-47.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-47.db arcade-20240521214423-48.db
-        python -u build.py -p arcade-20240521214423-48.db -d mame -s 240  -e 245
+        mv arcade-20250319223120-47.db arcade-20250319223120-48.db
+        python -u build.py -p arcade-20250319223120-48.db -d mame -s 240  -e 245
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-48.db
-        path: arcade-20240521214423-48.db
+        name: arcade-20250319223120-48.db
+        path: arcade-20250319223120-48.db
 
   build49:
 
@@ -1835,18 +1835,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-48.db
+        name: arcade-20250319223120-48.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-48.db arcade-20240521214423-49.db
-        python -u build.py -p arcade-20240521214423-49.db -d mame -s 245  -e 250
+        mv arcade-20250319223120-48.db arcade-20250319223120-49.db
+        python -u build.py -p arcade-20250319223120-49.db -d mame -s 245  -e 250
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-49.db
-        path: arcade-20240521214423-49.db
+        name: arcade-20250319223120-49.db
+        path: arcade-20250319223120-49.db
 
   build50:
 
@@ -1872,18 +1872,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-49.db
+        name: arcade-20250319223120-49.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-49.db arcade-20240521214423-50.db
-        python -u build.py -p arcade-20240521214423-50.db -d mame -s 250  -e 255
+        mv arcade-20250319223120-49.db arcade-20250319223120-50.db
+        python -u build.py -p arcade-20250319223120-50.db -d mame -s 250  -e 255
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-50.db
-        path: arcade-20240521214423-50.db
+        name: arcade-20250319223120-50.db
+        path: arcade-20250319223120-50.db
 
   build51:
 
@@ -1909,18 +1909,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-50.db
+        name: arcade-20250319223120-50.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-50.db arcade-20240521214423-51.db
-        python -u build.py -p arcade-20240521214423-51.db -d mame -s 255  -e 260
+        mv arcade-20250319223120-50.db arcade-20250319223120-51.db
+        python -u build.py -p arcade-20250319223120-51.db -d mame -s 255  -e 260
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-51.db
-        path: arcade-20240521214423-51.db
+        name: arcade-20250319223120-51.db
+        path: arcade-20250319223120-51.db
 
   build52:
 
@@ -1946,18 +1946,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-51.db
+        name: arcade-20250319223120-51.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-51.db arcade-20240521214423-52.db
-        python -u build.py -p arcade-20240521214423-52.db -d mame -s 260  -e 265
+        mv arcade-20250319223120-51.db arcade-20250319223120-52.db
+        python -u build.py -p arcade-20250319223120-52.db -d mame -s 260  -e 265
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-52.db
-        path: arcade-20240521214423-52.db
+        name: arcade-20250319223120-52.db
+        path: arcade-20250319223120-52.db
 
   build53:
 
@@ -1983,18 +1983,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-52.db
+        name: arcade-20250319223120-52.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-52.db arcade-20240521214423-53.db
-        python -u build.py -p arcade-20240521214423-53.db -d mame -s 265  -e 270
+        mv arcade-20250319223120-52.db arcade-20250319223120-53.db
+        python -u build.py -p arcade-20250319223120-53.db -d mame -s 265  -e 270
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-53.db
-        path: arcade-20240521214423-53.db
+        name: arcade-20250319223120-53.db
+        path: arcade-20250319223120-53.db
 
   build54:
 
@@ -2020,18 +2020,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-53.db
+        name: arcade-20250319223120-53.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-53.db arcade-20240521214423-54.db
-        python -u build.py -p arcade-20240521214423-54.db -d mame -s 270  -e 275
+        mv arcade-20250319223120-53.db arcade-20250319223120-54.db
+        python -u build.py -p arcade-20250319223120-54.db -d mame -s 270  -e 275
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-54.db
-        path: arcade-20240521214423-54.db
+        name: arcade-20250319223120-54.db
+        path: arcade-20250319223120-54.db
 
   build55:
 
@@ -2057,18 +2057,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-54.db
+        name: arcade-20250319223120-54.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-54.db arcade-20240521214423-55.db
-        python -u build.py -p arcade-20240521214423-55.db -d mame -s 275  -e 280
+        mv arcade-20250319223120-54.db arcade-20250319223120-55.db
+        python -u build.py -p arcade-20250319223120-55.db -d mame -s 275  -e 280
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-55.db
-        path: arcade-20240521214423-55.db
+        name: arcade-20250319223120-55.db
+        path: arcade-20250319223120-55.db
 
   build56:
 
@@ -2094,18 +2094,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-55.db
+        name: arcade-20250319223120-55.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-55.db arcade-20240521214423-56.db
-        python -u build.py -p arcade-20240521214423-56.db -d mame -s 280  -e 285
+        mv arcade-20250319223120-55.db arcade-20250319223120-56.db
+        python -u build.py -p arcade-20250319223120-56.db -d mame -s 280  -e 285
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-56.db
-        path: arcade-20240521214423-56.db
+        name: arcade-20250319223120-56.db
+        path: arcade-20250319223120-56.db
 
   build57:
 
@@ -2131,18 +2131,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-56.db
+        name: arcade-20250319223120-56.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-56.db arcade-20240521214423-57.db
-        python -u build.py -p arcade-20240521214423-57.db -d mame -s 285  -e 290
+        mv arcade-20250319223120-56.db arcade-20250319223120-57.db
+        python -u build.py -p arcade-20250319223120-57.db -d mame -s 285  -e 290
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-57.db
-        path: arcade-20240521214423-57.db
+        name: arcade-20250319223120-57.db
+        path: arcade-20250319223120-57.db
 
   build58:
 
@@ -2168,18 +2168,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-57.db
+        name: arcade-20250319223120-57.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-57.db arcade-20240521214423-58.db
-        python -u build.py -p arcade-20240521214423-58.db -d mame -s 290  -e 295
+        mv arcade-20250319223120-57.db arcade-20250319223120-58.db
+        python -u build.py -p arcade-20250319223120-58.db -d mame -s 290  -e 295
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-58.db
-        path: arcade-20240521214423-58.db
+        name: arcade-20250319223120-58.db
+        path: arcade-20250319223120-58.db
 
   build59:
 
@@ -2205,18 +2205,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-58.db
+        name: arcade-20250319223120-58.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-58.db arcade-20240521214423-59.db
-        python -u build.py -p arcade-20240521214423-59.db -d mame -s 295  -e 300
+        mv arcade-20250319223120-58.db arcade-20250319223120-59.db
+        python -u build.py -p arcade-20250319223120-59.db -d mame -s 295  -e 300
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-59.db
-        path: arcade-20240521214423-59.db
+        name: arcade-20250319223120-59.db
+        path: arcade-20250319223120-59.db
 
   build60:
 
@@ -2242,18 +2242,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-59.db
+        name: arcade-20250319223120-59.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-59.db arcade-20240521214423-60.db
-        python -u build.py -p arcade-20240521214423-60.db -d mame -s 300  -e 305
+        mv arcade-20250319223120-59.db arcade-20250319223120-60.db
+        python -u build.py -p arcade-20250319223120-60.db -d mame -s 300  -e 305
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-60.db
-        path: arcade-20240521214423-60.db
+        name: arcade-20250319223120-60.db
+        path: arcade-20250319223120-60.db
 
   build61:
 
@@ -2279,18 +2279,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-60.db
+        name: arcade-20250319223120-60.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-60.db arcade-20240521214423-61.db
-        python -u build.py -p arcade-20240521214423-61.db -d mame -s 305  -e 310
+        mv arcade-20250319223120-60.db arcade-20250319223120-61.db
+        python -u build.py -p arcade-20250319223120-61.db -d mame -s 305  -e 310
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-61.db
-        path: arcade-20240521214423-61.db
+        name: arcade-20250319223120-61.db
+        path: arcade-20250319223120-61.db
 
   build62:
 
@@ -2316,18 +2316,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-61.db
+        name: arcade-20250319223120-61.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-61.db arcade-20240521214423-62.db
-        python -u build.py -p arcade-20240521214423-62.db -d mame -s 310  -e 315
+        mv arcade-20250319223120-61.db arcade-20250319223120-62.db
+        python -u build.py -p arcade-20250319223120-62.db -d mame -s 310  -e 315
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-62.db
-        path: arcade-20240521214423-62.db
+        name: arcade-20250319223120-62.db
+        path: arcade-20250319223120-62.db
 
   build63:
 
@@ -2353,18 +2353,18 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-62.db
+        name: arcade-20250319223120-62.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-62.db arcade-20240521214423-63.db
-        python -u build.py -p arcade-20240521214423-63.db -d mame -s 315  -e 320
+        mv arcade-20250319223120-62.db arcade-20250319223120-63.db
+        python -u build.py -p arcade-20250319223120-63.db -d mame -s 315  -e 320
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-63.db
-        path: arcade-20240521214423-63.db
+        name: arcade-20250319223120-63.db
+        path: arcade-20250319223120-63.db
 
   build64:
 
@@ -2390,15 +2390,126 @@ jobs:
     - name: Download database
       uses: actions/download-artifact@v4
       with:
-        name: arcade-20240521214423-63.db
+        name: arcade-20250319223120-63.db
 
     - name: Run build.py
       run: |
-        mv arcade-20240521214423-63.db arcade-20240521214423-64.db
-        python -u build.py -p arcade-20240521214423-64.db -d mame -s 320  -e 325
+        mv arcade-20250319223120-63.db arcade-20250319223120-64.db
+        python -u build.py -p arcade-20250319223120-64.db -d mame -s 320  -e 325
 
     - name: Upload database
       uses: actions/upload-artifact@v4
       with:
-        name: arcade-20240521214423-64.db
-        path: arcade-20240521214423-64.db
+        name: arcade-20250319223120-64.db
+        path: arcade-20250319223120-64.db
+
+  build65:
+
+    needs: build64
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20250319223120-64.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20250319223120-64.db arcade-20250319223120-65.db
+        python -u build.py -p arcade-20250319223120-65.db -d mame -s 325  -e 330
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20250319223120-65.db
+        path: arcade-20250319223120-65.db
+
+  build66:
+
+    needs: build65
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20250319223120-65.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20250319223120-65.db arcade-20250319223120-66.db
+        python -u build.py -p arcade-20250319223120-66.db -d mame -s 330  -e 335
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20250319223120-66.db
+        path: arcade-20250319223120-66.db
+
+  build67:
+
+    needs: build66
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install poetry
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Download database
+      uses: actions/download-artifact@v4
+      with:
+        name: arcade-20250319223120-66.db
+
+    - name: Run build.py
+      run: |
+        mv arcade-20250319223120-66.db arcade-20250319223120-67.db
+        python -u build.py -p arcade-20250319223120-67.db -d mame -s 335
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: arcade-20250319223120-67.db
+        path: arcade-20250319223120-67.db
