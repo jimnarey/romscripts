@@ -6,10 +6,10 @@ import bz2
 
 import lxml.etree as ET
 
-from arcade_db.shared import sources
+from shared import sources
 
 
-WRITE_PATH = os.path.join(sources.PARENT_PATH, "mame_db_source", "clones_sorted_dats")
+WRITE_PATH = os.path.join(sources.PARENT_PATH, "mame_db_source_working", "clones_sorted_dats")
 
 
 def get_parent_elements(
@@ -114,7 +114,7 @@ def process_dat(path: str) -> tuple[list[dict], list]:
 
 def process_files() -> None:
     with multiprocessing.Pool(8) as pool:
-        results = pool.map(process_dat, sources.MAME_DATS)
+        results = pool.map(process_dat, sources.MAME_DATS_WORKING)
 
     validation_errors = []
     not_found = []

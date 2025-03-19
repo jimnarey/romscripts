@@ -9,8 +9,12 @@ from lxml import etree as ET
 PARENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Use the MAME DATs sorted with parents before clones
 MAME_SOURCES = os.path.join(PARENT_PATH, "mame_db_source", "clones_sorted_dats")
+MAME_SOURCES_WORKING = os.path.join(PARENT_PATH, "mame_db_source_working", "dats")
 FBA_SOURCES = os.path.join(PARENT_PATH, "fba_db_source", "dats")
 MAME_DATS = [os.path.join(MAME_SOURCES, file) for file in os.listdir(MAME_SOURCES)]
+MAME_DATS_WORKING = [
+    os.path.join(MAME_SOURCES_WORKING, file) for file in os.listdir(MAME_SOURCES_WORKING) if file.endswith(".bz2")
+]
 
 PARSER = ET.XMLParser(remove_comments=True)
 
