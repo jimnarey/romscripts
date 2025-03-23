@@ -25,7 +25,8 @@ def roms_signature_from_elements(roms_elements: list[ET._Element]):
 
 
 def get_roms_signature(rom_specs: list[dict]):
-    signatures = [f"{rom['name']}/{rom['size']}/{rom['crc']}" for rom in rom_specs]
+    sorted_rom_specs = sorted(rom_specs, key=lambda rom: rom["crc"])
+    signatures = [f"{rom['name']}/{rom['size']}/{rom['crc']}" for rom in sorted_rom_specs]
     return ",".join(sorted(signatures))
 
 
