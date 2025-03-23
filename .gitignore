@@ -7,4 +7,4 @@ testing/*
 *.7z
 *.rar
 *.db
-!arcade-latest.db
+roms/*.zip
