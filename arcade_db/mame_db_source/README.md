@@ -84,6 +84,8 @@ The rules/conventions above lead to the following sorting rules:
 
 This is a copy of the summary of the `validate_sources.py` script as of MAME 0.262.
 
+> The following displays in a table when viewed in a text editor.
+
 85 romsets with different cloneof and romof attributes
 
 Dat       	            Name      	Romof     	Cloneof
