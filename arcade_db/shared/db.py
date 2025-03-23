@@ -8,8 +8,11 @@ handle cases where the type checker was unable to properly handle SQLAlchemy
 types.
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index
-from sqlalchemy.orm import Session, DeclarativeBase, sessionmaker, backref, relationship
+from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy.orm import Session, DeclarativeBase, sessionmaker
+
+# from sqlalchemy.orm import backref, relationship
+# from sqlalchemy import Index
 from sqlalchemy import create_engine
 
 
@@ -31,21 +34,14 @@ game_rom_association = Table(
     Column("rom_id", Integer, ForeignKey("roms.id")),
 )
 
-game_disk_association = Table(
-    "game_disk_association",
-    Base.metadata,
-    Column("game_id", Integer, ForeignKey("games.id")),
-    Column("disk_id", Integer, ForeignKey("disks.id")),
-)
-
-game_emulator_feature = Table(
+game_emulator_feature_association = Table(
     "game_emulator_feature",
     Base.metadata,
     Column("game_emulator_id", Integer, ForeignKey("game_emulator.game_id")),
     Column("feature_id", Integer, ForeignKey("features.id")),
 )
 
-game_emulator_disk = Table(
+game_emulator_disk_association = Table(
     "game_emulator_disk",
     Base.metadata,
     Column("game_emulator_id", Integer, ForeignKey("game_emulator.game_id")),
@@ -55,59 +51,58 @@ game_emulator_disk = Table(
 
 class GameEmulator(Base):
     __tablename__ = "game_emulator"
+    id = Column(String(32), primary_key=True)
     game_id = Column(Integer, ForeignKey("games.id"), primary_key=True)
     emulator_id = Column(Integer, ForeignKey("emulators.id"), primary_key=True)
     driver_id = Column(Integer, ForeignKey("drivers.id"))
-    game = relationship("Game", back_populates="game_emulators")
-    emulator = relationship("Emulator", back_populates="game_emulators")
-    driver = relationship("Driver", back_populates="game_emulators")
-    features = relationship("Feature", secondary=game_emulator_feature, back_populates="game_emulators")
-    disks = relationship("Disk", secondary=game_emulator_disk, back_populates="game_emulators")
+    # game = relationship("Game", back_populates="game_emulators")
+    # emulator = relationship("Emulator", back_populates="game_emulators")
+    # driver = relationship("Driver", back_populates="game_emulators")
+    # features = relationship("Feature", secondary=game_emulator_feature_association, back_populates="game_emulators")
+    # disks = relationship("Disk", secondary=game_emulator_disk_association, back_populates="game_emulators")
 
 
 class Emulator(Base):
     __tablename__ = "emulators"
-    id = Column(Integer, primary_key=True)
+    id = Column(String(32), primary_key=True)
     name = Column(String)
     version = Column(String)
-    game_emulators = relationship("GameEmulator", back_populates="emulator")
+    # game_emulators = relationship("GameEmulator", back_populates="emulator")
 
 
 # TODO: What should happen when no games are associated with a rom?
 class Game(Base):
     __tablename__ = "games"
-    id = Column(Integer, primary_key=True)
+    id = Column(String(64), primary_key=True)  # Hash of name and roms signature
     name = Column(String, nullable=False)
     description = Column(String)
     year = Column(Integer)
     manufacturer = Column(String)
     cloneof_id = Column(Integer, ForeignKey("games.id"))
-    cloneof = relationship(
-        "Game", foreign_keys=[cloneof_id], backref=backref("clones", foreign_keys=[cloneof_id]), remote_side=[id]
-    )
+    # cloneof = relationship(
+    #     "Game", foreign_keys=[cloneof_id], backref=backref("clones", foreign_keys=[cloneof_id]), remote_side=[id]
+    # )
     romof_id = Column(Integer, ForeignKey("games.id"))
-    romof = relationship(
-        "Game", foreign_keys=[romof_id], backref=backref("bios_children", foreign_keys=[romof_id]), remote_side=[id]
-    )
+    # romof = relationship(
+    #     "Game", foreign_keys=[romof_id], backref=backref("bios_children", foreign_keys=[romof_id]), remote_side=[id]
+    # )
     isbios = Column(String)
     isdevice = Column(String)
     runnable = Column(String)
     ismechanical = Column(String)
-    game_emulators = relationship("GameEmulator", back_populates="game")
-    roms = relationship("Rom", secondary=game_rom_association, back_populates="games")
-    # TODO: Make this unique
-    name_roms_index = Column(String, index=True, unique=True)
+    # game_emulators = relationship("GameEmulator", back_populates="game")
+    # roms = relationship("Rom", secondary=game_rom_association, back_populates="games")
 
 
 class Rom(Base):
     __tablename__ = "roms"
-    id = Column(Integer, primary_key=True)
+    id = Column(String(64), primary_key=True)  # Hash of name, size, and crc
     name = Column(String, nullable=False)
     size = Column(Integer, nullable=False)
     crc = Column(String, nullable=False)
     sha1 = Column(String)
-    games = relationship("Game", secondary=game_rom_association, back_populates="roms")
-    _table_args__ = (Index("idx_name_size_crc", "name", "size", "crc"),)
+    # games = relationship("Game", secondary=game_rom_association, back_populates="roms")
+    # _table_args__ = (Index("idx_name_size_crc", "name", "size", "crc"),)
 
 
 class Disk(Base):
@@ -117,27 +112,27 @@ class Disk(Base):
     """
 
     __tablename__ = "disks"
-    id = Column(Integer, primary_key=True)
+    id = Column(String(32), primary_key=True)
     name = Column(String, nullable=False)
     sha1 = Column(String, nullable=False)
     md5 = Column(String, nullable=False)
-    game_emulators = relationship("GameEmulator", secondary=game_emulator_disk, back_populates="disks")
-    _table_args__ = (Index("idx_name_sha1", "name", "sha1"), Index("idx_name_md5", "name", "md5"))
+    # game_emulators = relationship("GameEmulator", secondary=game_emulator_disk_association, back_populates="disks")
+    # _table_args__ = (Index("idx_name_sha1", "name", "sha1"), Index("idx_name_md5", "name", "md5"))
 
 
 class Feature(Base):
     __tablename__ = "features"
-    id = Column(Integer, primary_key=True)
+    id = Column(String(32), primary_key=True)
     overall = Column(String, nullable=False)
     type = Column(String, nullable=False)
     status = Column(String, nullable=False)
-    game_emulators = relationship("GameEmulator", secondary=game_emulator_feature, back_populates="features")
-    _table_args__ = (Index("idx_overall_type_status", "overall", "type", "status"),)
+    # game_emulators = relationship("GameEmulator", secondary=game_emulator_feature_association, back_populates="features")
+    # _table_args__ = (Index("idx_overall_type_status", "overall", "type", "status"),)
 
 
 class Driver(Base):
     __tablename__ = "drivers"
-    id = Column(Integer, primary_key=True)
+    id = Column(String(32), primary_key=True)
     palettesize = Column(String, nullable=False)
     hiscoresave = Column(String, nullable=False)
     requiresartwork = Column(String, nullable=False)
@@ -154,25 +149,25 @@ class Driver(Base):
     nosoundhardware = Column(String, nullable=False)
     sound = Column(String, nullable=False)
     incomplete = Column(String, nullable=False)
-    game_emulators = relationship("GameEmulator", back_populates="driver")
-    __table_args__ = (
-        Index(
-            "idx_all_attribs",
-            "palettesize",
-            "hiscoresave",
-            "requiresartwork",
-            "unofficial",
-            "good",
-            "status",
-            "graphic",
-            "cocktailmode",
-            "savestate",
-            "protection",
-            "emulation",
-            "cocktail",
-            "color",
-            "nosoundhardware",
-            "sound",
-            "incomplete",
-        ),
-    )
+    # game_emulators = relationship("GameEmulator", back_populates="driver")
+    # __table_args__ = (
+    #     Index(
+    #         "idx_all_attribs",
+    #         "palettesize",
+    #         "hiscoresave",
+    #         "requiresartwork",
+    #         "unofficial",
+    #         "good",
+    #         "status",
+    #         "graphic",
+    #         "cocktailmode",
+    #         "savestate",
+    #         "protection",
+    #         "emulation",
+    #         "cocktail",
+    #         "color",
+    #         "nosoundhardware",
+    #         "sound",
+    #         "incomplete",
+    #     ),
+    # )

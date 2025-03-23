@@ -8,55 +8,37 @@ handle cases where the type checker was unable to properly handle SQLAlchemy
 types.
 """
 
+# TODO: Carefully consider whether the target values for romof and cloneof are part of a game's identity (uniqueness).
+# Starting point is non-merged sets. So if a game has a different romof/cloneof than a predecessor, it must have different
+# roms. This is not true of split games, where a romof/cloneof target may have different roms without the the child game
+# having changed. If we include split roms as additional rows, we need to take care not to effectively overwrite the
+# cloneof/romof values of earlier versions of a game with those of later versions.
+#
+# If we treat cloneof/romof values as part of identity, add a second index to include a hash.
+
 # TODO: Add Chip table and create records for non-rom machines (e.g. famicom)
 # TODO: Investigate and implement the use of the 'merge' attribute in Rom elements. Validate parameters for merge attributes.
 # TODO: Change calls to .first to .one_or_none or .one
 
-from typing import Optional, Type
-import warnings
+from typing import Optional, Any, Union
 import os
+import time
 
 from lxml import etree as ET
-import psutil
-from sqlalchemy import inspect
-from sqlalchemy.orm import Session, DeclarativeBase
+import pandas as pd
+from sqlalchemy.sql.schema import Table
 
-from .shared import db, sources, utils, indexing
+from .shared import sources, utils, indexing, db
 
-
-def check_cpu_utilization(threshold=90):
-    cpu_usages = psutil.cpu_percent(percpu=True)
-    for i, cpu_usage in enumerate(cpu_usages):
-        if cpu_usage > threshold:
-            warnings.warn(f"CPU core {i} usage is {cpu_usage}%")
+SqlAlchemyTable = Union[Table, Any]
 
 
-def check_memory_utilization(threshold=90):
-    memory_usage = psutil.virtual_memory().percent
-    if memory_usage > threshold:
-        warnings.warn(f"Memory usage is {memory_usage}%")
-
-
-def get_instance_attributes(instance: DeclarativeBase, model_class: Type[DeclarativeBase]) -> dict[str, str]:
-    """
-    Return instance attributes with the exception of the primary key and any relationships.
-    """
-    primary_key_column = inspect(model_class).primary_key[0].key
-    instance_attrs = {c.key: getattr(instance, c.key) for c in inspect(instance).mapper.column_attrs}
-    instance_attrs.pop(primary_key_column, None)
-    return instance_attrs
-
-
-def get_existing_game(session: Session, game_element: ET._Element) -> Optional[db.Game]:
-    """
-    Will call the indexing function(s) with disk hash type md5 if there are no disk elements
-    This is fine for the current implementation. Remember if refactoring.
-    """
-    rom_elements = utils.get_sub_elements(game_element, "rom")
-    index_value = indexing.get_game_index_from_elements(game_element.get("name", ""), rom_elements)
-    if existing_game := session.query(db.Game).filter_by(name_roms_index=index_value).first():
-        return existing_game
-    return None
+def create_dataframe_from_table(table: SqlAlchemyTable) -> pd.DataFrame:
+    if isinstance(table, Table):
+        column_names = [column.name for column in table.columns]
+    else:
+        column_names = [column.name for column in table.__table__.columns]
+    return pd.DataFrame(columns=column_names)
 
 
 # TODO: Test for possibility rom instance is assigned zero value
@@ -74,71 +56,45 @@ def get_inner_element_text(outer_element: ET._Element, inner_element_name: str) 
     return None
 
 
-# Decide what to do when later MAME versions add attributes to an existing rom
-def get_or_create_roms(session: Session, rom_elements: list[ET._Element]) -> list[db.Rom]:
-    roms = []
+def add_roms(rom_elements: list[ET._Element], dataframes: dict[str, Any], game_id: str) -> None:
     for rom_element in rom_elements:
-        rom = (
-            session.query(db.Rom)
-            .filter_by(name=rom_element.get("name"), size=rom_element.get("size"), crc=rom_element.get("crc"))
-            .first()
-        )
-        if not rom:
-            rom = db.Rom(
-                name=rom_element.get("name", ""),
-                size=get_rom_size(rom_element),
-                crc=rom_element.get("crc", ""),
-                sha1=rom_element.get("sha1", None),
-            )
-        roms.append(rom)
-    return roms
+        name = rom_element.get("name", "")
+        size = get_rom_size(rom_element)
+        crc = rom_element.get("crc", "")
+        sha1 = rom_element.get("sha1", None)
+
+        rom = {
+            "id": indexing.get_rom_index_hash(name, size, crc),
+            "name": name,
+            "size": size,
+            "crc": crc,
+            "sha1": sha1,
+        }
+        dataframes["roms"].append(pd.DataFrame([rom]))
+        dataframes["game_rom"].append(pd.DataFrame([{"game_id": game_id, "rom_id": rom["id"]}]))
 
 
-def get_existing_disk(session: Session, disk_element: ET._Element) -> Optional[db.Disk]:
-    if disk_element.get("sha1"):
-        if (
-            disk := session.query(db.Disk)
-            .filter_by(name=disk_element.get("name"), sha1=disk_element.get("sha1"))
-            .first()
-        ):
-            return disk
-    if disk_element.get("md5"):
-        if disk := session.query(db.Disk).filter_by(name=disk_element.get("name"), md5=disk_element.get("md5")).first():
-            return disk
-    return None
-
-
-def get_or_create_disks(session: Session, disk_elements: list[ET._Element]) -> list[db.Disk]:
-    disks = []
-    for disk_element in disk_elements:
-        if not (disk := get_existing_disk(session, disk_element)):
-            disk = db.Disk(
-                name=disk_element.get("name", ""),
-                sha1=disk_element.get("sha1", ""),
-                md5=disk_element.get("md5", ""),
-            )
-        disks.append(disk)
-    return disks
-
-
-def create_game(session: Session, game_element: ET._Element) -> Optional[db.Game]:
+def process_game(game_element: ET._Element, dataframes: dict[str, Any]) -> Optional[dict[str, str]]:
     if rom_elements := utils.get_sub_elements(game_element, "rom"):
-        game = db.Game(
-            name=game_element.get("name", ""),
-            description=get_inner_element_text(game_element, "description"),
-            year=get_inner_element_text(game_element, "year"),
-            manufacturer=get_inner_element_text(game_element, "manufacturer"),
-            isbios=game_element.get("isbios"),
-            isdevice=game_element.get("isdevice"),
-            runnable=game_element.get("runnable"),
-            ismechanical=game_element.get("ismechanical"),
-        )
-        game.roms = get_or_create_roms(session, rom_elements)
-        return game
+        name = game_element.get("name", "")
+        game_id = indexing.get_game_index_from_elements(name, rom_elements)
+        game_attrs = {
+            "id": game_id,
+            "name": name,
+            "description": get_inner_element_text(game_element, "description"),
+            "year": get_inner_element_text(game_element, "year"),
+            "manufacturer": get_inner_element_text(game_element, "manufacturer"),
+            "isbios": game_element.get("isbios"),
+            "isdevice": game_element.get("isdevice"),
+            "runnable": game_element.get("runnable"),
+            "ismechanical": game_element.get("ismechanical"),
+        }
+        add_roms(rom_elements, dataframes, game_id)
+        return game_attrs
     return None
 
 
-def get_feature_element_attributes(feature_element: ET._Element) -> dict[str, Optional[str]]:
+def get_feature_element_attributes(feature_element: ET._Element) -> dict[str, str]:
     return {
         "overall": feature_element.get("overall", ""),
         "type": feature_element.get("type", ""),
@@ -146,16 +102,20 @@ def get_feature_element_attributes(feature_element: ET._Element) -> dict[str, Op
     }
 
 
-def add_features(session: Session, game_emulator: db.GameEmulator, game_element: ET._Element):
+def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]) -> None:
     for feature_element in game_element.findall("feature"):
         feature_attributes = get_feature_element_attributes(feature_element)
-        if not (feature := session.query(db.Feature).filter_by(**feature_attributes).first()):
-            feature = db.Feature(**feature_attributes)
-        game_emulator.features.append(feature)
-    session.add_all(game_emulator.features)
+        feature_attributes["id"] = indexing.get_attributes_md5(feature_attributes)
+        features = pd.DataFrame([feature_attributes])
+        dataframes["features"].append(features)
+        dataframes["game_emulator_feature"].append(
+            pd.DataFrame([{"game_emulator_id": game_emulator_attrs["id"], "feature_id": features["id"]}]).set_index(
+                ["game_emulator_id", "feature_id"]
+            )
+        )
 
 
-def get_driver_element_attributes(driver_element: ET._Element) -> dict[str, Optional[str]]:
+def get_driver_element_attributes(driver_element: ET._Element) -> dict[str, str]:
     return {
         "palettesize": driver_element.get("palettesize", ""),
         "hiscoresave": driver_element.get("hiscoresave", ""),
@@ -176,84 +136,110 @@ def get_driver_element_attributes(driver_element: ET._Element) -> dict[str, Opti
     }
 
 
-def add_driver(session: Session, game_emulator: db.GameEmulator, game_element: ET._Element):
+# TODO: Check for orphaned drivers after db build.
+def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]) -> None:
     if (driver_element := game_element.find("driver")) is not None:
         driver_attributes = get_driver_element_attributes(driver_element)
-        if not (driver := session.query(db.Driver).filter_by(**driver_attributes).first()):
-            driver = db.Driver(**driver_attributes)
-        game_emulator.driver = driver
-        session.add(driver)
+        driver_attributes["id"] = indexing.get_attributes_md5(driver_attributes)
+        driver = pd.DataFrame([driver_attributes])
+        dataframes["drivers"].append(driver)
+        game_emulator_attrs["driver_id"] = driver_attributes["id"]
+
+
+def get_disk_attributes(disk_element: ET._Element) -> dict[str, str]:
+    return {
+        "name": disk_element.get("name", ""),
+        "sha1": disk_element.get("sha1", ""),
+        "md5": disk_element.get("md5", ""),
+    }
 
 
 # TODO: Can probably avoid using get_sub_elements.
-def add_disks(session: Session, game_emulator: db.GameEmulator, game_element: ET._Element):
+def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]):
     if disk_elements := utils.get_sub_elements(game_element, "disk"):
-        disks = get_or_create_disks(session, disk_elements)
-        game_emulator.disks.extend(disks)
-        session.add_all(game_emulator.features)
+        for disk_element in disk_elements:
+            disk_attributes = get_disk_attributes(disk_element)
+            disk_attributes["id"] = indexing.get_attributes_md5(disk_attributes)
+            disk = pd.DataFrame([disk_attributes])
+            dataframes["disks"].append(disk)
+            dataframes["game_emulator_disk"].append(
+                pd.DataFrame([{"game_emulator_id": game_emulator_attrs["id"], "disk_id": disk["id"]}]).set_index(
+                    ["game_emulator_id", "disk_id"]
+                )
+            )
 
 
-def add_game_emulator_relationship(session: Session, game_element: ET._Element, game: db.Game, emulator: db.Emulator):
-    game_emulator = db.GameEmulator(game=game, emulator=emulator)
-    session.add(game_emulator)
-    add_features(session, game_emulator, game_element)
-    add_driver(session, game_emulator, game_element)
-    add_disks(session, game_emulator, game_element)
+def add_game_emulator_relationship(
+    game_element: ET._Element, game_attrs: dict[str, str], emulator_attrs: dict[str, str], dataframes: dict[str, Any]
+):
+    game_emulator_attrs = {"game_id": game_attrs["id"], "emulator_id": emulator_attrs["id"]}
+    # We don't use the driver id as part of the primary key because we only want one game_emulator record per game/emulator
+    # relationship. There is a risk here of orphaning driver records, which we need to check for elsewhere.
+    game_emulator_attrs["id"] = indexing.get_attributes_md5(
+        {key: game_emulator_attrs[key] for key in ("game_id", "emulator_id")}
+    )
+    add_features(game_emulator_attrs, game_element, dataframes)
+    add_driver(game_emulator_attrs, game_element, dataframes)
+    add_disks(game_emulator_attrs, game_element, dataframes)
+    dataframes["game_emulator"].append(pd.DataFrame([game_emulator_attrs]))
 
 
-def add_game_reference(
-    session: Session, game: db.Game, emulator: db.Emulator, attribute: str, target_game_name: str
-) -> bool:
+def add_game_reference(game: dict[str, str], attribute: str, target_game_name: str, dataframes: dict[str, Any]) -> bool:
     """
     Add a reference to another game to a game object.
     field: either "cloneof" or "romof"
     """
-    target_game = (
-        session.query(db.Game)
-        .filter(db.Game.name == target_game_name, db.Game.game_emulators.any(emulator=emulator))
-        .first()
-    )
-    if target_game:
-        setattr(game, attribute, target_game)
+    target_game = dataframes["games"].get(target_game_name)
+    if target_game is not None:
+        # Need to test that this only ever receives a one row dataframe
+        game[f"{attribute}_id"] = target_game.iloc[0]["id"]
         return True
-
     return False
 
 
-def add_game_references(session: Session, emulator: db.Emulator, game: db.Game, game_element: ET._Element):
+def add_game_references(
+    game: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]
+) -> list[dict[str, str]]:
     """
     Resolves the game > game references for a single game.
     """
     unhandled_references = []
     for attribute in ("cloneof", "romof"):
         if target_game_name := game_element.get(attribute):
-            if bool(game.name != target_game_name):
-                if not add_game_reference(session, game, emulator, attribute, target_game_name):
-                    unhandled_references.append({"game": game.name, "attribute": attribute, "target": target_game_name})
+            if bool(game["name"] != target_game_name):
+                if add_game_reference(game, attribute, target_game_name, dataframes) is False:
+                    unhandled_references.append(
+                        {"game": game["name"], "attribute": attribute, "target": target_game_name}
+                    )
     return unhandled_references
 
 
-def process_games(session: Session, root: ET._Element, emulator: db.Emulator):
+def process_games(
+    root: ET._Element, emulator_attrs: dict[str, str]
+) -> tuple[dict[str, pd.DataFrame], list[dict[str, str]]]:
+    dataframes: dict[str, Any] = {
+        "games": {},
+        "roms": [],
+        "emulators": [],
+        "disks": [],
+        "features": [],
+        "drivers": [],
+        "game_emulator": [],
+        "game_rom": [],
+        "game_emulator_disk": [],
+        "game_emulator_feature": [],
+    }
     unhanded_references = []
-    new_games = 0
-    total_games = 0
     for game_element in root:
         rom_elements = utils.get_sub_elements(game_element, "rom")
         if rom_elements:
-            game = get_existing_game(session, game_element)
-            if not game:
-                game = create_game(session, game_element)
-                session.add(game)
-                new_games += 1
-            if game:
-                add_game_emulator_relationship(session, game_element, game, emulator)
-                session.commit()  # Is this needed!?
-                total_games += 1
-                unhanded_references.extend(add_game_references(session, emulator, game, game_element))
-        session.commit()
-        check_memory_utilization()
-        session.expunge_all()
-    return new_games, total_games, unhanded_references
+            game_attrs = process_game(game_element, dataframes)
+            if game_attrs is not None:
+                add_game_emulator_relationship(game_element, game_attrs, emulator_attrs, dataframes)
+                unhanded_references.extend(add_game_references(game_attrs, game_element, dataframes))
+                dataframes["games"][game_attrs["name"]] = pd.DataFrame([game_attrs])
+    dataframes["emulators"].append(pd.DataFrame([emulator_attrs]))
+    return dataframes, unhanded_references
 
 
 def get_mame_emulator_details(dat_file: str) -> list[str]:
@@ -263,22 +249,59 @@ def get_mame_emulator_details(dat_file: str) -> list[str]:
     return emulator.split()
 
 
-def create_emulator(session: Session, dat_file: str) -> db.Emulator:
+def get_emulator_attrs(dat_file: str) -> dict[str, str]:
     emulator_name, emulator_version = get_mame_emulator_details(dat_file)
-    emulator = db.Emulator(name=emulator_name, version=emulator_version)
-    session.add(emulator)
-    session.commit()
-    return emulator
+    id = "".join([char for char in f"{emulator_name}{emulator_version}" if char.isalnum()]).lower()
+    return {"id": id, "name": emulator_name, "version": str(emulator_version)}
 
 
-def process_dats(session: Session, dats: list[str]):
+def process_dats(dats: list[str]):
+    master_dfs = {
+        "games": create_dataframe_from_table(db.Game),
+        "roms": create_dataframe_from_table(db.Rom),
+        "emulators": create_dataframe_from_table(db.Emulator),
+        "disks": create_dataframe_from_table(db.Disk),
+        "features": create_dataframe_from_table(db.Feature),
+        "drivers": create_dataframe_from_table(db.Driver),
+        "game_emulator": create_dataframe_from_table(db.GameEmulator),
+        "game_rom": create_dataframe_from_table(db.game_rom_association),
+        "game_emulator_disk": create_dataframe_from_table(db.game_emulator_disk_association),
+        "game_emulator_feature": create_dataframe_from_table(db.game_emulator_feature_association),
+    }
     for dat_file in dats:
-        emulator = create_emulator(session, dat_file)
-        if (root := sources.get_dat_root(dat_file)) is not None:
-            new_games, total_games, unhandled_references = process_games(session, root, emulator)
-            check_memory_utilization()
-            print(f"DAT: {os.path.basename(dat_file)} - Total: {total_games}, New: {new_games}")
-            if unhandled_references:
-                print(f"{'Name':<10}\t{'Attribute':<10}\t{'Target Game':<10}")
-                for ref in unhandled_references:
-                    print(f"{ref['game']:<10}\t{ref['attribute']:<10}\t{ref['target']:<10}")
+        emulator_attrs = get_emulator_attrs(dat_file)
+        t = time.time()
+        root = sources.get_dat_root(dat_file)
+        print(f"Opened {dat_file} in: {time.time() - t:.6f} seconds")
+        if root is not None:
+            t = time.time()
+            dataframes, unhandled_references = process_games(root, emulator_attrs)
+            print(f"Created data for {dat_file} in: {time.time() - t:.6f} seconds")
+            master_dfs["games"] = pd.concat([master_dfs["games"], *dataframes["games"].values()])  # type: ignore
+            master_dfs["roms"] = pd.concat([master_dfs["roms"], *dataframes["roms"]])  # type: ignore
+            master_dfs["emulators"] = pd.concat([master_dfs["emulators"], *dataframes["emulators"]])  # type: ignore
+            master_dfs["disks"] = pd.concat([master_dfs["disks"], *dataframes["disks"]])  # type: ignore
+            master_dfs["features"] = pd.concat([master_dfs["features"], *dataframes["features"]])  # type: ignore
+            master_dfs["drivers"] = pd.concat([master_dfs["drivers"], *dataframes["drivers"]])  # type: ignore
+            master_dfs["game_emulator"] = pd.concat([master_dfs["game_emulator"], *dataframes["game_emulator"]])  # type: ignore
+            master_dfs["game_rom"] = pd.concat([master_dfs["game_rom"], *dataframes["game_rom"]])  # type: ignore
+            master_dfs["game_emulator_disk"] = pd.concat([master_dfs["game_emulator_disk"], *dataframes["game_emulator_disk"]])  # type: ignore
+            master_dfs["game_emulator_feature"] = pd.concat([master_dfs["game_emulator_feature"], *dataframes["game_emulator_feature"]])  # type: ignore
+
+            t = time.time()
+            for key, df in master_dfs.items():
+                if "id" in df.columns:
+                    df.drop_duplicates(subset="id", inplace=True)
+                else:
+                    df.drop_duplicates(inplace=True)
+                df.reset_index(inplace=True, drop=True)
+            print(f"Dropped duplicates for {dat_file} in: {time.time() - t:.6f} seconds")
+
+    # breakpoint()
+    master_dfs["games"].to_csv("games.csv")
+
+
+# if unhandled_references:
+#     print(f"{'Name':<10}\t{'Attribute':<10}\t{'Target Game':<10}")
+#     for ref in unhandled_references:
+#         print(f"{ref['game']:<10}\t{ref['attribute']:<10}\t{ref['target']:<10}")

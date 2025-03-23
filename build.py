@@ -2,7 +2,7 @@
 
 from optparse import OptionParser
 from arcade_db import create_db
-from arcade_db.shared import sources, db
+from arcade_db.shared import sources
 
 
 def print_job_summary(start, end, filepath, source_dats):
@@ -27,8 +27,8 @@ if __name__ == "__main__":
     filepath = options.filepath if options.filepath else "./arcade_db_build/arcade.db"
     start = options.start_index if options.start_index else 0
     end = options.end_index if options.end_index else len(sorted_dats)
-    session = db.get_session(filepath)
+    # session = db.get_session(filepath)
     source_dats = sorted_dats[start:end]
     print_job_summary(start, end, filepath, source_dats)
-    create_db.process_dats(session, source_dats)
-    session.close()
+    create_db.process_dats(source_dats)
+    # session.close()
