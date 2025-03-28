@@ -3,6 +3,7 @@
 from typing import Type
 import warnings
 import functools
+import time
 
 from lxml import etree as ET
 import psutil
@@ -13,6 +14,22 @@ from sqlalchemy.inspection import inspect
 @functools.lru_cache(maxsize=10)
 def get_sub_elements(parent_element: ET._Element, tag_name: str) -> list[ET._Element]:
     return parent_element.findall(tag_name)
+
+
+def time_execution(message: str):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()  # Start the timer
+            result = func(*args, **kwargs)  # Execute the decorated function
+            end_time = time.time()  # End the timer
+            elapsed_time = end_time - start_time
+            print(f"{message} executed in {elapsed_time:.6f} seconds")
+            return result
+
+        return wrapper
+
+    return decorator
 
 
 #

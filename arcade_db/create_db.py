@@ -22,7 +22,6 @@ types.
 
 from typing import Optional, Any, Union
 import os
-import time
 
 from lxml import etree as ET
 import pandas as pd
@@ -214,6 +213,7 @@ def add_game_references(
     return unhandled_references
 
 
+@utils.time_execution("Process games")
 def process_games(
     root: ET._Element, emulator_attrs: dict[str, str]
 ) -> tuple[dict[str, pd.DataFrame], list[dict[str, str]]]:
@@ -255,8 +255,8 @@ def get_emulator_attrs(dat_file: str) -> dict[str, str]:
     return {"id": id, "name": emulator_name, "version": str(emulator_version)}
 
 
-def process_dats(dats: list[str]):
-    master_dfs = {
+def get_master_dfs() -> dict[str, pd.DataFrame]:
+    return {
         "games": create_dataframe_from_table(db.Game),
         "roms": create_dataframe_from_table(db.Rom),
         "emulators": create_dataframe_from_table(db.Emulator),
@@ -268,34 +268,41 @@ def process_dats(dats: list[str]):
         "game_emulator_disk": create_dataframe_from_table(db.game_emulator_disk_association),
         "game_emulator_feature": create_dataframe_from_table(db.game_emulator_feature_association),
     }
+
+
+@utils.time_execution("Update master dataframes")
+def update_master_dfs(master_dfs: dict[str, pd.DataFrame], dataframes: dict[str, pd.DataFrame]) -> None:
+    master_dfs["games"] = pd.concat([master_dfs["games"], *dataframes["games"].values()])  # type: ignore
+    master_dfs["roms"] = pd.concat([master_dfs["roms"], *dataframes["roms"]])  # type: ignore
+    master_dfs["emulators"] = pd.concat([master_dfs["emulators"], *dataframes["emulators"]])  # type: ignore
+    master_dfs["disks"] = pd.concat([master_dfs["disks"], *dataframes["disks"]])  # type: ignore
+    master_dfs["features"] = pd.concat([master_dfs["features"], *dataframes["features"]])  # type: ignore
+    master_dfs["drivers"] = pd.concat([master_dfs["drivers"], *dataframes["drivers"]])  # type: ignore
+    master_dfs["game_emulator"] = pd.concat([master_dfs["game_emulator"], *dataframes["game_emulator"]])  # type: ignore
+    master_dfs["game_rom"] = pd.concat([master_dfs["game_rom"], *dataframes["game_rom"]])  # type: ignore
+    master_dfs["game_emulator_disk"] = pd.concat([master_dfs["game_emulator_disk"], *dataframes["game_emulator_disk"]])  # type: ignore
+    master_dfs["game_emulator_feature"] = pd.concat([master_dfs["game_emulator_feature"], *dataframes["game_emulator_feature"]])  # type: ignore
+
+
+@utils.time_execution("Drop duplicates")
+def drop_all_duplicates(master_dfs: dict[str, pd.DataFrame]) -> None:
+    for key, df in master_dfs.items():
+        if "id" in df.columns:
+            df.drop_duplicates(subset="id", inplace=True)
+        else:
+            df.drop_duplicates(inplace=True)
+        df.reset_index(inplace=True, drop=True)
+
+
+def process_dats(dats: list[str]):
+    master_dfs = get_master_dfs()
     for dat_file in dats:
         emulator_attrs = get_emulator_attrs(dat_file)
-        t = time.time()
         root = sources.get_dat_root(dat_file)
-        print(f"Opened {dat_file} in: {time.time() - t:.6f} seconds")
         if root is not None:
-            t = time.time()
             dataframes, unhandled_references = process_games(root, emulator_attrs)
-            print(f"Created data for {dat_file} in: {time.time() - t:.6f} seconds")
-            master_dfs["games"] = pd.concat([master_dfs["games"], *dataframes["games"].values()])  # type: ignore
-            master_dfs["roms"] = pd.concat([master_dfs["roms"], *dataframes["roms"]])  # type: ignore
-            master_dfs["emulators"] = pd.concat([master_dfs["emulators"], *dataframes["emulators"]])  # type: ignore
-            master_dfs["disks"] = pd.concat([master_dfs["disks"], *dataframes["disks"]])  # type: ignore
-            master_dfs["features"] = pd.concat([master_dfs["features"], *dataframes["features"]])  # type: ignore
-            master_dfs["drivers"] = pd.concat([master_dfs["drivers"], *dataframes["drivers"]])  # type: ignore
-            master_dfs["game_emulator"] = pd.concat([master_dfs["game_emulator"], *dataframes["game_emulator"]])  # type: ignore
-            master_dfs["game_rom"] = pd.concat([master_dfs["game_rom"], *dataframes["game_rom"]])  # type: ignore
-            master_dfs["game_emulator_disk"] = pd.concat([master_dfs["game_emulator_disk"], *dataframes["game_emulator_disk"]])  # type: ignore
-            master_dfs["game_emulator_feature"] = pd.concat([master_dfs["game_emulator_feature"], *dataframes["game_emulator_feature"]])  # type: ignore
-
-            t = time.time()
-            for key, df in master_dfs.items():
-                if "id" in df.columns:
-                    df.drop_duplicates(subset="id", inplace=True)
-                else:
-                    df.drop_duplicates(inplace=True)
-                df.reset_index(inplace=True, drop=True)
-            print(f"Dropped duplicates for {dat_file} in: {time.time() - t:.6f} seconds")
+            update_master_dfs(master_dfs, dataframes)
+            drop_all_duplicates(master_dfs)
 
     # breakpoint()
     master_dfs["games"].to_csv("games.csv")

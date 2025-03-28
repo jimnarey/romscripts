@@ -6,6 +6,8 @@ import re
 import bz2
 from lxml import etree as ET
 
+from .utils import time_execution
+
 PARENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Use the MAME DATs sorted with parents before clones
 MAME_SOURCES = os.path.join(PARENT_PATH, "mame_db_source", "clones_sorted_dats")
@@ -30,7 +32,9 @@ def get_xml_contents(path: str) -> bytes:
         return bzip_file.read()
 
 
+@time_execution("Get DAT root")
 def get_dat_root(path: str, concurrent: bool = False) -> Optional[ET._Element]:
+    print(f"Getting root from {path}")
     parser = PARSER if not concurrent else ET.XMLParser(remove_comments=True)
     contents = get_xml_contents(path)
     root = ET.fromstring(contents, parser)
