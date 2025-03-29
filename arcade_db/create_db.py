@@ -297,6 +297,7 @@ def drop_all_duplicates(master_dfs: dict[str, pd.DataFrame]) -> None:
 def process_dats(dats: list[str]):
     master_dfs = get_master_dfs()
     for dat_file in dats:
+        print(dat_file, "******************")
         emulator_attrs = get_emulator_attrs(dat_file)
         root = sources.get_dat_root(dat_file)
         if root is not None:

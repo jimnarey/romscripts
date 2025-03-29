@@ -9,14 +9,19 @@ from lxml import etree as ET
 from .utils import time_execution
 
 PARENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Use the MAME DATs sorted with parents before clones
-MAME_SOURCES = os.path.join(PARENT_PATH, "mame_db_source", "clones_sorted_dats")
-MAME_SOURCES_WORKING = os.path.join(PARENT_PATH, "mame_db_source_working", "dats")
-FBA_SOURCES = os.path.join(PARENT_PATH, "fba_db_source", "dats")
-MAME_DATS = [os.path.join(MAME_SOURCES, file) for file in os.listdir(MAME_SOURCES)]
-MAME_DATS_WORKING = [
-    os.path.join(MAME_SOURCES_WORKING, file) for file in os.listdir(MAME_SOURCES_WORKING) if file.endswith(".bz2")
-]
+WORKDIR = os.path.join(PARENT_PATH, "sources", "working")
+
+MAME_DAT_DIR = os.path.join(PARENT_PATH, "sources", "mame", "dats")
+MAME_REORDERED_DAT_DIR = os.path.join(PARENT_PATH, "sources", "mame", "dats_reordered")
+
+MAME_DATS = [os.path.join(MAME_DAT_DIR, file) for file in os.listdir(MAME_DAT_DIR)]
+MAME_REORDERED_DATS = [os.path.join(MAME_REORDERED_DAT_DIR, file) for file in os.listdir(MAME_REORDERED_DAT_DIR)]
+
+# MAME_DATS_WORKING = [
+#     os.path.join(MAME_SOURCES_WORKING, file) for file in os.listdir(MAME_SOURCES_WORKING) if file.endswith(".bz2")
+# ]
+
+FBA_DAT_DIR = os.path.join(PARENT_PATH, "sources", "fba", "dats")
 
 PARSER = ET.XMLParser(remove_comments=True)
 
@@ -41,6 +46,6 @@ def get_dat_root(path: str, concurrent: bool = False) -> Optional[ET._Element]:
     return root
 
 
-SORTED_DATS = {
-    "mame": sorted(MAME_DATS, key=extract_mame_version),
+BUILD_DATS = {
+    "mame": sorted(MAME_REORDERED_DATS, key=extract_mame_version),
 }
