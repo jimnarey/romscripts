@@ -23,6 +23,8 @@ MAME_REORDERED_DATS = [os.path.join(MAME_REORDERED_DAT_DIR, file) for file in os
 
 FBA_DAT_DIR = os.path.join(PARENT_PATH, "sources", "fba", "dats")
 
+CSVS_DIR = os.path.join(PARENT_PATH, "csvs")
+
 PARSER = ET.XMLParser(remove_comments=True)
 
 

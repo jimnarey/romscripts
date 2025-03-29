@@ -7,4 +7,6 @@ testing/*
 *.7z
 *.rar
 *.db
+*.csv
+*.csv#
 roms/*.zip

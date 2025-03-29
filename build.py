@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
     dat_type = options.dat_type if options.dat_type else "mame"
-    sorted_dats = sources.SORTED_DATS[dat_type]
+    sorted_dats = sources.BUILD_DATS[dat_type]
     filepath = options.filepath if options.filepath else "./arcade_db_build/arcade.db"
     start = options.start_index if options.start_index else 0
     end = options.end_index if options.end_index else len(sorted_dats)

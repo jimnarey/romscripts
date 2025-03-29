@@ -17,3 +17,6 @@ Later:
  - Decide what to do when existing instances have additional attributes in later DATs. E.g. 'bios' in Rom.
  - Decide whether to add the 'bios' field to Rom. Work out what the 'biosset' elements are really for.
  - What about fields which could plausibly change between DATs? (How sure are we that e.g. 'sourcefile' in Game doesn't change?) cloneof and romof are fine in the current implementation. To ensure coherent responses to queries we just need to filter by emulator, but the database structure is sound.
+
+
+Be careful opening CSVs in LibreOffice. Hex-based CRC strings will appear as numbers if they happen to contain no letters. Those comprised of digits separated by a single 'e' will be interpreted as a number with exponent.

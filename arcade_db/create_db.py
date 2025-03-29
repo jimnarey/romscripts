@@ -22,6 +22,8 @@ types.
 
 from typing import Optional, Any, Union
 import os
+from pathlib import Path
+from datetime import datetime
 
 from lxml import etree as ET
 import pandas as pd
@@ -66,11 +68,13 @@ def add_roms(rom_elements: list[ET._Element], dataframes: dict[str, Any], game_i
             "id": indexing.get_rom_index_hash(name, size, crc),
             "name": name,
             "size": size,
-            "crc": crc,
+            "crc": str(crc),
             "sha1": sha1,
         }
         dataframes["roms"].append(pd.DataFrame([rom]))
         dataframes["game_rom"].append(pd.DataFrame([{"game_id": game_id, "rom_id": rom["id"]}]))
+        if name == "gorf-d.bin":
+            breakpoint()
 
 
 def process_game(game_element: ET._Element, dataframes: dict[str, Any]) -> Optional[dict[str, str]]:
@@ -294,6 +298,17 @@ def drop_all_duplicates(master_dfs: dict[str, pd.DataFrame]) -> None:
         df.reset_index(inplace=True, drop=True)
 
 
+@utils.time_execution("Write CSVs")
+def write_csvs(master_dfs: dict[str, pd.DataFrame]) -> None:
+    target_dir = Path(sources.CSVS_DIR, f"{datetime.now().strftime('%Y-%m-%d-%H-%M')}")
+    target_dir.mkdir()
+    for key, df in master_dfs.items():
+        if key == "games":
+            df.to_csv(Path(target_dir, "games.csv"), index=False)
+        else:
+            df.to_csv(Path(target_dir, f"{key}.csv"), index=False)
+
+
 def process_dats(dats: list[str]):
     master_dfs = get_master_dfs()
     for dat_file in dats:
@@ -305,8 +320,7 @@ def process_dats(dats: list[str]):
             update_master_dfs(master_dfs, dataframes)
             drop_all_duplicates(master_dfs)
 
-    # breakpoint()
-    master_dfs["games"].to_csv("games.csv")
+    write_csvs(master_dfs)
 
 
 # if unhandled_references:
