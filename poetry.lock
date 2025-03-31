@@ -627,6 +627,21 @@ files = [
 ]
 
 [[package]]
+name = "objgraph"
+version = "3.6.2"
+description = "Draws Python object reference graphs with graphviz"
+optional = false
+python-versions = ">=3.7"
+groups = ["dev"]
+files = [
+    {file = "objgraph-3.6.2-py3-none-any.whl", hash = "sha256:8114c97712291c3ba30d882406a384d0a7651b307ea9a06e0d83836ccde85e15"},
+    {file = "objgraph-3.6.2.tar.gz", hash = "sha256:00b9f2f40f7422e3c7f45a61c4dafdaf81f03ff0649d6eaec866f01030e51ad8"},
+]
+
+[package.extras]
+ipython = ["graphviz"]
+
+[[package]]
 name = "pandas"
 version = "2.2.3"
 description = "Powerful data structures for data analysis, time series, and statistics"
@@ -1215,4 +1230,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "9b988ce0563e491c76d837729f855fff009e50fecb93d1905f477762c1545689"
+content-hash = "8ace799680d317a2d8c202fa5d5e3a80824a92f447cf9310a95c137d7a9e97bd"
