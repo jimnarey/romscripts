@@ -28,7 +28,7 @@ def get_session(db_path: str) -> Session:
 
 
 game_rom_association = Table(
-    "game_rom_association",
+    "game_rom",
     Base.metadata,
     Column("game_id", Integer, ForeignKey("games.id")),
     Column("rom_id", Integer, ForeignKey("roms.id")),

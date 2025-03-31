@@ -24,9 +24,13 @@ from typing import Optional, Any, Union
 import os
 from pathlib import Path
 from datetime import datetime
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing
+import gc
 
 from lxml import etree as ET
 import pandas as pd
+from sqlalchemy import create_engine
 from sqlalchemy.sql.schema import Table
 
 from .shared import sources, utils, indexing, db
@@ -73,8 +77,6 @@ def add_roms(rom_elements: list[ET._Element], dataframes: dict[str, Any], game_i
         }
         dataframes["roms"].append(pd.DataFrame([rom]))
         dataframes["game_rom"].append(pd.DataFrame([{"game_id": game_id, "rom_id": rom["id"]}]))
-        if name == "gorf-d.bin":
-            breakpoint()
 
 
 def process_game(game_element: ET._Element, dataframes: dict[str, Any]) -> Optional[dict[str, str]]:
@@ -158,15 +160,16 @@ def get_disk_attributes(disk_element: ET._Element) -> dict[str, str]:
 
 
 # TODO: Can probably avoid using get_sub_elements.
+# TODO: Need a second index for sha1
 def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]):
     if disk_elements := utils.get_sub_elements(game_element, "disk"):
         for disk_element in disk_elements:
-            disk_attributes = get_disk_attributes(disk_element)
-            disk_attributes["id"] = indexing.get_attributes_md5(disk_attributes)
-            disk = pd.DataFrame([disk_attributes])
+            disk_attrs = get_disk_attributes(disk_element)
+            disk_attrs["id"] = indexing.get_attributes_md5(disk_attrs)
+            disk = pd.DataFrame([disk_attrs])
             dataframes["disks"].append(disk)
             dataframes["game_emulator_disk"].append(
-                pd.DataFrame([{"game_emulator_id": game_emulator_attrs["id"], "disk_id": disk["id"]}]).set_index(
+                pd.DataFrame([{"game_emulator_id": game_emulator_attrs["id"], "disk_id": disk_attrs["id"]}]).set_index(
                     ["game_emulator_id", "disk_id"]
                 )
             )
@@ -217,7 +220,7 @@ def add_game_references(
     return unhandled_references
 
 
-@utils.time_execution("Process games")
+# @utils.time_execution("Process games")
 def process_games(
     root: ET._Element, emulator_attrs: dict[str, str]
 ) -> tuple[dict[str, pd.DataFrame], list[dict[str, str]]]:
@@ -274,7 +277,7 @@ def get_master_dfs() -> dict[str, pd.DataFrame]:
     }
 
 
-@utils.time_execution("Update master dataframes")
+# @utils.time_execution("Update master dataframes")
 def update_master_dfs(master_dfs: dict[str, pd.DataFrame], dataframes: dict[str, pd.DataFrame]) -> None:
     master_dfs["games"] = pd.concat([master_dfs["games"], *dataframes["games"].values()])  # type: ignore
     master_dfs["roms"] = pd.concat([master_dfs["roms"], *dataframes["roms"]])  # type: ignore
@@ -288,7 +291,7 @@ def update_master_dfs(master_dfs: dict[str, pd.DataFrame], dataframes: dict[str,
     master_dfs["game_emulator_feature"] = pd.concat([master_dfs["game_emulator_feature"], *dataframes["game_emulator_feature"]])  # type: ignore
 
 
-@utils.time_execution("Drop duplicates")
+# @utils.time_execution("Drop duplicates")
 def drop_all_duplicates(master_dfs: dict[str, pd.DataFrame]) -> None:
     for key, df in master_dfs.items():
         if "id" in df.columns:
@@ -298,29 +301,77 @@ def drop_all_duplicates(master_dfs: dict[str, pd.DataFrame]) -> None:
         df.reset_index(inplace=True, drop=True)
 
 
-@utils.time_execution("Write CSVs")
+# @utils.time_execution("Write CSVs")
 def write_csvs(master_dfs: dict[str, pd.DataFrame]) -> None:
     target_dir = Path(sources.CSVS_DIR, f"{datetime.now().strftime('%Y-%m-%d-%H-%M')}")
     target_dir.mkdir()
-    for key, df in master_dfs.items():
-        if key == "games":
-            df.to_csv(Path(target_dir, "games.csv"), index=False)
-        else:
-            df.to_csv(Path(target_dir, f"{key}.csv"), index=False)
+    for table_name, df in master_dfs.items():
+        df.to_csv(Path(target_dir, f"{table_name}.csv"), index=False)
 
 
-def process_dats(dats: list[str]):
+def write_to_sqlite(master_dfs: dict[str, pd.DataFrame], db_path: str) -> None:
+    os.remove(db_path) if os.path.exists(db_path) else None
+    engine = create_engine(f"sqlite:///{db_path}")
+    for table_name, df in master_dfs.items():
+        if not df.empty:
+            print(f"Writing table '{table_name}' to database...")
+            df.to_sql(name=table_name, con=engine, index=False)
+
+
+def clear_dataframes(dataframes: dict[str, Any]) -> None:
+    dataframes["games"] = dataframes["games"].values()
+    for df_set in dataframes.values():
+        for df in df_set:
+            df.drop(df.index, inplace=True)
+            df = None
+    gc.collect()
+
+
+def process_dats_consecutively(dats: list[str]):
     master_dfs = get_master_dfs()
     for dat_file in dats:
-        print(dat_file, "******************")
         emulator_attrs = get_emulator_attrs(dat_file)
         root = sources.get_dat_root(dat_file)
         if root is not None:
+            utils.log_memory(f"Before process_games - {dat_file}")
             dataframes, unhandled_references = process_games(root, emulator_attrs)
             update_master_dfs(master_dfs, dataframes)
             drop_all_duplicates(master_dfs)
 
     write_csvs(master_dfs)
+    write_to_sqlite(master_dfs, "test.db")
+
+
+def process_dat(dat_file: str) -> tuple[dict[str, pd.DataFrame], list[dict[str, str]]]:
+    """
+    Process a single DAT file and return the resulting dataframes and unhandled references.
+    """
+    emulator_attrs = get_emulator_attrs(dat_file)
+    root = sources.get_dat_root(dat_file)
+    if root is not None:
+        return process_games(root, emulator_attrs)
+    return {}, []
+
+
+def process_dats(dats: list[str]):
+    master_dfs = get_master_dfs()
+    with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+        future_to_dat = {executor.submit(process_dat, dat_file): dat_file for dat_file in dats}
+        for future in as_completed(future_to_dat):
+            dat_file = future_to_dat[future]
+            try:
+                dataframes, unhandled_references = future.result()
+                print(f"Processed {dat_file} successfully.")
+                update_master_dfs(master_dfs, dataframes)
+                drop_all_duplicates(master_dfs)
+
+                gc.collect()
+
+            except Exception as e:
+                print(f"Error processing {dat_file}: {e}")
+
+    write_csvs(master_dfs)
+    write_to_sqlite(master_dfs, "test.db")
 
 
 # if unhandled_references:

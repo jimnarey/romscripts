@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from typing import Type
+import os
 import warnings
 import functools
 import time
@@ -16,13 +17,18 @@ def get_sub_elements(parent_element: ET._Element, tag_name: str) -> list[ET._Ele
     return parent_element.findall(tag_name)
 
 
+def log_memory(msg=""):
+    process = psutil.Process(os.getpid())
+    print(f"{msg} Memory: {process.memory_info().rss / (1024 * 1024)} MB")
+
+
 def time_execution(message: str):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            start_time = time.time()  # Start the timer
-            result = func(*args, **kwargs)  # Execute the decorated function
-            end_time = time.time()  # End the timer
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            end_time = time.time()
             elapsed_time = end_time - start_time
             print(f"{message} executed in {elapsed_time:.6f} seconds")
             return result
