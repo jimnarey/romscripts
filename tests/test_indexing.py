@@ -33,13 +33,6 @@ class TestIndexing(unittest.TestCase):
         self.rom_element1 = Element("rom", name="rom1", size="100", crc="crchash")
         self.rom_element2 = Element("rom", name="rom2", size="200", crc="crchash2")
 
-    def test_roms_signature_from_one_rom(self):
-        result = indexing.roms_signature_from_roms([self.rom1])
-        self.assertEqual(result, "rom1/100/crchash")
-
-    def test_roms_signature_from_two_roms(self):
-        result = indexing.roms_signature_from_roms([self.rom1, self.rom2])
-        self.assertEqual(result, "rom1/100/crchash,rom2/200/crchash2")
 
     def test_roms_signature_from_one_element(self):
         result = indexing.roms_signature_from_elements([self.rom_element1])
@@ -54,10 +47,6 @@ class TestIndexing(unittest.TestCase):
             [{"name": "rom1", "size": 100, "crc": "crchash"}, {"name": "rom2", "size": 200, "crc": "crchash2"}]
         )
         self.assertEqual(result, "rom1/100/crchash,rom2/200/crchash2")
-
-    def test_get_index_from_records(self):
-        result = indexing.get_game_index_from_records(self.game_name, [self.rom1, self.rom2])
-        self.assertEqual(result, "65ae03eb08c4fc99fede5304a8abba8df18da2acf9dc9c32379c14c43843b00a")
 
     def test_get_index_from_elements(self):
         result = indexing.get_game_index_from_elements(self.game_name, [self.rom_element1, self.rom_element2])

@@ -51,7 +51,7 @@ game_emulator_disk_association = Table(
 
 class GameEmulator(Base):
     __tablename__ = "game_emulator"
-    id = Column(String(32), primary_key=True)
+    id = Column(String(64), primary_key=True)
     game_id = Column(Integer, ForeignKey("games.id"), primary_key=True)
     emulator_id = Column(Integer, ForeignKey("emulators.id"), primary_key=True)
     driver_id = Column(Integer, ForeignKey("drivers.id"))
@@ -64,7 +64,7 @@ class GameEmulator(Base):
 
 class Emulator(Base):
     __tablename__ = "emulators"
-    id = Column(String(32), primary_key=True)
+    id = Column(String(64), primary_key=True)
     name = Column(String)
     version = Column(String)
     # game_emulators = relationship("GameEmulator", back_populates="emulator")
@@ -112,7 +112,7 @@ class Disk(Base):
     """
 
     __tablename__ = "disks"
-    id = Column(String(32), primary_key=True)
+    id = Column(String(64), primary_key=True)
     name = Column(String, nullable=False)
     sha1 = Column(String, nullable=False)
     md5 = Column(String, nullable=False)
@@ -122,7 +122,7 @@ class Disk(Base):
 
 class Feature(Base):
     __tablename__ = "features"
-    id = Column(String(32), primary_key=True)
+    id = Column(String(64), primary_key=True)
     overall = Column(String, nullable=False)
     type = Column(String, nullable=False)
     status = Column(String, nullable=False)
@@ -132,7 +132,7 @@ class Feature(Base):
 
 class Driver(Base):
     __tablename__ = "drivers"
-    id = Column(String(32), primary_key=True)
+    id = Column(String(64), primary_key=True)
     palettesize = Column(String, nullable=False)
     hiscoresave = Column(String, nullable=False)
     requiresartwork = Column(String, nullable=False)

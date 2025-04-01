@@ -26,7 +26,7 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
-import gc
+import shutil
 
 from lxml import etree as ET
 import pandas as pd
@@ -37,6 +37,8 @@ from .shared import sources, utils, indexing, db
 
 SqlAlchemyTable = Union[Table, Any]
 
+DatData = dict[str, dict[str, dict[str, str]]]
+
 
 def create_dataframe_from_table(table: SqlAlchemyTable) -> pd.DataFrame:
     if isinstance(table, Table):
@@ -44,6 +46,42 @@ def create_dataframe_from_table(table: SqlAlchemyTable) -> pd.DataFrame:
     else:
         column_names = [column.name for column in table.__table__.columns]
     return pd.DataFrame(columns=column_names)
+
+
+def strip_keys(dict_: dict[str, Any]) -> list[str]:
+    return [key for key in dict_.keys() if not key.startswith("_")]
+
+
+def print_dat_data_stats(dat_data: DatData, label: str) -> None:
+    """Print statistics to help debug size issues."""
+    print(f"\n{label} Statistics:")
+    total_records = 0
+    for key in strip_keys(dat_data):
+        count = len(dat_data[key])
+        total_records += count
+        print(f"  {key}: {count:,} records")
+    print(f"  TOTAL: {total_records:,} records")
+    
+    # Check relationship ratios that might indicate problems
+    if dat_data["games"] and dat_data["game_rom"]:
+        ratio = len(dat_data["game_rom"]) / len(dat_data["games"])
+        print(f"  ROMs per game: {ratio:.1f}")
+    
+    if dat_data["games"] and dat_data["game_emulator"]:
+        ratio = len(dat_data["game_emulator"]) / len(dat_data["games"])
+        print(f"  Emulators per game: {ratio:.1f}")
+    
+    # Debug features specifically
+    if dat_data["features"] and dat_data["game_emulator_feature"]:
+        ratio = len(dat_data["game_emulator_feature"]) / len(dat_data["features"])
+        print(f"  Game-emulator-features per feature: {ratio:.1f}")
+        
+        # Show the actual features to see if they're generic
+        print("  Features found:")
+        for feature in list(dat_data["features"].values())[:10]:  # Show first 10
+            print(f"    type='{feature['type']}', status='{feature['status']}', overall='{feature['overall']}'")
+        if len(dat_data["features"]) > 10:
+            print(f"    ... and {len(dat_data['features']) - 10} more")
 
 
 # TODO: Test for possibility rom instance is assigned zero value
@@ -61,25 +99,26 @@ def get_inner_element_text(outer_element: ET._Element, inner_element_name: str) 
     return None
 
 
-def add_roms(rom_elements: list[ET._Element], dataframes: dict[str, Any], game_id: str) -> None:
+def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_id: str) -> None:
     for rom_element in rom_elements:
         name = rom_element.get("name", "")
         size = get_rom_size(rom_element)
         crc = rom_element.get("crc", "")
         sha1 = rom_element.get("sha1", None)
-
-        rom = {
-            "id": indexing.get_rom_index_hash(name, size, crc),
+        rom_id = indexing.get_rom_index_hash(name, size, crc)
+        rom_attrs = {
+            "id": rom_id,
             "name": name,
             "size": size,
             "crc": str(crc),
             "sha1": sha1,
         }
-        dataframes["roms"].append(pd.DataFrame([rom]))
-        dataframes["game_rom"].append(pd.DataFrame([{"game_id": game_id, "rom_id": rom["id"]}]))
+        dat_data["roms"][rom_attrs["id"]] = rom_attrs
+        composite_key = indexing.get_attributes_md5({"game_id": game_id, "rom_id": rom_id})
+        dat_data["game_rom"][composite_key] = {"game_id": game_id, "rom_id": rom_id}
 
 
-def process_game(game_element: ET._Element, dataframes: dict[str, Any]) -> Optional[dict[str, str]]:
+def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[dict[str, str]]:
     if rom_elements := utils.get_sub_elements(game_element, "rom"):
         name = game_element.get("name", "")
         game_id = indexing.get_game_index_from_elements(name, rom_elements)
@@ -94,7 +133,7 @@ def process_game(game_element: ET._Element, dataframes: dict[str, Any]) -> Optio
             "runnable": game_element.get("runnable"),
             "ismechanical": game_element.get("ismechanical"),
         }
-        add_roms(rom_elements, dataframes, game_id)
+        add_roms(rom_elements, dat_data, game_id)
         return game_attrs
     return None
 
@@ -107,17 +146,19 @@ def get_feature_element_attributes(feature_element: ET._Element) -> dict[str, st
     }
 
 
-def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]) -> None:
+def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData) -> None:
     for feature_element in game_element.findall("feature"):
-        feature_attributes = get_feature_element_attributes(feature_element)
-        feature_attributes["id"] = indexing.get_attributes_md5(feature_attributes)
-        features = pd.DataFrame([feature_attributes])
-        dataframes["features"].append(features)
-        dataframes["game_emulator_feature"].append(
-            pd.DataFrame([{"game_emulator_id": game_emulator_attrs["id"], "feature_id": features["id"]}]).set_index(
-                ["game_emulator_id", "feature_id"]
-            )
-        )
+        feature_attrs = get_feature_element_attributes(feature_element)
+        feature_attrs["id"] = indexing.get_attributes_md5(feature_attrs)
+        dat_data["features"][feature_attrs["id"]] = feature_attrs
+        composite_key = indexing.get_attributes_md5({
+            "game_emulator_id": game_emulator_attrs["id"],
+            "feature_id": feature_attrs["id"]
+        })
+        dat_data["game_emulator_feature"][composite_key] = {
+            "game_emulator_id": game_emulator_attrs["id"],
+            "feature_id": feature_attrs["id"],
+        }
 
 
 def get_driver_element_attributes(driver_element: ET._Element) -> dict[str, str]:
@@ -142,13 +183,12 @@ def get_driver_element_attributes(driver_element: ET._Element) -> dict[str, str]
 
 
 # TODO: Check for orphaned drivers after db build.
-def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]) -> None:
+def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData) -> None:
     if (driver_element := game_element.find("driver")) is not None:
-        driver_attributes = get_driver_element_attributes(driver_element)
-        driver_attributes["id"] = indexing.get_attributes_md5(driver_attributes)
-        driver = pd.DataFrame([driver_attributes])
-        dataframes["drivers"].append(driver)
-        game_emulator_attrs["driver_id"] = driver_attributes["id"]
+        driver_attrs = get_driver_element_attributes(driver_element)
+        driver_attrs["id"] = indexing.get_attributes_md5(driver_attrs)
+        dat_data["drivers"][driver_attrs["id"]] = driver_attrs
+        game_emulator_attrs["driver_id"] = driver_attrs["id"]
 
 
 def get_disk_attributes(disk_element: ET._Element) -> dict[str, str]:
@@ -161,22 +201,24 @@ def get_disk_attributes(disk_element: ET._Element) -> dict[str, str]:
 
 # TODO: Can probably avoid using get_sub_elements.
 # TODO: Need a second index for sha1
-def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]):
+def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData):
     if disk_elements := utils.get_sub_elements(game_element, "disk"):
         for disk_element in disk_elements:
             disk_attrs = get_disk_attributes(disk_element)
             disk_attrs["id"] = indexing.get_attributes_md5(disk_attrs)
-            disk = pd.DataFrame([disk_attrs])
-            dataframes["disks"].append(disk)
-            dataframes["game_emulator_disk"].append(
-                pd.DataFrame([{"game_emulator_id": game_emulator_attrs["id"], "disk_id": disk_attrs["id"]}]).set_index(
-                    ["game_emulator_id", "disk_id"]
-                )
-            )
+            dat_data["disks"][disk_attrs["id"]] = disk_attrs
+            composite_key = indexing.get_attributes_md5({
+                "game_emulator_id": game_emulator_attrs["id"],
+                "disk_id": disk_attrs["id"]
+            })
+            dat_data["game_emulator_disk"][composite_key] = {
+                "game_emulator_id": game_emulator_attrs["id"],
+                "disk_id": disk_attrs["id"],
+            }
 
 
 def add_game_emulator_relationship(
-    game_element: ET._Element, game_attrs: dict[str, str], emulator_attrs: dict[str, str], dataframes: dict[str, Any]
+    game_element: ET._Element, game_attrs: dict[str, str], emulator_attrs: dict[str, str], dat_data: DatData
 ):
     game_emulator_attrs = {"game_id": game_attrs["id"], "emulator_id": emulator_attrs["id"]}
     # We don't use the driver id as part of the primary key because we only want one game_emulator record per game/emulator
@@ -184,28 +226,25 @@ def add_game_emulator_relationship(
     game_emulator_attrs["id"] = indexing.get_attributes_md5(
         {key: game_emulator_attrs[key] for key in ("game_id", "emulator_id")}
     )
-    add_features(game_emulator_attrs, game_element, dataframes)
-    add_driver(game_emulator_attrs, game_element, dataframes)
-    add_disks(game_emulator_attrs, game_element, dataframes)
-    dataframes["game_emulator"].append(pd.DataFrame([game_emulator_attrs]))
+    add_features(game_emulator_attrs, game_element, dat_data)
+    add_driver(game_emulator_attrs, game_element, dat_data)
+    add_disks(game_emulator_attrs, game_element, dat_data)
+    dat_data["game_emulator"][game_emulator_attrs["id"]] = game_emulator_attrs
 
 
-def add_game_reference(game: dict[str, str], attribute: str, target_game_name: str, dataframes: dict[str, Any]) -> bool:
+def add_game_reference(game_attrs: dict[str, str], attribute: str, target_game_name: str, dat_data: DatData) -> bool:
     """
     Add a reference to another game to a game object.
     field: either "cloneof" or "romof"
     """
-    target_game = dataframes["games"].get(target_game_name)
+    target_game = dat_data["_games_name"].get(target_game_name)
     if target_game is not None:
-        # Need to test that this only ever receives a one row dataframe
-        game[f"{attribute}_id"] = target_game.iloc[0]["id"]
+        game_attrs[f"{attribute}_id"] = target_game["id"]
         return True
     return False
 
 
-def add_game_references(
-    game: dict[str, str], game_element: ET._Element, dataframes: dict[str, Any]
-) -> list[dict[str, str]]:
+def add_game_references(game: dict[str, str], game_element: ET._Element, dat_data: DatData) -> list[dict[str, str]]:
     """
     Resolves the game > game references for a single game.
     """
@@ -213,40 +252,27 @@ def add_game_references(
     for attribute in ("cloneof", "romof"):
         if target_game_name := game_element.get(attribute):
             if bool(game["name"] != target_game_name):
-                if add_game_reference(game, attribute, target_game_name, dataframes) is False:
+                if add_game_reference(game, attribute, target_game_name, dat_data) is False:
                     unhandled_references.append(
                         {"game": game["name"], "attribute": attribute, "target": target_game_name}
                     )
     return unhandled_references
 
 
-# @utils.time_execution("Process games")
-def process_games(
-    root: ET._Element, emulator_attrs: dict[str, str]
-) -> tuple[dict[str, pd.DataFrame], list[dict[str, str]]]:
-    dataframes: dict[str, Any] = {
-        "games": {},
-        "roms": [],
-        "emulators": [],
-        "disks": [],
-        "features": [],
-        "drivers": [],
-        "game_emulator": [],
-        "game_rom": [],
-        "game_emulator_disk": [],
-        "game_emulator_feature": [],
-    }
+def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> tuple[DatData, list[dict[str, str]]]:
+    dat_data = get_empty_dat_data()
     unhanded_references = []
     for game_element in root:
         rom_elements = utils.get_sub_elements(game_element, "rom")
         if rom_elements:
-            game_attrs = process_game(game_element, dataframes)
+            game_attrs = process_game(game_element, dat_data)
             if game_attrs is not None:
-                add_game_emulator_relationship(game_element, game_attrs, emulator_attrs, dataframes)
-                unhanded_references.extend(add_game_references(game_attrs, game_element, dataframes))
-                dataframes["games"][game_attrs["name"]] = pd.DataFrame([game_attrs])
-    dataframes["emulators"].append(pd.DataFrame([emulator_attrs]))
-    return dataframes, unhanded_references
+                add_game_emulator_relationship(game_element, game_attrs, emulator_attrs, dat_data)
+                unhanded_references.extend(add_game_references(game_attrs, game_element, dat_data))
+                dat_data["_games_name"][game_attrs["name"]] = game_attrs
+                dat_data["games"][game_attrs["id"]] = game_attrs
+    dat_data["emulators"][emulator_attrs["id"]] = emulator_attrs
+    return dat_data, unhanded_references
 
 
 def get_mame_emulator_details(dat_file: str) -> list[str]:
@@ -262,119 +288,90 @@ def get_emulator_attrs(dat_file: str) -> dict[str, str]:
     return {"id": id, "name": emulator_name, "version": str(emulator_version)}
 
 
-def get_master_dfs() -> dict[str, pd.DataFrame]:
+def get_empty_dat_data() -> DatData:
     return {
-        "games": create_dataframe_from_table(db.Game),
-        "roms": create_dataframe_from_table(db.Rom),
-        "emulators": create_dataframe_from_table(db.Emulator),
-        "disks": create_dataframe_from_table(db.Disk),
-        "features": create_dataframe_from_table(db.Feature),
-        "drivers": create_dataframe_from_table(db.Driver),
-        "game_emulator": create_dataframe_from_table(db.GameEmulator),
-        "game_rom": create_dataframe_from_table(db.game_rom_association),
-        "game_emulator_disk": create_dataframe_from_table(db.game_emulator_disk_association),
-        "game_emulator_feature": create_dataframe_from_table(db.game_emulator_feature_association),
+        "_games_name": {},
+        "games": {},
+        "roms": {},
+        "emulators": {},
+        "disks": {},
+        "features": {},
+        "drivers": {},
+        "game_emulator": {},
+        "game_rom": {},
+        "game_emulator_disk": {},
+        "game_emulator_feature": {},
     }
 
 
-# @utils.time_execution("Update master dataframes")
-def update_master_dfs(master_dfs: dict[str, pd.DataFrame], dataframes: dict[str, pd.DataFrame]) -> None:
-    master_dfs["games"] = pd.concat([master_dfs["games"], *dataframes["games"].values()])  # type: ignore
-    master_dfs["roms"] = pd.concat([master_dfs["roms"], *dataframes["roms"]])  # type: ignore
-    master_dfs["emulators"] = pd.concat([master_dfs["emulators"], *dataframes["emulators"]])  # type: ignore
-    master_dfs["disks"] = pd.concat([master_dfs["disks"], *dataframes["disks"]])  # type: ignore
-    master_dfs["features"] = pd.concat([master_dfs["features"], *dataframes["features"]])  # type: ignore
-    master_dfs["drivers"] = pd.concat([master_dfs["drivers"], *dataframes["drivers"]])  # type: ignore
-    master_dfs["game_emulator"] = pd.concat([master_dfs["game_emulator"], *dataframes["game_emulator"]])  # type: ignore
-    master_dfs["game_rom"] = pd.concat([master_dfs["game_rom"], *dataframes["game_rom"]])  # type: ignore
-    master_dfs["game_emulator_disk"] = pd.concat([master_dfs["game_emulator_disk"], *dataframes["game_emulator_disk"]])  # type: ignore
-    master_dfs["game_emulator_feature"] = pd.concat([master_dfs["game_emulator_feature"], *dataframes["game_emulator_feature"]])  # type: ignore
-
-
-# @utils.time_execution("Drop duplicates")
-def drop_all_duplicates(master_dfs: dict[str, pd.DataFrame]) -> None:
-    for key, df in master_dfs.items():
-        if "id" in df.columns:
-            df.drop_duplicates(subset="id", inplace=True)
-        else:
-            df.drop_duplicates(inplace=True)
-        df.reset_index(inplace=True, drop=True)
-
-
-# @utils.time_execution("Write CSVs")
-def write_csvs(master_dfs: dict[str, pd.DataFrame]) -> None:
-    target_dir = Path(sources.CSVS_DIR, f"{datetime.now().strftime('%Y-%m-%d-%H-%M')}")
+def write(dat_data: DatData, path: str, csv: bool = False) -> None:
+    target_dir = Path(path, "arcade-out")
+    if target_dir.exists():
+        shutil.rmtree(target_dir)
     target_dir.mkdir()
-    for table_name, df in master_dfs.items():
-        df.to_csv(Path(target_dir, f"{table_name}.csv"), index=False)
+    engine = create_engine(f"sqlite:///{Path(target_dir, 'arcade.db')}")
+    for key in strip_keys(dat_data):
+        print(f"Creating {key} dataframe...")
+        df = pd.DataFrame(list(dat_data[key].values()))
+        if csv:
+            print(f"Writing {key} dataframe to CSV...")
+            df.to_csv(Path(target_dir, f"{key}.csv"), index=False)
+        print(f"Writing {key} dataframe to sqlite...")
+        df.to_sql(key, con=engine, if_exists="replace", index=False)
 
 
-def write_to_sqlite(master_dfs: dict[str, pd.DataFrame], db_path: str) -> None:
-    os.remove(db_path) if os.path.exists(db_path) else None
-    engine = create_engine(f"sqlite:///{db_path}")
-    for table_name, df in master_dfs.items():
-        if not df.empty:
-            print(f"Writing table '{table_name}' to database...")
-            df.to_sql(name=table_name, con=engine, index=False)
-
-
-def clear_dataframes(dataframes: dict[str, Any]) -> None:
-    dataframes["games"] = dataframes["games"].values()
-    for df_set in dataframes.values():
-        for df in df_set:
-            df.drop(df.index, inplace=True)
-            df = None
-    gc.collect()
+def print_unhandled_references(unhandled_references: list[dict[str, str]]) -> None:
+    if unhandled_references:
+        print(f"{'Name':<10}\t{'Attribute':<10}\t{'Target Game':<10}")
+        for ref in unhandled_references:
+            print(f"{ref['game']:<10}\t{ref['attribute']:<10}\t{ref['target']:<10}")
 
 
 def process_dats_consecutively(dats: list[str]):
-    master_dfs = get_master_dfs()
-    for dat_file in dats:
+    master_dat_data = get_empty_dat_data()
+    all_unhandled_references = []
+    
+    print_dat_data_stats(master_dat_data, "Initial")
+    
+    for i, dat_file in enumerate(dats):
         emulator_attrs = get_emulator_attrs(dat_file)
         root = sources.get_dat_root(dat_file)
         if root is not None:
             utils.log_memory(f"Before process_games - {dat_file}")
-            dataframes, unhandled_references = process_games(root, emulator_attrs)
-            update_master_dfs(master_dfs, dataframes)
-            drop_all_duplicates(master_dfs)
+            dat_data, unhandled_references = process_games(root, emulator_attrs)
+            all_unhandled_references.extend(unhandled_references)
+            for key in strip_keys(dat_data):
+                master_dat_data[key].update(dat_data[key])
+            
+            # Print stats every 10 DATs to see where explosion happens
+            if i % 10 == 0:
+                print_dat_data_stats(master_dat_data, f"After DAT {i+1}")
+    
+    print_dat_data_stats(master_dat_data, "Final")
+    write(master_dat_data, os.getcwd(), csv=True)
+    print_unhandled_references(all_unhandled_references)
 
-    write_csvs(master_dfs)
-    write_to_sqlite(master_dfs, "test.db")
 
-
-def process_dat(dat_file: str) -> tuple[dict[str, pd.DataFrame], list[dict[str, str]]]:
-    """
-    Process a single DAT file and return the resulting dataframes and unhandled references.
-    """
+def dat_worker(dat_file):
     emulator_attrs = get_emulator_attrs(dat_file)
     root = sources.get_dat_root(dat_file)
     if root is not None:
-        return process_games(root, emulator_attrs)
-    return {}, []
+        utils.log_memory(f"Before process_games - {dat_file}")
+        dat_data, unhandled_references = process_games(root, emulator_attrs)
+        return dat_data, unhandled_references
+    return get_empty_dat_data(), []
 
 
+# Parallelized version using multiprocessing
 def process_dats(dats: list[str]):
-    master_dfs = get_master_dfs()
-    with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-        future_to_dat = {executor.submit(process_dat, dat_file): dat_file for dat_file in dats}
-        for future in as_completed(future_to_dat):
-            dat_file = future_to_dat[future]
-            try:
-                dataframes, unhandled_references = future.result()
-                print(f"Processed {dat_file} successfully.")
-                update_master_dfs(master_dfs, dataframes)
-                drop_all_duplicates(master_dfs)
+    master_dat_data = get_empty_dat_data()
+    all_unhandled_references = []
+    with multiprocessing.Pool() as pool:
+        results = pool.map(dat_worker, dats)
+    for dat_data, unhandled_references in results:
+        for key in strip_keys(dat_data):
+            master_dat_data[key].update(dat_data[key])
+        all_unhandled_references.extend(unhandled_references)
+    write(master_dat_data, os.getcwd(), csv=True)
+    print_unhandled_references(all_unhandled_references)
 
-                gc.collect()
-
-            except Exception as e:
-                print(f"Error processing {dat_file}: {e}")
-
-    write_csvs(master_dfs)
-    write_to_sqlite(master_dfs, "test.db")
-
-
-# if unhandled_references:
-#     print(f"{'Name':<10}\t{'Attribute':<10}\t{'Target Game':<10}")
-#     for ref in unhandled_references:
-#         print(f"{ref['game']:<10}\t{ref['attribute']:<10}\t{ref['target']:<10}")

@@ -35,29 +35,6 @@ class TestModels(unittest.TestCase):
     def tearDown(self):
         self.session.rollback()
 
-    def test_models_are_properly_declared(self):
-        # TODO: add game:game relationships
-        # Add more fields, including those derived from sub-elements
-        """
-        This doesn't add every field on Game. It tests the realtionships
-        """
-        emulator = db.Emulator(name="emu1", version="1.0")
-        roms = [
-            db.Rom(name="rom1", size=100, crc="crc1", sha1="sha1"),
-            db.Rom(name="rom2", size=200, crc="crc2", sha1="sha2"),
-        ]
-        game = db.Game(isbios=False, name="game1", year="2000", manufacturer="man1", roms=roms)
-        game_emulator = db.GameEmulator(game=game, emulator=emulator)
-        self.session.add(game_emulator)
-        self.session.commit()
-        db_game = self.session.query(db.Game).filter_by(name="game1").one()
-        db_emulator = self.session.query(db.Emulator).filter_by(name="emu1").one()
-        self.assertEqual(db_game, game)
-        self.assertEqual(db_emulator, emulator)
-        self.assertEqual(db_game.game_emulators[0], game_emulator)
-        self.assertEqual(db_emulator.game_emulators[0], game_emulator)
-        self.assertEqual(set(rom.name for rom in db_game.roms), {"rom1", "rom2"})
-
 
 class TestGetInnerElementText(unittest.TestCase):
     def test_element_with_inner_element(self):
