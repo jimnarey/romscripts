@@ -52,38 +52,6 @@ def strip_keys(dict_: dict[str, Any]) -> list[str]:
     return [key for key in dict_.keys() if not key.startswith("_")]
 
 
-def print_dat_data_stats(dat_data: DatData, label: str) -> None:
-    """Print statistics to help debug size issues."""
-    print(f"\n{label} Statistics:")
-    total_records = 0
-    for key in strip_keys(dat_data):
-        count = len(dat_data[key])
-        total_records += count
-        print(f"  {key}: {count:,} records")
-    print(f"  TOTAL: {total_records:,} records")
-    
-    # Check relationship ratios that might indicate problems
-    if dat_data["games"] and dat_data["game_rom"]:
-        ratio = len(dat_data["game_rom"]) / len(dat_data["games"])
-        print(f"  ROMs per game: {ratio:.1f}")
-    
-    if dat_data["games"] and dat_data["game_emulator"]:
-        ratio = len(dat_data["game_emulator"]) / len(dat_data["games"])
-        print(f"  Emulators per game: {ratio:.1f}")
-    
-    # Debug features specifically
-    if dat_data["features"] and dat_data["game_emulator_feature"]:
-        ratio = len(dat_data["game_emulator_feature"]) / len(dat_data["features"])
-        print(f"  Game-emulator-features per feature: {ratio:.1f}")
-        
-        # Show the actual features to see if they're generic
-        print("  Features found:")
-        for feature in list(dat_data["features"].values())[:10]:  # Show first 10
-            print(f"    type='{feature['type']}', status='{feature['status']}', overall='{feature['overall']}'")
-        if len(dat_data["features"]) > 10:
-            print(f"    ... and {len(dat_data['features']) - 10} more")
-
-
 # TODO: Test for possibility rom instance is assigned zero value
 # This is needed to keep the type checker happy
 def get_rom_size(rom_element: ET._Element) -> int:
@@ -240,9 +208,9 @@ def add_game_reference(game_attrs: dict[str, str], attribute: str, target_game_n
     Add a reference to another game to a game object.
     field: either "cloneof" or "romof"
     """
-    target_game = dat_data["_games_name"].get(target_game_name)
-    if target_game is not None:
-        game_attrs[f"{attribute}_id"] = target_game["hash"]
+    target_game_ref = dat_data["_games_name"].get(target_game_name)
+    if target_game_ref is not None:
+        game_attrs[f"{attribute}_id"] = target_game_ref["hash"]
         return True
     return False
 
@@ -254,6 +222,8 @@ def add_game_references(game: dict[str, str], game_element: ET._Element, dat_dat
     unhandled_references = []
     for attribute in ("cloneof", "romof"):
         if target_game_name := game_element.get(attribute):
+            # We can get rid of the casting now (no SQLAlchemy types)
+            # We should add a reference to self (or something)
             if bool(game["name"] != target_game_name):
                 if add_game_reference(game, attribute, target_game_name, dat_data) is False:
                     unhandled_references.append(
@@ -276,7 +246,8 @@ def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> tuple[Da
             if game_attrs is not None:
                 add_game_emulator_relationship(game_element, game_attrs, emulator_hash, dat_data)
                 unhanded_references.extend(add_game_references(game_attrs, game_element, dat_data))
-                dat_data["_games_name"][game_attrs["name"]] = game_attrs
+                # Store only the hash in _games_name to avoid reference retention
+                dat_data["_games_name"][game_attrs["name"]] = {"hash": game_attrs["hash"]}
                 dat_data["games"][game_attrs["hash"]] = game_attrs
     return dat_data, unhanded_references
 
@@ -316,12 +287,9 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
     This is done at write time to minimize memory usage during processing.
     """
     print("Converting hash keys to numeric IDs...")
-    
-    # Create hash-to-ID mappings
     hash_to_id = {}
     next_id = {}
-    
-    # Map entities with their hash field
+
     entity_tables = ["games", "roms", "emulators", "disks", "features", "drivers"]
     for table in entity_tables:
         hash_to_id[table] = {}
@@ -331,25 +299,21 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
             hash_to_id[table][hash_key] = new_id
             attrs["id"] = new_id
             next_id[table] += 1
-    
-    # Map game_emulator (needs special handling)
+
     hash_to_id["game_emulator"] = {}
     next_id["game_emulator"] = 1
     for hash_key, attrs in dat_data["game_emulator"].items():
         new_id = next_id["game_emulator"]
         hash_to_id["game_emulator"][hash_key] = new_id
         attrs["id"] = new_id
-        # Update foreign keys
         attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
         attrs["emulator_id"] = hash_to_id["emulators"][attrs["emulator_id"]]
         if "driver_id" in attrs:
             attrs["driver_id"] = hash_to_id["drivers"][attrs["driver_id"]]
-        # Remove the hash field - it's not needed in the database
         if "hash" in attrs:
             del attrs["hash"]
         next_id["game_emulator"] += 1
     
-    # Update association tables
     for attrs in dat_data["game_rom"].values():
         attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
         attrs["rom_id"] = hash_to_id["roms"][attrs["rom_id"]]
@@ -362,7 +326,6 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
         attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
         attrs["disk_id"] = hash_to_id["disks"][attrs["disk_id"]]
     
-    # Update game references (cloneof_id, romof_id)
     for game_attrs in dat_data["games"].values():
         if "cloneof_id" in game_attrs and game_attrs["cloneof_id"]:
             game_attrs["cloneof_id"] = hash_to_id["games"].get(game_attrs["cloneof_id"])
@@ -374,7 +337,6 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
 
 
 def write(dat_data: DatData, path: str, csv: bool = False) -> None:
-    # Convert hashes to numeric IDs
     dat_data = convert_hashes_to_ids(dat_data)
     
     target_dir = Path(path, "arcade-out")
@@ -399,29 +361,49 @@ def print_unhandled_references(unhandled_references: list[dict[str, str]]) -> No
             print(f"{ref['game']:<10}\t{ref['attribute']:<10}\t{ref['target']:<10}")
 
 
+def merge_dat_data(master_dat_data: DatData, dat_data: DatData) -> None:
+    """
+    Merge dat_data into master_dat_data without maintaining references to original objects.
+    Aggressively breaks reference cycles to ensure memory can be reclaimed.
+    """
+
+    for name, game_attrs in list(dat_data["_games_name"].items()):
+        if name not in master_dat_data["_games_name"]:
+            master_dat_data["_games_name"][name] = {"hash": game_attrs["hash"]}
+    
+    for key in strip_keys(dat_data):
+        items = list(dat_data[key].items())
+        for item_hash, item_attrs in items:
+            if item_hash not in master_dat_data[key]:
+                copied_attrs = {}
+                for k, v in item_attrs.items():
+                    if isinstance(v, dict):
+                        copied_attrs[k] = {dk: dv for dk, dv in v.items()}
+                    elif isinstance(v, list):
+                        copied_attrs[k] = list(v)
+                    else:
+                        copied_attrs[k] = v
+                master_dat_data[key][item_hash] = copied_attrs
+
+
 def process_dats_consecutively(dats: list[str]):
     master_dat_data = get_empty_dat_data()
     all_unhandled_references = []
-    
-    print_dat_data_stats(master_dat_data, "Initial")
-    
+
     for i, dat_file in enumerate(dats):
+ 
         emulator_attrs = get_emulator_attrs(dat_file)
         root = sources.get_dat_root(dat_file)
         if root is not None:
-            utils.log_memory(f"Before process_games - {dat_file}")
             dat_data, unhandled_references = process_games(root, emulator_attrs)
             all_unhandled_references.extend(unhandled_references)
-            for key in strip_keys(dat_data):
-                master_dat_data[key].update(dat_data[key])
-            
-            # Print stats every 10 DATs to see where explosion happens
-            if i % 10 == 0:
-                print_dat_data_stats(master_dat_data, f"After DAT {i+1}")
+            root.clear()
+            merge_dat_data(master_dat_data, dat_data)
+            for key in dat_data:
+                dat_data[key].clear()
+            dat_data.clear()
+            dat_data = None
     
-    print_dat_data_stats(master_dat_data, "Final")
-    write(master_dat_data, os.getcwd(), csv=True)
-    print_unhandled_references(all_unhandled_references)
 
 
 def dat_worker(dat_file):
@@ -430,20 +412,33 @@ def dat_worker(dat_file):
     if root is not None:
         utils.log_memory(f"Before process_games - {dat_file}")
         dat_data, unhandled_references = process_games(root, emulator_attrs)
+        root.clear()
         return dat_data, unhandled_references
     return get_empty_dat_data(), []
 
 
-# Parallelized version using multiprocessing
 def process_dats(dats: list[str]):
     master_dat_data = get_empty_dat_data()
     all_unhandled_references = []
+    
+    initial_memory = utils.log_memory("Initial memory (parallel processing):")
+    
     with multiprocessing.Pool() as pool:
         results = pool.map(dat_worker, dats)
-    for dat_data, unhandled_references in results:
-        for key in strip_keys(dat_data):
-            master_dat_data[key].update(dat_data[key])
+    
+    for i, (dat_data, unhandled_references) in enumerate(results):
+        # before_merge = utils.log_memory(f"Before merging result {i+1}:")
+        merge_dat_data(master_dat_data, dat_data)
+        for key in dat_data:
+            dat_data[key].clear()
+        dat_data.clear()
         all_unhandled_references.extend(unhandled_references)
+        # if i % 5 == 0:
+        #     print_dat_data_stats(master_dat_data, f"After merging result {i+1}")
+    
+    final_memory = utils.log_memory("Final memory:")
+    print(f"Total memory growth: {final_memory - initial_memory:.2f} MB")
+    
     write(master_dat_data, os.getcwd(), csv=True)
     print_unhandled_references(all_unhandled_references)
 

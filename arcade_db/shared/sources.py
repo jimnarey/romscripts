@@ -32,8 +32,6 @@ def get_xml_contents(path: str) -> bytes:
     with bz2.open(path, "rb") as bzip_file:
         return bzip_file.read()
 
-
-# @time_execution("Get DAT root")
 def get_dat_root(path: str) -> Optional[ET._Element]:
     print(f"Getting root from {path}")
     parser = ET.XMLParser(remove_comments=True)

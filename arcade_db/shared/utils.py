@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import gc
 from typing import Type
 import os
 import warnings
@@ -19,7 +20,9 @@ def get_sub_elements(parent_element: ET._Element, tag_name: str) -> list[ET._Ele
 
 def log_memory(msg=""):
     process = psutil.Process(os.getpid())
-    print(f"{msg} Memory: {process.memory_info().rss / (1024 * 1024)} MB")
+    memory_mb = process.memory_info().rss / (1024 * 1024)
+    print(f"{msg} Memory: {memory_mb:.2f} MB")
+    return memory_mb
 
 
 def time_execution(message: str):
@@ -64,3 +67,14 @@ def get_instance_attributes(instance: DeclarativeBase, model_class: Type[Declara
     instance_attrs = {c.key: getattr(instance, c.key) for c in inspect(instance).mapper.column_attrs}
     instance_attrs.pop(primary_key_column, None)
     return instance_attrs
+
+def force_memory_cleanup():
+    """
+    Force aggressive memory cleanup
+    """
+    before_count = len(gc.get_objects())
+    for i in range(3):
+        gc.collect()
+    after_count = len(gc.get_objects())
+    print(f"Garbage collection: removed {before_count - after_count} objects")
+    return log_memory("After forced cleanup:")
