@@ -344,6 +344,9 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
         attrs["emulator_id"] = hash_to_id["emulators"][attrs["emulator_id"]]
         if "driver_id" in attrs:
             attrs["driver_id"] = hash_to_id["drivers"][attrs["driver_id"]]
+        # Remove the hash field - it's not needed in the database
+        if "hash" in attrs:
+            del attrs["hash"]
         next_id["game_emulator"] += 1
     
     # Update association tables
