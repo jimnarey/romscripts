@@ -105,25 +105,25 @@ def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_id: str) -
         size = get_rom_size(rom_element)
         crc = rom_element.get("crc", "")
         sha1 = rom_element.get("sha1", None)
-        rom_id = indexing.get_rom_index_hash(name, size, crc)
+        rom_hash = indexing.get_rom_index_hash(name, size, crc)
         rom_attrs = {
-            "id": rom_id,
+            "hash": rom_hash,
             "name": name,
             "size": size,
             "crc": str(crc),
             "sha1": sha1,
         }
-        dat_data["roms"][rom_attrs["id"]] = rom_attrs
-        composite_key = indexing.get_attributes_md5({"game_id": game_id, "rom_id": rom_id})
-        dat_data["game_rom"][composite_key] = {"game_id": game_id, "rom_id": rom_id}
+        dat_data["roms"][rom_hash] = rom_attrs
+        composite_key = indexing.get_attributes_md5({"game_id": game_id, "rom_id": rom_hash})
+        dat_data["game_rom"][composite_key] = {"game_id": game_id, "rom_id": rom_hash}
 
 
 def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[dict[str, str]]:
     if rom_elements := utils.get_sub_elements(game_element, "rom"):
         name = game_element.get("name", "")
-        game_id = indexing.get_game_index_from_elements(name, rom_elements)
+        game_hash = indexing.get_game_index_from_elements(name, rom_elements)
         game_attrs = {
-            "id": game_id,
+            "hash": game_hash,
             "name": name,
             "description": get_inner_element_text(game_element, "description"),
             "year": get_inner_element_text(game_element, "year"),
@@ -133,7 +133,7 @@ def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[dict[
             "runnable": game_element.get("runnable"),
             "ismechanical": game_element.get("ismechanical"),
         }
-        add_roms(rom_elements, dat_data, game_id)
+        add_roms(rom_elements, dat_data, game_hash)
         return game_attrs
     return None
 
@@ -149,15 +149,16 @@ def get_feature_element_attributes(feature_element: ET._Element) -> dict[str, st
 def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData) -> None:
     for feature_element in game_element.findall("feature"):
         feature_attrs = get_feature_element_attributes(feature_element)
-        feature_attrs["id"] = indexing.get_attributes_md5(feature_attrs)
-        dat_data["features"][feature_attrs["id"]] = feature_attrs
+        feature_hash = indexing.get_attributes_md5(feature_attrs)
+        feature_attrs["hash"] = feature_hash
+        dat_data["features"][feature_hash] = feature_attrs
         composite_key = indexing.get_attributes_md5({
-            "game_emulator_id": game_emulator_attrs["id"],
-            "feature_id": feature_attrs["id"]
+            "game_emulator_id": game_emulator_attrs["hash"],
+            "feature_id": feature_hash
         })
         dat_data["game_emulator_feature"][composite_key] = {
-            "game_emulator_id": game_emulator_attrs["id"],
-            "feature_id": feature_attrs["id"],
+            "game_emulator_id": game_emulator_attrs["hash"],
+            "feature_id": feature_hash,
         }
 
 
@@ -186,9 +187,10 @@ def get_driver_element_attributes(driver_element: ET._Element) -> dict[str, str]
 def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData) -> None:
     if (driver_element := game_element.find("driver")) is not None:
         driver_attrs = get_driver_element_attributes(driver_element)
-        driver_attrs["id"] = indexing.get_attributes_md5(driver_attrs)
-        dat_data["drivers"][driver_attrs["id"]] = driver_attrs
-        game_emulator_attrs["driver_id"] = driver_attrs["id"]
+        driver_hash = indexing.get_attributes_md5(driver_attrs)
+        driver_attrs["hash"] = driver_hash
+        dat_data["drivers"][driver_hash] = driver_attrs
+        game_emulator_attrs["driver_id"] = driver_hash
 
 
 def get_disk_attributes(disk_element: ET._Element) -> dict[str, str]:
@@ -205,31 +207,32 @@ def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, da
     if disk_elements := utils.get_sub_elements(game_element, "disk"):
         for disk_element in disk_elements:
             disk_attrs = get_disk_attributes(disk_element)
-            disk_attrs["id"] = indexing.get_attributes_md5(disk_attrs)
-            dat_data["disks"][disk_attrs["id"]] = disk_attrs
+            disk_hash = indexing.get_attributes_md5(disk_attrs)
+            disk_attrs["hash"] = disk_hash
+            dat_data["disks"][disk_hash] = disk_attrs
             composite_key = indexing.get_attributes_md5({
-                "game_emulator_id": game_emulator_attrs["id"],
-                "disk_id": disk_attrs["id"]
+                "game_emulator_id": game_emulator_attrs["hash"],
+                "disk_id": disk_hash
             })
             dat_data["game_emulator_disk"][composite_key] = {
-                "game_emulator_id": game_emulator_attrs["id"],
-                "disk_id": disk_attrs["id"],
+                "game_emulator_id": game_emulator_attrs["hash"],
+                "disk_id": disk_hash,
             }
 
 
 def add_game_emulator_relationship(
-    game_element: ET._Element, game_attrs: dict[str, str], emulator_attrs: dict[str, str], dat_data: DatData
+    game_element: ET._Element, game_attrs: dict[str, str], emulator_hash: str, dat_data: DatData
 ):
-    game_emulator_attrs = {"game_id": game_attrs["id"], "emulator_id": emulator_attrs["id"]}
+    game_emulator_attrs = {"game_id": game_attrs["hash"], "emulator_id": emulator_hash}
     # We don't use the driver id as part of the primary key because we only want one game_emulator record per game/emulator
     # relationship. There is a risk here of orphaning driver records, which we need to check for elsewhere.
-    game_emulator_attrs["id"] = indexing.get_attributes_md5(
+    game_emulator_attrs["hash"] = indexing.get_attributes_md5(
         {key: game_emulator_attrs[key] for key in ("game_id", "emulator_id")}
     )
     add_features(game_emulator_attrs, game_element, dat_data)
     add_driver(game_emulator_attrs, game_element, dat_data)
     add_disks(game_emulator_attrs, game_element, dat_data)
-    dat_data["game_emulator"][game_emulator_attrs["id"]] = game_emulator_attrs
+    dat_data["game_emulator"][game_emulator_attrs["hash"]] = game_emulator_attrs
 
 
 def add_game_reference(game_attrs: dict[str, str], attribute: str, target_game_name: str, dat_data: DatData) -> bool:
@@ -239,7 +242,7 @@ def add_game_reference(game_attrs: dict[str, str], attribute: str, target_game_n
     """
     target_game = dat_data["_games_name"].get(target_game_name)
     if target_game is not None:
-        game_attrs[f"{attribute}_id"] = target_game["id"]
+        game_attrs[f"{attribute}_id"] = target_game["hash"]
         return True
     return False
 
@@ -261,17 +264,20 @@ def add_game_references(game: dict[str, str], game_element: ET._Element, dat_dat
 
 def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> tuple[DatData, list[dict[str, str]]]:
     dat_data = get_empty_dat_data()
+    emulator_hash = emulator_attrs["id"]
+    emulator_attrs["hash"] = emulator_hash
+    dat_data["emulators"][emulator_hash] = emulator_attrs
+    
     unhanded_references = []
     for game_element in root:
         rom_elements = utils.get_sub_elements(game_element, "rom")
         if rom_elements:
             game_attrs = process_game(game_element, dat_data)
             if game_attrs is not None:
-                add_game_emulator_relationship(game_element, game_attrs, emulator_attrs, dat_data)
+                add_game_emulator_relationship(game_element, game_attrs, emulator_hash, dat_data)
                 unhanded_references.extend(add_game_references(game_attrs, game_element, dat_data))
                 dat_data["_games_name"][game_attrs["name"]] = game_attrs
-                dat_data["games"][game_attrs["id"]] = game_attrs
-    dat_data["emulators"][emulator_attrs["id"]] = emulator_attrs
+                dat_data["games"][game_attrs["hash"]] = game_attrs
     return dat_data, unhanded_references
 
 
@@ -304,7 +310,70 @@ def get_empty_dat_data() -> DatData:
     }
 
 
+def convert_hashes_to_ids(dat_data: DatData) -> DatData:
+    """
+    Convert hash-based keys to numeric auto-increment IDs before writing to database.
+    This is done at write time to minimize memory usage during processing.
+    """
+    print("Converting hash keys to numeric IDs...")
+    
+    # Create hash-to-ID mappings
+    hash_to_id = {}
+    next_id = {}
+    
+    # Map entities with their hash field
+    entity_tables = ["games", "roms", "emulators", "disks", "features", "drivers"]
+    for table in entity_tables:
+        hash_to_id[table] = {}
+        next_id[table] = 1
+        for hash_key, attrs in dat_data[table].items():
+            new_id = next_id[table]
+            hash_to_id[table][hash_key] = new_id
+            attrs["id"] = new_id
+            next_id[table] += 1
+    
+    # Map game_emulator (needs special handling)
+    hash_to_id["game_emulator"] = {}
+    next_id["game_emulator"] = 1
+    for hash_key, attrs in dat_data["game_emulator"].items():
+        new_id = next_id["game_emulator"]
+        hash_to_id["game_emulator"][hash_key] = new_id
+        attrs["id"] = new_id
+        # Update foreign keys
+        attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
+        attrs["emulator_id"] = hash_to_id["emulators"][attrs["emulator_id"]]
+        if "driver_id" in attrs:
+            attrs["driver_id"] = hash_to_id["drivers"][attrs["driver_id"]]
+        next_id["game_emulator"] += 1
+    
+    # Update association tables
+    for attrs in dat_data["game_rom"].values():
+        attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
+        attrs["rom_id"] = hash_to_id["roms"][attrs["rom_id"]]
+    
+    for attrs in dat_data["game_emulator_feature"].values():
+        attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
+        attrs["feature_id"] = hash_to_id["features"][attrs["feature_id"]]
+    
+    for attrs in dat_data["game_emulator_disk"].values():
+        attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
+        attrs["disk_id"] = hash_to_id["disks"][attrs["disk_id"]]
+    
+    # Update game references (cloneof_id, romof_id)
+    for game_attrs in dat_data["games"].values():
+        if "cloneof_id" in game_attrs and game_attrs["cloneof_id"]:
+            game_attrs["cloneof_id"] = hash_to_id["games"].get(game_attrs["cloneof_id"])
+        if "romof_id" in game_attrs and game_attrs["romof_id"]:
+            game_attrs["romof_id"] = hash_to_id["games"].get(game_attrs["romof_id"])
+    
+    print("Conversion complete.")
+    return dat_data
+
+
 def write(dat_data: DatData, path: str, csv: bool = False) -> None:
+    # Convert hashes to numeric IDs
+    dat_data = convert_hashes_to_ids(dat_data)
+    
     target_dir = Path(path, "arcade-out")
     if target_dir.exists():
         shutil.rmtree(target_dir)

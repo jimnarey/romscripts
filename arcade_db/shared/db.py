@@ -8,11 +8,10 @@ handle cases where the type checker was unable to properly handle SQLAlchemy
 types.
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index
 from sqlalchemy.orm import Session, DeclarativeBase, sessionmaker
 
 # from sqlalchemy.orm import backref, relationship
-# from sqlalchemy import Index
 from sqlalchemy import create_engine
 
 
@@ -30,41 +29,44 @@ def get_session(db_path: str) -> Session:
 game_rom_association = Table(
     "game_rom",
     Base.metadata,
-    Column("game_id", Integer, ForeignKey("games.id")),
-    Column("rom_id", Integer, ForeignKey("roms.id")),
+    Column("game_id", Integer, ForeignKey("games.id"), primary_key=True),
+    Column("rom_id", Integer, ForeignKey("roms.id"), primary_key=True),
 )
 
 game_emulator_feature_association = Table(
     "game_emulator_feature",
     Base.metadata,
-    Column("game_emulator_id", Integer, ForeignKey("game_emulator.game_id")),
-    Column("feature_id", Integer, ForeignKey("features.id")),
+    Column("game_emulator_id", Integer, ForeignKey("game_emulator.id"), primary_key=True),
+    Column("feature_id", Integer, ForeignKey("features.id"), primary_key=True),
 )
 
 game_emulator_disk_association = Table(
     "game_emulator_disk",
     Base.metadata,
-    Column("game_emulator_id", Integer, ForeignKey("game_emulator.game_id")),
-    Column("disk_id", Integer, ForeignKey("disks.id")),
+    Column("game_emulator_id", Integer, ForeignKey("game_emulator.id"), primary_key=True),
+    Column("disk_id", Integer, ForeignKey("disks.id"), primary_key=True),
 )
 
 
 class GameEmulator(Base):
     __tablename__ = "game_emulator"
-    id = Column(String(64), primary_key=True)
-    game_id = Column(Integer, ForeignKey("games.id"), primary_key=True)
-    emulator_id = Column(Integer, ForeignKey("emulators.id"), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
+    emulator_id = Column(Integer, ForeignKey("emulators.id"), nullable=False)
     driver_id = Column(Integer, ForeignKey("drivers.id"))
     # game = relationship("Game", back_populates="game_emulators")
     # emulator = relationship("Emulator", back_populates="game_emulators")
     # driver = relationship("Driver", back_populates="game_emulators")
     # features = relationship("Feature", secondary=game_emulator_feature_association, back_populates="game_emulators")
     # disks = relationship("Disk", secondary=game_emulator_disk_association, back_populates="game_emulators")
+    
+    __table_args__ = (Index("idx_game_emulator_unique", "game_id", "emulator_id", unique=True),)
 
 
 class Emulator(Base):
     __tablename__ = "emulators"
-    id = Column(String(64), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String(64), unique=True, nullable=False, index=True)
     name = Column(String)
     version = Column(String)
     # game_emulators = relationship("GameEmulator", back_populates="emulator")
@@ -73,7 +75,8 @@ class Emulator(Base):
 # TODO: What should happen when no games are associated with a rom?
 class Game(Base):
     __tablename__ = "games"
-    id = Column(String(64), primary_key=True)  # Hash of name and roms signature
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String(64), unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
     description = Column(String)
     year = Column(Integer)
@@ -96,13 +99,15 @@ class Game(Base):
 
 class Rom(Base):
     __tablename__ = "roms"
-    id = Column(String(64), primary_key=True)  # Hash of name, size, and crc
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String(64), unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
     size = Column(Integer, nullable=False)
     crc = Column(String, nullable=False)
     sha1 = Column(String)
     # games = relationship("Game", secondary=game_rom_association, back_populates="roms")
-    # _table_args__ = (Index("idx_name_size_crc", "name", "size", "crc"),)
+    
+    __table_args__ = (Index("idx_rom_lookup", "name", "size", "crc"),)
 
 
 class Disk(Base):
@@ -112,27 +117,33 @@ class Disk(Base):
     """
 
     __tablename__ = "disks"
-    id = Column(String(64), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String(64), unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
     sha1 = Column(String, nullable=False)
     md5 = Column(String, nullable=False)
     # game_emulators = relationship("GameEmulator", secondary=game_emulator_disk_association, back_populates="disks")
-    # _table_args__ = (Index("idx_name_sha1", "name", "sha1"), Index("idx_name_md5", "name", "md5"))
+    
+    __table_args__ = (
+        Index("idx_disk_sha1", "name", "sha1"),
+        Index("idx_disk_md5", "name", "md5"),
+    )
 
 
 class Feature(Base):
     __tablename__ = "features"
-    id = Column(String(64), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String(64), unique=True, nullable=False, index=True)
     overall = Column(String, nullable=False)
     type = Column(String, nullable=False)
     status = Column(String, nullable=False)
     # game_emulators = relationship("GameEmulator", secondary=game_emulator_feature_association, back_populates="features")
-    # _table_args__ = (Index("idx_overall_type_status", "overall", "type", "status"),)
 
 
 class Driver(Base):
     __tablename__ = "drivers"
-    id = Column(String(64), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String(64), unique=True, nullable=False, index=True)
     palettesize = Column(String, nullable=False)
     hiscoresave = Column(String, nullable=False)
     requiresartwork = Column(String, nullable=False)

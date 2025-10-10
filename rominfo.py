@@ -39,5 +39,5 @@ if __name__ == "__main__":
     print(signature)
     index_hash = indexing.get_game_index_hash(file_path.stem, signature)
     print(index_hash)
-    results = session.query(db.Game).filter(db.Game.id == index_hash)
+    results = session.query(db.Game).filter(db.Game.hash == index_hash)
     print(len(results.all())) # Should be 1 for any valid MAME zip
