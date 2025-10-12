@@ -51,7 +51,7 @@ The relationships can be as follows. A romset may:
 
 ### Summary
 
-From these rules/convetions, we can derive the following:
+From these rules/conventions, we can derive the following:
 
 - `romof` chains are never more than three romsets in length (this is also explicitly tested for in validate_sources.py)
 - `cloneof` chains are never more than two romsets in length
