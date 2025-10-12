@@ -1,0 +1,253 @@
+<!-- Declare the clone before the parent to ensure this is tolerated when creating the db -->
+<datafile>
+	<machine name="columnsj" sourcefile="segac2.cpp" cloneof="columns" romof="columns">
+		<description>Columns (Japan)</description>
+		<year>1990</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="epr-13112.ic32" size="131072" crc="bae6e53e" sha1="2c2fd621eecd55591f22d076323972a7d0314615" region="maincpu" offset="0"/>
+		<rom name="epr-13111.ic31" size="131072" crc="aa5ccd6d" sha1="480e29e3112282d1790f1fb68075453325ba4336" region="maincpu" offset="1"/>
+		<device_ref name="m68000"/>
+		<device_ref name="nvram"/>
+		<device_ref name="315_5296"/>
+		<device_ref name="sega315_5313"/>
+		<device_ref name="palette"/>
+		<device_ref name="segapsg"/>
+		<device_ref name="palette"/>
+		<device_ref name="palette"/>
+		<device_ref name="palette"/>
+		<device_ref name="timer"/>
+		<device_ref name="screen"/>
+		<device_ref name="palette"/>
+		<device_ref name="speaker"/>
+		<device_ref name="ym3438"/>
+		<chip type="cpu" tag="maincpu" name="Motorola MC68000" clock="8948862"/>
+		<chip type="audio" tag="gen_vdp" name="Sega 315-5313 Megadrive VDP" clock="53693175"/>
+		<chip type="audio" tag="gen_vdp:snsnd" name="Sega VDP PSG" clock="3579545"/>
+		<chip type="audio" tag="mono" name="Speaker"/>
+		<chip type="audio" tag="ymsnd" name="YM3438 OPN2C" clock="7670453"/>
+		<display tag="megadriv" type="raster" rotate="0" width="256" height="224" refresh="59.922743" pixclock="8038276" htotal="512" hbend="0" hbstart="256" vtotal="262" vbend="0" vbstart="224" />
+		<sound channels="1"/>
+		<input players="2" coins="2" service="yes">
+			<control type="joy" player="1" buttons="1" ways="8"/>
+			<control type="joy" player="2" buttons="1" ways="8"/>
+		</input>
+		<dipswitch name="Coin A" tag="COINAGE" mask="15">
+			<diplocation name="SW1" number="1"/>
+			<diplocation name="SW1" number="2"/>
+			<diplocation name="SW1" number="3"/>
+			<diplocation name="SW1" number="4"/>
+			<dipvalue name="4 Coins/1 Credit" value="7"/>
+			<dipvalue name="3 Coins/1 Credit" value="8"/>
+			<dipvalue name="2 Coins/1 Credit" value="9"/>
+			<dipvalue name="2 Coins/1 Credit, 5/3, 6/4" value="5"/>
+			<dipvalue name="2 Coins/1 Credit, 4/3" value="4"/>
+			<dipvalue name="1 Coin/1 Credit" value="15" default="yes"/>
+			<dipvalue name="1 Coin/1 Credit, 5/6" value="3"/>
+			<dipvalue name="1 Coin/1 Credit, 4/5" value="2"/>
+			<dipvalue name="1 Coin/1 Credit, 2/3" value="1"/>
+			<dipvalue name="2 Coins/3 Credits" value="6"/>
+			<dipvalue name="1 Coin/2 Credits" value="14"/>
+			<dipvalue name="1 Coin/3 Credits" value="13"/>
+			<dipvalue name="1 Coin/4 Credits" value="12"/>
+			<dipvalue name="1 Coin/5 Credits" value="11"/>
+			<dipvalue name="1 Coin/6 Credits" value="10"/>
+			<dipvalue name="Free Play (if Coin B too) or 1/1" value="0"/>
+		</dipswitch>
+		<dipswitch name="Coin B" tag="COINAGE" mask="240">
+			<diplocation name="SW1" number="5"/>
+			<diplocation name="SW1" number="6"/>
+			<diplocation name="SW1" number="7"/>
+			<diplocation name="SW1" number="8"/>
+			<dipvalue name="4 Coins/1 Credit" value="112"/>
+			<dipvalue name="3 Coins/1 Credit" value="128"/>
+			<dipvalue name="2 Coins/1 Credit" value="144"/>
+			<dipvalue name="2 Coins/1 Credit, 5/3, 6/4" value="80"/>
+			<dipvalue name="2 Coins/1 Credit, 4/3" value="64"/>
+			<dipvalue name="1 Coin/1 Credit" value="240" default="yes"/>
+			<dipvalue name="1 Coin/1 Credit, 5/6" value="48"/>
+			<dipvalue name="1 Coin/1 Credit, 4/5" value="32"/>
+			<dipvalue name="1 Coin/1 Credit, 2/3" value="16"/>
+			<dipvalue name="2 Coins/3 Credits" value="96"/>
+			<dipvalue name="1 Coin/2 Credits" value="224"/>
+			<dipvalue name="1 Coin/3 Credits" value="208"/>
+			<dipvalue name="1 Coin/4 Credits" value="192"/>
+			<dipvalue name="1 Coin/5 Credits" value="176"/>
+			<dipvalue name="1 Coin/6 Credits" value="160"/>
+			<dipvalue name="Free Play (if Coin A too) or 1/1" value="0"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="1">
+			<diplocation name="SW2" number="1"/>
+			<dipvalue name="Off" value="1" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Demo Sounds" tag="DSW" mask="2">
+			<diplocation name="SW2" number="2"/>
+			<dipvalue name="Off" value="2"/>
+			<dipvalue name="On" value="0" default="yes"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="4">
+			<diplocation name="SW2" number="3"/>
+			<dipvalue name="Off" value="4" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="8">
+			<diplocation name="SW2" number="4"/>
+			<dipvalue name="Off" value="8" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Difficulty" tag="DSW" mask="48">
+			<diplocation name="SW2" number="5"/>
+			<diplocation name="SW2" number="6"/>
+			<dipvalue name="Easiest" value="0"/>
+			<dipvalue name="Easy" value="16"/>
+			<dipvalue name="Normal" value="48" default="yes"/>
+			<dipvalue name="Hard" value="32"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="64">
+			<diplocation name="SW2" number="7"/>
+			<dipvalue name="Off" value="64" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="128">
+			<diplocation name="SW2" number="8"/>
+			<dipvalue name="Off" value="128" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<port tag=":COINAGE">
+		</port>
+		<port tag=":DSW">
+		</port>
+		<port tag=":P1">
+		</port>
+		<port tag=":P2">
+		</port>
+		<port tag=":SERVICE">
+		</port>
+		<driver status="good" emulation="good" savestate="unsupported"/>
+	</machine>
+	<machine name="columns" sourcefile="segac2.cpp">
+		<description>Columns (World)</description>
+		<year>1990</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="epr-13114.ic32" size="131072" crc="ff78f740" sha1="0a034103a4b942f43e62f6e717f5dbf1bfb0b613" region="maincpu" offset="0"/>
+		<rom name="epr-13113.ic31" size="131072" crc="9a426d9b" sha1="3322e65ebf8d0a6047f7d408387c63ea401b8973" region="maincpu" offset="1"/>
+		<device_ref name="m68000"/>
+		<device_ref name="nvram"/>
+		<device_ref name="315_5296"/>
+		<device_ref name="sega315_5313"/>
+		<device_ref name="palette"/>
+		<device_ref name="segapsg"/>
+		<device_ref name="palette"/>
+		<device_ref name="palette"/>
+		<device_ref name="palette"/>
+		<device_ref name="timer"/>
+		<device_ref name="screen"/>
+		<device_ref name="palette"/>
+		<device_ref name="speaker"/>
+		<device_ref name="ym3438"/>
+		<chip type="cpu" tag="maincpu" name="Motorola MC68000" clock="8948862"/>
+		<chip type="audio" tag="gen_vdp" name="Sega 315-5313 Megadrive VDP" clock="53693175"/>
+		<chip type="audio" tag="gen_vdp:snsnd" name="Sega VDP PSG" clock="3579545"/>
+		<chip type="audio" tag="mono" name="Speaker"/>
+		<chip type="audio" tag="ymsnd" name="YM3438 OPN2C" clock="7670453"/>
+		<display tag="megadriv" type="raster" rotate="0" width="256" height="224" refresh="59.922743" pixclock="8038276" htotal="512" hbend="0" hbstart="256" vtotal="262" vbend="0" vbstart="224" />
+		<sound channels="1"/>
+		<input players="2" coins="2" service="yes">
+			<control type="joy" player="1" buttons="1" ways="8"/>
+			<control type="joy" player="2" buttons="1" ways="8"/>
+		</input>
+		<dipswitch name="Coin A" tag="COINAGE" mask="15">
+			<diplocation name="SW1" number="1"/>
+			<diplocation name="SW1" number="2"/>
+			<diplocation name="SW1" number="3"/>
+			<diplocation name="SW1" number="4"/>
+			<dipvalue name="4 Coins/1 Credit" value="7"/>
+			<dipvalue name="3 Coins/1 Credit" value="8"/>
+			<dipvalue name="2 Coins/1 Credit" value="9"/>
+			<dipvalue name="2 Coins/1 Credit, 5/3, 6/4" value="5"/>
+			<dipvalue name="2 Coins/1 Credit, 4/3" value="4"/>
+			<dipvalue name="1 Coin/1 Credit" value="15" default="yes"/>
+			<dipvalue name="1 Coin/1 Credit, 5/6" value="3"/>
+			<dipvalue name="1 Coin/1 Credit, 4/5" value="2"/>
+			<dipvalue name="1 Coin/1 Credit, 2/3" value="1"/>
+			<dipvalue name="2 Coins/3 Credits" value="6"/>
+			<dipvalue name="1 Coin/2 Credits" value="14"/>
+			<dipvalue name="1 Coin/3 Credits" value="13"/>
+			<dipvalue name="1 Coin/4 Credits" value="12"/>
+			<dipvalue name="1 Coin/5 Credits" value="11"/>
+			<dipvalue name="1 Coin/6 Credits" value="10"/>
+			<dipvalue name="Free Play (if Coin B too) or 1/1" value="0"/>
+		</dipswitch>
+		<dipswitch name="Coin B" tag="COINAGE" mask="240">
+			<diplocation name="SW1" number="5"/>
+			<diplocation name="SW1" number="6"/>
+			<diplocation name="SW1" number="7"/>
+			<diplocation name="SW1" number="8"/>
+			<dipvalue name="4 Coins/1 Credit" value="112"/>
+			<dipvalue name="3 Coins/1 Credit" value="128"/>
+			<dipvalue name="2 Coins/1 Credit" value="144"/>
+			<dipvalue name="2 Coins/1 Credit, 5/3, 6/4" value="80"/>
+			<dipvalue name="2 Coins/1 Credit, 4/3" value="64"/>
+			<dipvalue name="1 Coin/1 Credit" value="240" default="yes"/>
+			<dipvalue name="1 Coin/1 Credit, 5/6" value="48"/>
+			<dipvalue name="1 Coin/1 Credit, 4/5" value="32"/>
+			<dipvalue name="1 Coin/1 Credit, 2/3" value="16"/>
+			<dipvalue name="2 Coins/3 Credits" value="96"/>
+			<dipvalue name="1 Coin/2 Credits" value="224"/>
+			<dipvalue name="1 Coin/3 Credits" value="208"/>
+			<dipvalue name="1 Coin/4 Credits" value="192"/>
+			<dipvalue name="1 Coin/5 Credits" value="176"/>
+			<dipvalue name="1 Coin/6 Credits" value="160"/>
+			<dipvalue name="Free Play (if Coin A too) or 1/1" value="0"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="1">
+			<diplocation name="SW2" number="1"/>
+			<dipvalue name="Off" value="1" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Demo Sounds" tag="DSW" mask="2">
+			<diplocation name="SW2" number="2"/>
+			<dipvalue name="Off" value="2"/>
+			<dipvalue name="On" value="0" default="yes"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="4">
+			<diplocation name="SW2" number="3"/>
+			<dipvalue name="Off" value="4" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="8">
+			<diplocation name="SW2" number="4"/>
+			<dipvalue name="Off" value="8" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Difficulty" tag="DSW" mask="48">
+			<diplocation name="SW2" number="5"/>
+			<diplocation name="SW2" number="6"/>
+			<dipvalue name="Easiest" value="0"/>
+			<dipvalue name="Easy" value="16"/>
+			<dipvalue name="Normal" value="48" default="yes"/>
+			<dipvalue name="Hard" value="32"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="64">
+			<diplocation name="SW2" number="7"/>
+			<dipvalue name="Off" value="64" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<dipswitch name="Unused" tag="DSW" mask="128">
+			<diplocation name="SW2" number="8"/>
+			<dipvalue name="Off" value="128" default="yes"/>
+			<dipvalue name="On" value="0"/>
+		</dipswitch>
+		<port tag=":COINAGE">
+		</port>
+		<port tag=":DSW">
+		</port>
+		<port tag=":P1">
+		</port>
+		<port tag=":P2">
+		</port>
+		<port tag=":SERVICE">
+		</port>
+		<driver status="good" emulation="good" savestate="unsupported"/>
+	</machine>
+</datafile>

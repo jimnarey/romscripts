@@ -42,8 +42,12 @@ def get_dat_root(path: str) -> Optional[ET._Element]:
     return root
 
 
+# BUILD_DATS = {
+#     "mame": sorted(MAME_REORDERED_DATS, key=extract_mame_version),
+# }
+
 BUILD_DATS = {
-    "mame": sorted(MAME_REORDERED_DATS, key=extract_mame_version),
+    "mame": MAME_DATS,
 }
 
 TEST_DATS = {
