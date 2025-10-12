@@ -23,9 +23,9 @@ types.
 from typing import Optional, Any, Union
 import os
 from pathlib import Path
-from datetime import datetime
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import multiprocessing
+
+# from concurrent.futures import ProcessPoolExecutor, as_completed
+# import multiprocessing
 import shutil
 from copy import deepcopy
 
@@ -34,7 +34,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.sql.schema import Table
 
-from .shared import sources, utils, indexing, db
+from .shared import sources, utils, indexing
 
 SqlAlchemyTable = Union[Table, Any]
 
@@ -101,6 +101,8 @@ def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[dict[
             "isdevice": game_element.get("isdevice"),
             "runnable": game_element.get("runnable"),
             "ismechanical": game_element.get("ismechanical"),
+            "romof": game_element.get("romof"),
+            "cloneof": game_element.get("cloneof"),
         }
         add_roms(rom_elements, dat_data, game_hash)
         return game_attrs
@@ -121,10 +123,9 @@ def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element,
         feature_hash = indexing.get_attributes_md5(feature_attrs)
         feature_attrs["hash"] = feature_hash
         dat_data["features"][feature_hash] = feature_attrs
-        composite_key = indexing.get_attributes_md5({
-            "game_emulator_id": game_emulator_attrs["hash"],
-            "feature_id": feature_hash
-        })
+        composite_key = indexing.get_attributes_md5(
+            {"game_emulator_id": game_emulator_attrs["hash"], "feature_id": feature_hash}
+        )
         dat_data["game_emulator_feature"][composite_key] = {
             "game_emulator_id": game_emulator_attrs["hash"],
             "feature_id": feature_hash,
@@ -179,10 +180,9 @@ def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, da
             disk_hash = indexing.get_attributes_md5(disk_attrs)
             disk_attrs["hash"] = disk_hash
             dat_data["disks"][disk_hash] = disk_attrs
-            composite_key = indexing.get_attributes_md5({
-                "game_emulator_id": game_emulator_attrs["hash"],
-                "disk_id": disk_hash
-            })
+            composite_key = indexing.get_attributes_md5(
+                {"game_emulator_id": game_emulator_attrs["hash"], "disk_id": disk_hash}
+            )
             dat_data["game_emulator_disk"][composite_key] = {
                 "game_emulator_id": game_emulator_attrs["hash"],
                 "disk_id": disk_hash,
@@ -204,64 +204,20 @@ def add_game_emulator_relationship(
     dat_data["game_emulator"][game_emulator_attrs["hash"]] = game_emulator_attrs
 
 
-def add_game_reference(game_attrs: dict[str, str], attribute: str, target_name: str, name_index_mapping: dict[str, str]) -> bool:
-    """
-    Add a reference to another game to a game object.
-    field: either "cloneof" or "romof"
-    """
-    target_index = name_index_mapping.get(target_name)
-    if target_index is not None:
-        game_attrs[f"{attribute}_id"] = target_index
-        return True
-    return False
-
-
-def add_game_references(game_attrs: dict[str, str], references: dict[str, str], name_index_mapping: dict[str, str]) -> set[dict[str, str]]:
-    """
-    Resolves the game > game references for a single game.
-    """
-    unhandled_references = []
-    has_unhandled_ref = False
-    for attribute, target_name in references.items():
-        if target_name:
-            # We can get rid of the casting now (no SQLAlchemy types)
-            # We should add a reference to self (or something)
-            if game_attrs["name"] != target_name:
-                if add_game_reference(game_attrs, attribute, target_name, name_index_mapping) is False:
-                    game_attrs[f"_{attribute}"] = target_name
-                    has_unhandled_ref = True
-    if has_unhandled_ref:
-        unhandled_references.append(game_attrs)
-    return unhandled_references
-
-
-def resolve_unhandled_references(games: list[dict[str, str]], dat_data: DatData):
-    unresolvable_references = []
-    for game in games:
-        references = {"romof": game.get("_romof", ""), "cloneof": game.get("_cloneof", "")}
-        unresolvable_references.extend(add_game_references(game, references, dat_data["name_index_mapping"]))
-    return unresolvable_references
-
-
-def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> tuple[DatData, list[dict[str, str]]]:
+def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> DatData:
     dat_data = get_empty_dat_data()
     emulator_hash = emulator_attrs["id"]
     emulator_attrs["hash"] = emulator_hash
     dat_data["emulators"][emulator_hash] = emulator_attrs
 
     for game_element in root:
-        unhandled_references = []
         rom_elements = utils.get_sub_elements(game_element, "rom")
         if rom_elements:
             game_attrs = process_game(game_element, dat_data)
             if game_attrs is not None:
                 add_game_emulator_relationship(game_element, game_attrs, emulator_hash, dat_data)
-                references = {"romof": game_element.get("romof"), "cloneof": game_element.get("cloneof")}
-                unhandled_references.extend(add_game_references(game_attrs, references, dat_data["name_index_mapping"]))
                 dat_data["games"][game_attrs["hash"]] = game_attrs
-                dat_data["name_index_mapping"][game_attrs["name"]] = game_attrs["hash"]
-    unresolvable_references = resolve_unhandled_references(unhandled_references, dat_data)
-    return dat_data, unresolvable_references
+    return dat_data
 
 
 def get_mame_emulator_details(dat_file: str) -> list[str]:
@@ -269,6 +225,7 @@ def get_mame_emulator_details(dat_file: str) -> list[str]:
     for substring in (".dat", ".xml", ".bz2"):
         emulator = emulator.replace(substring, "")
     return emulator.split()
+
 
 # Check emulator name as expected and that version matches expected format
 def get_emulator_attrs(dat_file: str) -> dict[str, str]:
@@ -279,7 +236,6 @@ def get_emulator_attrs(dat_file: str) -> dict[str, str]:
 
 def get_empty_dat_data() -> DatData:
     return {
-        "name_index_mapping": {},
         "games": {},
         "roms": {},
         "emulators": {},
@@ -299,7 +255,7 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
     This is done at write time to minimize memory usage during processing.
     """
     print("Converting hash keys to numeric IDs...")
-    hash_to_id = {}
+    hash_to_id = {}  # type: ignore
     next_id = {}
 
     entity_tables = ["games", "roms", "emulators", "disks", "features", "drivers"]
@@ -309,7 +265,7 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
         for hash_key, attrs in dat_data[table].items():
             new_id = next_id[table]
             hash_to_id[table][hash_key] = new_id
-            attrs["id"] = new_id
+            attrs["id"] = new_id  # type: ignore
             next_id[table] += 1
 
     hash_to_id["game_emulator"] = {}
@@ -317,7 +273,7 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
     for hash_key, attrs in dat_data["game_emulator"].items():
         new_id = next_id["game_emulator"]
         hash_to_id["game_emulator"][hash_key] = new_id
-        attrs["id"] = new_id
+        attrs["id"] = new_id  # type: ignore
         attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
         attrs["emulator_id"] = hash_to_id["emulators"][attrs["emulator_id"]]
         if "driver_id" in attrs:
@@ -325,37 +281,37 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
         if "hash" in attrs:
             del attrs["hash"]
         next_id["game_emulator"] += 1
-    
+
     for attrs in dat_data["game_rom"].values():
         attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
         attrs["rom_id"] = hash_to_id["roms"][attrs["rom_id"]]
-    
+
     for attrs in dat_data["game_emulator_feature"].values():
         attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
         attrs["feature_id"] = hash_to_id["features"][attrs["feature_id"]]
-    
+
     for attrs in dat_data["game_emulator_disk"].values():
         attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
         attrs["disk_id"] = hash_to_id["disks"][attrs["disk_id"]]
-    
+
     for game_attrs in dat_data["games"].values():
         if "cloneof_id" in game_attrs and game_attrs["cloneof_id"]:
             game_attrs["cloneof_id"] = hash_to_id["games"].get(game_attrs["cloneof_id"])
         if "romof_id" in game_attrs and game_attrs["romof_id"]:
             game_attrs["romof_id"] = hash_to_id["games"].get(game_attrs["romof_id"])
-    
+
     print("Conversion complete.")
     return dat_data
 
 
 def write(dat_data: DatData, path: str, csv: bool = False) -> None:
     dat_data = convert_hashes_to_ids(dat_data)
-    
+
     target_dir = Path(path, "arcade-out")
     if target_dir.exists():
         shutil.rmtree(target_dir)
     target_dir.mkdir()
-    engine = create_engine(f"sqlite:///{Path(target_dir, 'arcade.db')}")
+    engine = create_engine(f"sqlite:///{Path(target_dir, 'arcade.db')}")  # noqa: E231
     for key in strip_keys(dat_data):
         print(f"Creating {key} dataframe...")
         df = pd.DataFrame(list(dat_data[key].values()))
@@ -366,13 +322,6 @@ def write(dat_data: DatData, path: str, csv: bool = False) -> None:
         df.to_sql(key, con=engine, if_exists="replace", index=False)
 
 
-# def print_unhandled_references(unhandled_references: list[dict[str, str]]) -> None:
-#     if unhandled_references:
-#         print(f"{'Name':<10}\t{'Attribute':<10}\t{'Target Game':<10}")
-#         for ref in unhandled_references:
-#             print(f"{ref['game']:<10}\t{ref['attribute']:<10}\t{ref['target']:<10}")
-
-
 def merge_dat_data(master_dat_data: DatData, dat_data: DatData) -> None:
     for key in strip_keys(dat_data):
         master_dat_data[key].update(deepcopy(dat_data[key]))
@@ -380,27 +329,20 @@ def merge_dat_data(master_dat_data: DatData, dat_data: DatData) -> None:
 
 def process_dats_consecutively(dats: list[str]):
     master_dat_data = get_empty_dat_data()
-    unresolvable_references = []
 
     for i, dat_file in enumerate(dats):
- 
         emulator_attrs = get_emulator_attrs(dat_file)
         root = sources.get_dat_root(dat_file)
         if root is not None:
-            dat_data, unhandled_references = process_games(root, emulator_attrs)
-            unresolvable_references.extend(unhandled_references)
+            dat_data = process_games(root, emulator_attrs)
             root.clear()
             merge_dat_data(master_dat_data, dat_data)
             for key in dat_data:
                 dat_data[key].clear()
             dat_data.clear()
-            dat_data = None
+            dat_data = {}
         utils.log_memory(f"Processed game {dat_file} - ")
-        print(unresolvable_references)
-    breakpoint()
-    # print_unhandled_references(unresolvable_references)
-    # write(master_dat_data, "./arcade-out", csv=True)
-    
+    write(master_dat_data, "./arcade-out", csv=True)
 
 
 def dat_worker(dat_file):
@@ -414,25 +356,24 @@ def dat_worker(dat_file):
     return get_empty_dat_data(), []
 
 
-def process_dats(dats: list[str]):
-    master_dat_data = get_empty_dat_data()
-    all_unhandled_references = []
-    
-    initial_memory = utils.log_memory("Initial memory (parallel processing):")
-    
-    with multiprocessing.Pool() as pool:
-        results = pool.map(dat_worker, dats)
-    
-    for i, (dat_data, unhandled_references) in enumerate(results):
-        merge_dat_data(master_dat_data, dat_data)
-        for key in dat_data:
-            dat_data[key].clear()
-        dat_data.clear()
-        all_unhandled_references.extend(unhandled_references)
-    
-    final_memory = utils.log_memory("Final memory:")
-    print(f"Total memory growth: {final_memory - initial_memory:.2f} MB")
-    
-    write(master_dat_data, os.getcwd(), csv=True)
-    print_unhandled_references(all_unhandled_references)
+# def process_dats(dats: list[str]):
+#     master_dat_data = get_empty_dat_data()
+#     all_unhandled_references = []
 
+#     initial_memory = utils.log_memory("Initial memory (parallel processing):")
+
+#     with multiprocessing.Pool() as pool:
+#         results = pool.map(dat_worker, dats)
+
+#     for i, (dat_data, unhandled_references) in enumerate(results):
+#         merge_dat_data(master_dat_data, dat_data)
+#         for key in dat_data:
+#             dat_data[key].clear()
+#         dat_data.clear()
+#         all_unhandled_references.extend(unhandled_references)
+
+#     final_memory = utils.log_memory("Final memory:")
+#     print(f"Total memory growth: {final_memory - initial_memory:.2f} MB")
+
+#     write(master_dat_data, os.getcwd(), csv=True)
+#     print_unhandled_references(all_unhandled_references)

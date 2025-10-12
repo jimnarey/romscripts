@@ -59,7 +59,7 @@ class GameEmulator(Base):
     # driver = relationship("Driver", back_populates="game_emulators")
     # features = relationship("Feature", secondary=game_emulator_feature_association, back_populates="game_emulators")
     # disks = relationship("Disk", secondary=game_emulator_disk_association, back_populates="game_emulators")
-    
+
     __table_args__ = (Index("idx_game_emulator_unique", "game_id", "emulator_id", unique=True),)
 
 
@@ -81,11 +81,13 @@ class Game(Base):
     description = Column(String)
     year = Column(Integer)
     manufacturer = Column(String)
-    cloneof_id = Column(Integer, ForeignKey("games.id"))
+    romof = Column(String)
+    cloneof = Column(String)
+    # cloneof_id = Column(Integer, ForeignKey("games.id"))
     # cloneof = relationship(
     #     "Game", foreign_keys=[cloneof_id], backref=backref("clones", foreign_keys=[cloneof_id]), remote_side=[id]
     # )
-    romof_id = Column(Integer, ForeignKey("games.id"))
+    # romof_id = Column(Integer, ForeignKey("games.id"))
     # romof = relationship(
     #     "Game", foreign_keys=[romof_id], backref=backref("bios_children", foreign_keys=[romof_id]), remote_side=[id]
     # )
@@ -106,7 +108,7 @@ class Rom(Base):
     crc = Column(String, nullable=False)
     sha1 = Column(String)
     # games = relationship("Game", secondary=game_rom_association, back_populates="roms")
-    
+
     __table_args__ = (Index("idx_rom_lookup", "name", "size", "crc"),)
 
 
@@ -123,7 +125,7 @@ class Disk(Base):
     sha1 = Column(String, nullable=False)
     md5 = Column(String, nullable=False)
     # game_emulators = relationship("GameEmulator", secondary=game_emulator_disk_association, back_populates="disks")
-    
+
     __table_args__ = (
         Index("idx_disk_sha1", "name", "sha1"),
         Index("idx_disk_md5", "name", "md5"),
