@@ -304,20 +304,18 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
     return dat_data
 
 
-def write(dat_data: DatData, path: str, csv: bool = False) -> None:
+def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:
     dat_data = convert_hashes_to_ids(dat_data)
-
-    target_dir = Path(path, "arcade-out")
-    if target_dir.exists():
-        shutil.rmtree(target_dir)
-    target_dir.mkdir()
-    engine = create_engine(f"sqlite:///{Path(target_dir, 'arcade.db')}")  # noqa: E231
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+    os.mkdir(out_dir)
+    engine = create_engine(f"sqlite:///{Path(out_dir, 'arcade.db')}")  # noqa: E231
     for key in strip_keys(dat_data):
         print(f"Creating {key} dataframe...")
         df = pd.DataFrame(list(dat_data[key].values()))
         if csv:
             print(f"Writing {key} dataframe to CSV...")
-            df.to_csv(Path(target_dir, f"{key}.csv"), index=False)
+            df.to_csv(Path(out_dir, f"{key}.csv"), index=False)
         print(f"Writing {key} dataframe to sqlite...")
         df.to_sql(key, con=engine, if_exists="replace", index=False)
 
@@ -327,7 +325,7 @@ def merge_dat_data(master_dat_data: DatData, dat_data: DatData) -> None:
         master_dat_data[key].update(deepcopy(dat_data[key]))
 
 
-def process_dats_consecutively(dats: list[str]):
+def process_dats_consecutively(dats: list[str], out_dir: str):
     master_dat_data = get_empty_dat_data()
 
     for i, dat_file in enumerate(dats):
@@ -342,7 +340,7 @@ def process_dats_consecutively(dats: list[str]):
             dat_data.clear()
             dat_data = {}
         utils.log_memory(f"Processed game {dat_file} - ")
-    write(master_dat_data, ".", csv=True)
+    write(master_dat_data, out_dir, csv=True)
 
 
 def dat_worker(dat_file):

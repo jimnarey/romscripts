@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-from optparse import OptionParser
 from zipfile import ZipFile
 
-from arcade_db.shared import db, indexing
+import click
+
+from arcade_db import create_db
+from arcade_db.shared import db, indexing, sources
 
 
-DB_PATH = Path("./arcade-out/arcade.db")
+DB_PATH = Path("./arcade_db/arcade-out/arcade.db")
 
 
 def to_hex(value) -> str:
@@ -31,14 +33,34 @@ def get_arcade_game_index(file_path: str) -> str:
     return signature
 
 
-if __name__ == "__main__":
-    parser = OptionParser()
-    (options, args) = parser.parse_args()
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+@click.option("--dir", "-d", default="./arcade-out", help="Output directory")
+@click.option("--type", "-t", "dat_type", default="mame", help="Dat type")
+@click.option("--start", "-s", default=0, type=int, help="Start DAT index")
+@click.option("--end", "-e", default=None, type=int, help="End DAT index")
+def build(dir, dat_type, start, end):
+    dat_paths = sources.BUILD_DATS[dat_type]
+    end = end if end is not None else len(dat_paths)
+    source_dats = dat_paths[start:end]
+    create_db.process_dats_consecutively(source_dats, dir)
+
+
+@cli.command()
+@click.argument("path")
+def file(path):
     session = db.get_session(str(DB_PATH.absolute()))
-    file_path = Path(args[0])
-    signature = get_arcade_game_index(str(file_path))
-    print(signature)
-    index_hash = indexing.get_game_index_hash(file_path.stem, signature)
-    print(index_hash)
+    signature = get_arcade_game_index(path)
+    index_hash = indexing.get_game_index_hash(Path(path).stem, signature)
     results = session.query(db.Game).filter(db.Game.hash == index_hash)
-    print(len(results.all()))  # Should be 1 for any valid MAME zip
+    match = results.one_or_none()
+    if match:
+        print(match.description)
+
+
+if __name__ == "__main__":
+    cli()
