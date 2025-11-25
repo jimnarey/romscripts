@@ -342,7 +342,7 @@ def process_dats_consecutively(dats: list[str]):
             dat_data.clear()
             dat_data = {}
         utils.log_memory(f"Processed game {dat_file} - ")
-    write(master_dat_data, "./arcade-out", csv=True)
+    write(master_dat_data, ".", csv=True)
 
 
 def dat_worker(dat_file):
