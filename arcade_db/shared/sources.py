@@ -12,10 +12,8 @@ PARENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKDIR = os.path.join(PARENT_PATH, "sources", "working")
 
 MAME_DAT_DIR = os.path.join(PARENT_PATH, "sources", "mame", "dats")
-MAME_REORDERED_DAT_DIR = os.path.join(PARENT_PATH, "sources", "mame", "dats_reordered")
 
 MAME_DATS = [os.path.join(MAME_DAT_DIR, file) for file in os.listdir(MAME_DAT_DIR)]
-MAME_REORDERED_DATS = [os.path.join(MAME_REORDERED_DAT_DIR, file) for file in os.listdir(MAME_REORDERED_DAT_DIR)]
 
 FBA_DAT_DIR = os.path.join(PARENT_PATH, "sources", "fba", "dats")
 
@@ -32,6 +30,7 @@ def get_xml_contents(path: str) -> bytes:
     with bz2.open(path, "rb") as bzip_file:
         return bzip_file.read()
 
+
 def get_dat_root(path: str) -> Optional[ET._Element]:
     print(f"Getting root from {path}")
     parser = ET.XMLParser(remove_comments=True)
@@ -41,10 +40,6 @@ def get_dat_root(path: str) -> Optional[ET._Element]:
     gc.collect()
     return root
 
-
-# BUILD_DATS = {
-#     "mame": sorted(MAME_REORDERED_DATS, key=extract_mame_version),
-# }
 
 BUILD_DATS = {
     "mame": MAME_DATS,
