@@ -10,4 +10,4 @@ testing/*
 *.csv
 *.csv#
 roms/*.zip
-arcqade_db/arcade-out/*
+arcade_db/arcade-out/*

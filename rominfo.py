@@ -9,7 +9,7 @@ from arcade_db import create_db
 from arcade_db.shared import db, indexing, sources
 
 
-DB_PATH = Path("./arcade_db/arcade-out/arcade.db")
+DB_PATH = Path("./arcade-out/arcade.db")
 
 
 def to_hex(value) -> str:
@@ -60,6 +60,7 @@ def file(path):
     match = results.one_or_none()
     if match:
         print(match.description)
+    breakpoint()
 
 
 if __name__ == "__main__":
