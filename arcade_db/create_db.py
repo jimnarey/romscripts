@@ -25,7 +25,7 @@ import os
 from pathlib import Path
 
 # from concurrent.futures import ProcessPoolExecutor, as_completed
-# import multiprocessing
+import multiprocessing
 import shutil
 from copy import deepcopy
 
@@ -348,30 +348,32 @@ def dat_worker(dat_file):
     root = sources.get_dat_root(dat_file)
     if root is not None:
         utils.log_memory(f"Before process_games - {dat_file}")
-        dat_data, unhandled_references = process_games(root, emulator_attrs)
+        dat_data = process_games(root, emulator_attrs)
         root.clear()
-        return dat_data, unhandled_references
-    return get_empty_dat_data(), []
+        return dat_data
+    return get_empty_dat_data()
 
 
-# def process_dats(dats: list[str]):
-#     master_dat_data = get_empty_dat_data()
-#     all_unhandled_references = []
+def process_dats_parallel(dats: list[str], out_dir: str, num_processes: int = 4):
+    """Process DAT files in parallel using multiprocessing."""
+    master_dat_data = get_empty_dat_data()
+    print(f"Processing {len(dats)} DAT files using {num_processes} processes...")
+    initial_memory = utils.log_memory("Initial memory (parallel processing):")
 
-#     initial_memory = utils.log_memory("Initial memory (parallel processing):")
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        # Use imap_unordered to consume results as they complete
+        for i, dat_data in enumerate(pool.imap_unordered(dat_worker, dats)):
+            if dat_data:
+                print(f"Merging result {i+1}/{len(dats)}...")
+                merge_dat_data(master_dat_data, dat_data)
+                for key in dat_data:
+                    dat_data[key].clear()
+                dat_data.clear()
+                del dat_data
+                if (i + 1) % 10 == 0:
+                    utils.log_memory(f"Processed {i+1}/{len(dats)} files - ")
 
-#     with multiprocessing.Pool() as pool:
-#         results = pool.map(dat_worker, dats)
+    final_memory = utils.log_memory("Final memory:")
+    print(f"Total memory growth: {final_memory - initial_memory:.2f} MB")  # noqa: E231
 
-#     for i, (dat_data, unhandled_references) in enumerate(results):
-#         merge_dat_data(master_dat_data, dat_data)
-#         for key in dat_data:
-#             dat_data[key].clear()
-#         dat_data.clear()
-#         all_unhandled_references.extend(unhandled_references)
-
-#     final_memory = utils.log_memory("Final memory:")
-#     print(f"Total memory growth: {final_memory - initial_memory:.2f} MB")
-
-#     write(master_dat_data, os.getcwd(), csv=True)
-#     print_unhandled_references(all_unhandled_references)
+    write(master_dat_data, out_dir, csv=True)

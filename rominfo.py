@@ -43,11 +43,17 @@ def cli():
 @click.option("--type", "-t", "dat_type", default="mame", help="Dat type")
 @click.option("--start", "-s", default=0, type=int, help="Start DAT index")
 @click.option("--end", "-e", default=None, type=int, help="End DAT index")
-def build(dir, dat_type, start, end):
+@click.option("--concurrent", "-c", is_flag=True, help="Enable concurrent processing using multiprocessing")
+@click.option("--processes", "-p", default=4, type=int, help="Number of processes to use (defaults to 4)")
+def build(dir, dat_type, start, end, concurrent, processes):
     dat_paths = sources.BUILD_DATS[dat_type]
     end = end if end is not None else len(dat_paths)
     source_dats = dat_paths[start:end]
-    create_db.process_dats_consecutively(source_dats, dir)
+
+    if concurrent:
+        create_db.process_dats_parallel(source_dats, dir, processes)
+    else:
+        create_db.process_dats_consecutively(source_dats, dir)
 
 
 @cli.command()
