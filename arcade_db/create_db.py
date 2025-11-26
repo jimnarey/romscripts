@@ -230,7 +230,7 @@ def get_mame_emulator_details(dat_file: str) -> list[str]:
 # Check emulator name as expected and that version matches expected format
 def get_emulator_attrs(dat_file: str) -> dict[str, str]:
     emulator_name, emulator_version = get_mame_emulator_details(dat_file)
-    id = "".join([char for char in f"{emulator_name}{emulator_version}" if char.isalnum()]).lower()
+    id = f"{emulator_name.lower()}{emulator_version}".replace(" ", "").replace(".", "_")
     return {"id": id, "name": emulator_name, "version": str(emulator_version)}
 
 

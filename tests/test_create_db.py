@@ -71,7 +71,7 @@ class TestGetEmulatorAttrs(unittest.TestCase):
     def test_get_emulator_attrs_(self):
         dat_file = os.path.join(FIXTURES_PATH, "MAME 0.263.xml.bz2")
         attrs = create_db.get_emulator_attrs(dat_file)
-        self.assertDictEqual({"id": "mame0263", "name": "MAME", "version": "0.263"}, attrs)
+        self.assertDictEqual({"id": "mame0_263", "name": "MAME", "version": "0.263"}, attrs)
 
 
 if __name__ == "__main__":
