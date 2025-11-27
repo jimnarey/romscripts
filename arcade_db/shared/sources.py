@@ -45,6 +45,6 @@ BUILD_DATS = {
     "mame": MAME_DATS,
 }
 
-TEST_DATS = {
-    "mame": [dat for dat in MAME_DATS if "0.147" in dat],
-}
+# BUILD_DATS = {
+#     "mame": [dat for dat in MAME_DATS if "0.241" in dat],
+# }
