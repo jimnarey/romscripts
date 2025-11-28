@@ -19,7 +19,8 @@ def roms_signature_from_elements(roms_elements: list[ET._Element]):
 
 
 def get_roms_signature(rom_specs: list[dict]):
-    sorted_rom_specs = sorted(rom_specs, key=lambda rom: rom["crc"])
+    # This strips out any roms without a crc, so undumped roms don't change the signature
+    sorted_rom_specs = [rs for rs in sorted(rom_specs, key=lambda rom: rom["crc"]) if rs["crc"]]
     signatures = [f"{rom['name']}/{rom['size']}/{rom['crc']}" for rom in sorted_rom_specs]
     return ",".join(sorted(signatures))
 
@@ -40,6 +41,7 @@ def get_rom_index_hash(rom_name: str, size: int, crc: str):
 def get_attributes_md5(attributes: dict[str, str]):
     ordered_attrs = [attributes[key] for key in sorted(attributes.keys())]
     return hashlib.md5("".join(ordered_attrs).encode()).hexdigest()
+
 
 # In earlier versions it was necessary to match roms/games from SQLAlchemy records.
 # It's no longer necessary but might be again
