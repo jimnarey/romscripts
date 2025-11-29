@@ -6,11 +6,13 @@ drop/include particular checks.
 
 For now, this only validates the MAME source files
 """
-from typing import Optional
+from typing import Any, Optional
 import os
 import multiprocessing
 from lxml import etree as ET
-from arcade_db.shared import sources
+from shared import sources
+
+KNOWN_ELEMENT_TAG_NAMES = set(["game", "machine"])
 
 KNOWN_GAME_ATTRIBUTES = set(
     ["rom", "isdevice", "name", "cloneof", "runnable", "isbios", "sourcefile", "ismechanical", "romof", "sampleof"]
@@ -54,13 +56,10 @@ def validate_num_headers(path: str, element_tags: list[str]) -> None:
         print("Multiple header elements: ", path)
 
 
-def validate_tag_names(path: str, element_tags: list[str]) -> None:
+def validate_tag_names(path: str, element_tags: list[str]) -> set:
     element_tags_no_header = [element_tag for element_tag in element_tags if element_tag != "header"]
     element_tags_set = set(element_tags_no_header)
-    if len(element_tags_set) > 1:
-        print("Multiple tag types: ", path, element_tags_set)
-    if et := element_tags_set.pop() not in ("game", "machine"):
-        print("Unrecognised element tag: ", path, et)
+    return element_tags_set
 
 
 def validate_cloneof_rules(path: str, root: ET._Element, elements: list[ET._Element]) -> list[dict[str, str]]:
@@ -165,14 +164,17 @@ def find_different_romof_clone_ofs(path: str, elements: list[ET._Element]) -> li
     return results
 
 
-def process_dat(path: str) -> Optional[tuple[set, set, set, set, list, list]]:
+def process_dat(
+    path: str,
+) -> Optional[tuple[set[Any], set[Any], set[Any], set[Any], list[dict[str, str]], list[dict[str, str]], set[Any]]]:
     print(os.path.basename(path))
-    if (root := sources.get_dat_root(path, concurrent=True)) is not None:
+    root = sources.get_dat_root(path)
+    if root is not None:
         elements = list(root)
         element_tags = [element.tag for element in elements]
         validate_root_tag(root)
         validate_num_headers(path, element_tags)
-        validate_tag_names(path, element_tags)
+        element_tag_names = validate_tag_names(path, element_tags)
         cloneofs_no_rom_ofs = validate_cloneof_rules(path, root, elements)
         validate_romof_parents_are_never_cloneof_children(path, root, elements)
         validate_romof_chain_lengths(path, root)
@@ -180,19 +182,23 @@ def process_dat(path: str) -> Optional[tuple[set, set, set, set, list, list]]:
         game_attributes, driver_attributes, feature_attributes, disk_attributes = validate_tag_attributes(
             path, elements
         )
-    return (
-        game_attributes,
-        driver_attributes,
-        feature_attributes,
-        disk_attributes,
-        diff_parent_results,
-        cloneofs_no_rom_ofs,
-    )
+        return (
+            game_attributes,
+            driver_attributes,
+            feature_attributes,
+            disk_attributes,
+            diff_parent_results,
+            cloneofs_no_rom_ofs,
+            element_tag_names,
+        )
+    else:
+        print(f"  Failed to get root from {path}")
+    return None
 
 
 def process_files():
-    with multiprocessing.Pool(8) as pool:
-        results = pool.map(process_dat, sources.MAME_DATS)
+    with multiprocessing.Pool(4) as pool:
+        results = pool.map(process_dat, sources.FBA_DATS)
 
     game_attributes = set()
     driver_attributes = set()
@@ -200,6 +206,7 @@ def process_files():
     disk_attributes = set()
     diff_parent_results = []
     cloneofs_no_rom_ofs = []
+    element_tag_names = set()
 
     for result in results:
         if result:
@@ -209,24 +216,34 @@ def process_files():
             disk_attributes.update(result[3])
             diff_parent_results.extend(result[4])
             cloneofs_no_rom_ofs.extend(result[5])
+            element_tag_names.update(result[6])
 
+    if element_tag_names - KNOWN_ELEMENT_TAG_NAMES:
+        print("Unrecognised element tags: ", element_tag_names - KNOWN_ELEMENT_TAG_NAMES)
     if not game_attributes == KNOWN_GAME_ATTRIBUTES:
         print("Unrecognised game attributes: ", game_attributes - KNOWN_GAME_ATTRIBUTES)
+        print("Unincluded, known game attributes: ", KNOWN_GAME_ATTRIBUTES - game_attributes)
     if not driver_attributes == KNOWN_DRIVER_ATTRIBUTES:
         print("Unrecognised driver attributes: ", driver_attributes - KNOWN_DRIVER_ATTRIBUTES)
+        print("Unincluded, known driver attributes: ", KNOWN_DRIVER_ATTRIBUTES - driver_attributes)
     if not feature_attributes == KNOWN_FEATURE_ATTRIBUTES:
         print("Unrecognised feature attributes: ", feature_attributes - KNOWN_FEATURE_ATTRIBUTES)
+        print("Unincluded, known feature attributes: ", KNOWN_FEATURE_ATTRIBUTES - feature_attributes)
     if not disk_attributes == KNOWN_DISK_ATTRIBUTES:
         print("Unrecognised disk attributes: ", disk_attributes - KNOWN_DISK_ATTRIBUTES)
-    print(f"{len(diff_parent_results)} romsets with different cloneof and romof attributes")
-    print(f"{'Dat':<10}\t{'Name':<10}\t{'Romof':<10}\t{'Cloneof':<10}")
-    for result in diff_parent_results:
-        print(f"{result['dat']:<10}\t{result['name']:<10}\t{result['romof']:<10}\t{result['cloneof']:<10}")
-
-    print(f"{len(cloneofs_no_rom_ofs)} romsets with cloneof but no romof")
-    print(f"{'Dat':<10}\t{'Name':<10}\t{'Cloneof':<10}")
-    for result in cloneofs_no_rom_ofs:
-        print(f"{result['dat']:<10}\t{result['name']:<10}\t{result['cloneof']:<10}")
+        print("Unincluded, known disk attributes: ", KNOWN_DISK_ATTRIBUTES - disk_attributes)
+    if diff_parent_results:
+        print(f"{len(diff_parent_results)} romsets with different cloneof and romof attributes")
+        print(f"{'Dat':<10}\t{'Name':<10}\t{'Romof':<10}\t{'Cloneof':<10}")  # noqa: E231
+        for result in diff_parent_results:
+            print(
+                f"{result['dat']:<10}\t{result['name']:<10}\t{result['romof']:<10}\t{result['cloneof']:<10}"  # noqa: E231
+            )  # noqa: E231
+    if cloneofs_no_rom_ofs:
+        print(f"{len(cloneofs_no_rom_ofs)} romsets with cloneof but no romof")
+        print(f"{'Dat':<10}\t{'Name':<10}\t{'Cloneof':<10}")  # noqa: E231
+        for result in cloneofs_no_rom_ofs:
+            print(f"{result['dat']:<10}\t{result['name']:<10}\t{result['cloneof']:<10}")  # noqa: E231
 
 
 if __name__ == "__main__":
