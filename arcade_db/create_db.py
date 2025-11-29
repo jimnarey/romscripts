@@ -313,6 +313,12 @@ def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:
     for key in strip_keys(dat_data):
         print(f"Creating {key} dataframe...")
         df = pd.DataFrame(list(dat_data[key].values()))
+
+        # Skip empty dataframes - they would create invalid SQL
+        if df.empty:
+            print(f"  Skipping empty {key} dataframe...")
+            continue
+
         if csv:
             print(f"Writing {key} dataframe to CSV...")
             df.to_csv(Path(out_dir, f"{key}.csv"), index=False)
