@@ -20,9 +20,6 @@ FBA_DATS = [os.path.join(FBA_DAT_DIR, file) for file in os.listdir(FBA_DAT_DIR)]
 FBN_DATS = [os.path.join(FBN_DAT_DIR, file) for file in os.listdir(FBN_DAT_DIR)]
 
 
-# CSVS_DIR = os.path.join(PARENT_PATH, "csvs")
-
-
 def extract_mame_version(filename):
     version = filename.replace("MAME ", "").replace(".xml.bz2", "")
     version = re.sub(r"\D", "", version)
@@ -45,7 +42,7 @@ def get_dat_root(path: str) -> Optional[ET._Element]:
 
 
 BUILD_DATS = {
-    "mame": MAME_DATS,
+    "mame": MAME_DATS + FBA_DATS + FBN_DATS,
 }
 
 # BUILD_DATS = {
