@@ -12,12 +12,15 @@ PARENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKDIR = os.path.join(PARENT_PATH, "sources", "working")
 
 MAME_DAT_DIR = os.path.join(PARENT_PATH, "sources", "mame", "dats")
+FBA_DAT_DIR = os.path.join(PARENT_PATH, "sources", "fba", "dats")
+FBN_DAT_DIR = os.path.join(PARENT_PATH, "sources", "fbn", "dats")
 
 MAME_DATS = [os.path.join(MAME_DAT_DIR, file) for file in os.listdir(MAME_DAT_DIR)]
+FBA_DATS = [os.path.join(FBA_DAT_DIR, file) for file in os.listdir(FBA_DAT_DIR)]
+FBN_DATS = [os.path.join(FBN_DAT_DIR, file) for file in os.listdir(FBN_DAT_DIR)]
 
-FBA_DAT_DIR = os.path.join(PARENT_PATH, "sources", "fba", "dats")
 
-CSVS_DIR = os.path.join(PARENT_PATH, "csvs")
+# CSVS_DIR = os.path.join(PARENT_PATH, "csvs")
 
 
 def extract_mame_version(filename):
