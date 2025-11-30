@@ -9,11 +9,11 @@ import gc
 
 
 PARENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WORKDIR = os.path.join(PARENT_PATH, "sources", "working")
+WORKDIR = os.path.join(PARENT_PATH, "dats", "working")
 
-MAME_DAT_DIR = os.path.join(PARENT_PATH, "sources", "mame", "dats")
-FBA_DAT_DIR = os.path.join(PARENT_PATH, "sources", "fba", "dats")
-FBN_DAT_DIR = os.path.join(PARENT_PATH, "sources", "fbn", "dats")
+MAME_DAT_DIR = os.path.join(PARENT_PATH, "dats", "mame", "build")
+FBA_DAT_DIR = os.path.join(PARENT_PATH, "dats", "fba", "build")
+FBN_DAT_DIR = os.path.join(PARENT_PATH, "dats", "fbn", "build")
 
 MAME_DATS = [os.path.join(MAME_DAT_DIR, file) for file in os.listdir(MAME_DAT_DIR)]
 FBA_DATS = [os.path.join(FBA_DAT_DIR, file) for file in os.listdir(FBA_DAT_DIR)]
