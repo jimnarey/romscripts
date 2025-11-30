@@ -6,7 +6,7 @@ import glob
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from arcade_db.shared import db, indexing
+from arcade_db.shared import db, indexing, utils
 
 logging.basicConfig(level=logging.INFO)
 
@@ -45,7 +45,7 @@ class TestDb(unittest.TestCase):
                 for name, file_specs in zip_specs.items():
                     with self.subTest(fixture=fixture_name, game=name):
                         # logging.debug(f"Testing {name} from {fixture_name}")
-                        signature = indexing.get_roms_signature(file_specs)
+                        signature = indexing.get_roms_signature([utils.RomSpec(**spec) for spec in file_specs])
                         index_hash = indexing.get_game_index_hash(name.split(".")[0], signature)
                         results = self.session.query(db.Game).filter(db.Game.hash == index_hash)
                         if len(results.all()) != 1:

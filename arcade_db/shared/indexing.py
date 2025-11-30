@@ -3,6 +3,8 @@
 import hashlib
 from lxml import etree as ET
 
+from arcade_db.shared.utils import RomSpec
+
 
 def roms_signature_from_elements(roms_elements: list[ET._Element]):
     # We're using get() on the size attribute solely to deal with
@@ -12,16 +14,22 @@ def roms_signature_from_elements(roms_elements: list[ET._Element]):
     # the problem later
     return get_roms_signature(
         [
-            {"name": rom.get("name", ""), "size": int(rom.get("size", 0)), "crc": rom.get("crc", "")}
+            # {"name": rom.get("name", ""), "size": int(rom.get("size", 0)), "crc": rom.get("crc", "")}
+            RomSpec(
+                name=rom.get("name", ""),
+                size=int(rom.get("size", 0)),
+                crc=rom.get("crc", ""),
+            )
             for rom in roms_elements
         ]
     )
 
 
-def get_roms_signature(rom_specs: list[dict]):
+def get_roms_signature(rom_specs: list[RomSpec]):
     # This strips out any roms without a crc, so undumped roms don't change the signature
-    sorted_rom_specs = [rs for rs in sorted(rom_specs, key=lambda rom: rom["crc"]) if rs["crc"]]
-    signatures = [f"{rom['name']}/{rom['size']}/{rom['crc']}" for rom in sorted_rom_specs]
+    unique_roms = list(set(rs for rs in rom_specs if rs.crc))
+    sorted_rom_specs = sorted(unique_roms, key=lambda rom: rom.crc)
+    signatures = [f"{rom.name}/{rom.size}/{rom.crc}" for rom in sorted_rom_specs]
     return ",".join(sorted(signatures))
 
 

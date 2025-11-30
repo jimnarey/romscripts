@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 
 import gc
-from typing import Type
 import os
 import warnings
 import functools
 import time
+from typing import Type
+from collections import namedtuple
 
 from lxml import etree as ET
 import psutil
 from sqlalchemy.ext.declarative import DeclarativeMeta as DeclarativeBase
 from sqlalchemy.inspection import inspect
+
+RomSpec = namedtuple("RomSpec", ["name", "size", "crc"])
 
 
 @functools.lru_cache(maxsize=10)
@@ -21,7 +24,7 @@ def get_sub_elements(parent_element: ET._Element, tag_name: str) -> list[ET._Ele
 def log_memory(msg=""):
     process = psutil.Process(os.getpid())
     memory_mb = process.memory_info().rss / (1024 * 1024)
-    print(f"{msg} Memory: {memory_mb:.2f} MB")
+    print(f"{msg} Memory: {memory_mb:.2f} MB")  # noqa: E231
     return memory_mb
 
 
@@ -33,7 +36,7 @@ def time_execution(message: str):
             result = func(*args, **kwargs)
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"{message} executed in {elapsed_time:.6f} seconds")
+            print(f"{message} executed in {elapsed_time:.6f} seconds")  # noqa: E231
             return result
 
         return wrapper
@@ -67,6 +70,7 @@ def get_instance_attributes(instance: DeclarativeBase, model_class: Type[Declara
     instance_attrs = {c.key: getattr(instance, c.key) for c in inspect(instance).mapper.column_attrs}
     instance_attrs.pop(primary_key_column, None)
     return instance_attrs
+
 
 def force_memory_cleanup():
     """
