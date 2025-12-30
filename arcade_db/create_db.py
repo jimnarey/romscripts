@@ -20,7 +20,7 @@ types.
 # TODO: Investigate and implement the use of the 'merge' attribute in Rom elements. Validate parameters for merge attributes.
 # TODO: Change calls to .first to .one_or_none or .one
 
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, TypeAlias
 import os
 from pathlib import Path
 
@@ -34,11 +34,15 @@ import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.sql.schema import Table
 
-from .shared import sources, utils, indexing
+from .shared import sources, utils, indexing, tuples
 
 SqlAlchemyTable = Union[Table, Any]
 
-DatData = dict[str, dict[str, dict[str, str]]]
+# Type alias for entity data - either dict or specific tuple types
+EntityData: TypeAlias = Union[dict[str, Any], tuples.Rom]
+
+# Updated to support both dict and tuple values for gradual migration
+DatData = dict[str, dict[str, EntityData]]
 
 
 def create_dataframe_from_table(table: SqlAlchemyTable) -> pd.DataFrame:
@@ -75,14 +79,18 @@ def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_id: str) -
         crc = rom_element.get("crc", "")
         sha1 = rom_element.get("sha1", None)
         rom_hash = indexing.get_rom_index_hash(name, size, crc)
-        rom_attrs = {
-            "hash": rom_hash,
-            "name": name,
-            "size": size,
-            "crc": str(crc),
-            "sha1": sha1,
-        }
-        dat_data["roms"][rom_hash] = rom_attrs
+
+        # Create and store Rom tuple directly
+        rom = tuples.Rom(
+            id=0,  # Will be assigned during convert_hashes_to_ids
+            hash=rom_hash,
+            name=name,
+            size=size,
+            crc=str(crc),
+            sha1=sha1,
+        )
+        dat_data["roms"][rom_hash] = rom
+
         composite_key = indexing.get_attributes_md5({"game_id": game_id, "rom_id": rom_hash})
         dat_data["game_rom"][composite_key] = {"game_id": game_id, "rom_id": rom_hash}
 
@@ -249,14 +257,14 @@ def get_empty_dat_data() -> DatData:
     }
 
 
-def convert_hashes_to_ids(dat_data: DatData) -> DatData:
+def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
     """
     Convert hash-based keys to numeric auto-increment IDs before writing to database.
     This is done at write time to minimize memory usage during processing.
     """
     print("Converting hash keys to numeric IDs...")
-    hash_to_id = {}  # type: ignore
-    next_id = {}
+    hash_to_id: dict[str, dict[str, int]] = {}
+    next_id: dict[str, int] = {}
 
     entity_tables = ["games", "roms", "emulators", "disks", "features", "drivers"]
     for table in entity_tables:
@@ -265,40 +273,53 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
         for hash_key, attrs in dat_data[table].items():
             new_id = next_id[table]
             hash_to_id[table][hash_key] = new_id
-            attrs["id"] = new_id  # type: ignore
+
+            # Handle tuples separately from dicts
+            if table == "roms" and isinstance(attrs, tuples.Rom):
+                # Create new Rom tuple with updated id
+                dat_data[table][hash_key] = tuples.Rom(
+                    id=new_id, hash=attrs.hash, name=attrs.name, size=attrs.size, crc=attrs.crc, sha1=attrs.sha1
+                )
+            elif isinstance(attrs, dict):
+                attrs["id"] = new_id
             next_id[table] += 1
 
     hash_to_id["game_emulator"] = {}
     next_id["game_emulator"] = 1
     for hash_key, attrs in dat_data["game_emulator"].items():
-        new_id = next_id["game_emulator"]
-        hash_to_id["game_emulator"][hash_key] = new_id
-        attrs["id"] = new_id  # type: ignore
-        attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
-        attrs["emulator_id"] = hash_to_id["emulators"][attrs["emulator_id"]]
-        if "driver_id" in attrs:
-            attrs["driver_id"] = hash_to_id["drivers"][attrs["driver_id"]]
-        if "hash" in attrs:
-            del attrs["hash"]
-        next_id["game_emulator"] += 1
+        if isinstance(attrs, dict):
+            new_id = next_id["game_emulator"]
+            hash_to_id["game_emulator"][hash_key] = new_id
+            attrs["id"] = new_id
+            attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
+            attrs["emulator_id"] = hash_to_id["emulators"][attrs["emulator_id"]]
+            if "driver_id" in attrs:
+                attrs["driver_id"] = hash_to_id["drivers"][attrs["driver_id"]]
+            if "hash" in attrs:
+                del attrs["hash"]
+            next_id["game_emulator"] += 1
 
     for attrs in dat_data["game_rom"].values():
-        attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
-        attrs["rom_id"] = hash_to_id["roms"][attrs["rom_id"]]
+        if isinstance(attrs, dict):
+            attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
+            attrs["rom_id"] = hash_to_id["roms"][attrs["rom_id"]]
 
     for attrs in dat_data["game_emulator_feature"].values():
-        attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
-        attrs["feature_id"] = hash_to_id["features"][attrs["feature_id"]]
+        if isinstance(attrs, dict):
+            attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
+            attrs["feature_id"] = hash_to_id["features"][attrs["feature_id"]]
 
     for attrs in dat_data["game_emulator_disk"].values():
-        attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
-        attrs["disk_id"] = hash_to_id["disks"][attrs["disk_id"]]
+        if isinstance(attrs, dict):
+            attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
+            attrs["disk_id"] = hash_to_id["disks"][attrs["disk_id"]]
 
     for game_attrs in dat_data["games"].values():
-        if "cloneof_id" in game_attrs and game_attrs["cloneof_id"]:
-            game_attrs["cloneof_id"] = hash_to_id["games"].get(game_attrs["cloneof_id"])
-        if "romof_id" in game_attrs and game_attrs["romof_id"]:
-            game_attrs["romof_id"] = hash_to_id["games"].get(game_attrs["romof_id"])
+        if isinstance(game_attrs, dict):
+            if "cloneof_id" in game_attrs and game_attrs["cloneof_id"]:
+                game_attrs["cloneof_id"] = hash_to_id["games"].get(game_attrs["cloneof_id"])
+            if "romof_id" in game_attrs and game_attrs["romof_id"]:
+                game_attrs["romof_id"] = hash_to_id["games"].get(game_attrs["romof_id"])
 
     print("Conversion complete.")
     return dat_data
@@ -312,7 +333,19 @@ def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:
     engine = create_engine(f"sqlite:///{Path(out_dir, 'arcade.db')}")  # noqa: E231
     for key in strip_keys(dat_data):
         print(f"Creating {key} dataframe...")
-        df = pd.DataFrame(list(dat_data[key].values()))
+
+        # Convert tuples to dicts for DataFrame creation if needed
+        values_raw = list(dat_data[key].values())
+        values: list[dict[str, Any]] = []
+
+        for item in values_raw:
+            if isinstance(item, tuples.Rom):
+                # Named tuples have ._asdict() method
+                values.append(item._asdict())
+            elif isinstance(item, dict):
+                values.append(item)
+
+        df = pd.DataFrame(values)
 
         # Skip empty dataframes - they would create invalid SQL
         if df.empty:
