@@ -39,7 +39,7 @@ from .shared import sources, utils, indexing, tuples
 SqlAlchemyTable = Union[Table, Any]
 
 # Type alias for entity data - either dict or specific tuple types
-EntityData: TypeAlias = Union[dict[str, Any], tuples.Rom, tuples.Game]
+EntityData: TypeAlias = Union[dict[str, Any], tuples.Rom, tuples.Game, tuples.Driver, tuples.Feature]
 
 # Updated to support both dict and tuple values for gradual migration
 DatData = dict[str, dict[str, EntityData]]
@@ -137,8 +137,17 @@ def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element,
     for feature_element in game_element.findall("feature"):
         feature_attrs = get_feature_element_attributes(feature_element)
         feature_hash = indexing.get_attributes_md5(feature_attrs)
-        feature_attrs["hash"] = feature_hash
-        dat_data["features"][feature_hash] = feature_attrs
+
+        # Create and store Feature tuple directly
+        feature = tuples.Feature(
+            id=0,  # Will be assigned during convert_hashes_to_ids
+            hash=feature_hash,
+            overall=feature_attrs["overall"],
+            type=feature_attrs["type"],
+            status=feature_attrs["status"],
+        )
+        dat_data["features"][feature_hash] = feature
+
         composite_key = indexing.get_attributes_md5(
             {"game_emulator_id": game_emulator_attrs["hash"], "feature_id": feature_hash}
         )
@@ -174,8 +183,29 @@ def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, d
     if (driver_element := game_element.find("driver")) is not None:
         driver_attrs = get_driver_element_attributes(driver_element)
         driver_hash = indexing.get_attributes_md5(driver_attrs)
-        driver_attrs["hash"] = driver_hash
-        dat_data["drivers"][driver_hash] = driver_attrs
+
+        # Create and store Driver tuple directly
+        driver = tuples.Driver(
+            id=0,  # Will be assigned during convert_hashes_to_ids
+            hash=driver_hash,
+            palettesize=driver_attrs["palettesize"],
+            hiscoresave=driver_attrs["hiscoresave"],
+            requiresartwork=driver_attrs["requiresartwork"],
+            unofficial=driver_attrs["unofficial"],
+            good=driver_attrs["good"],
+            status=driver_attrs["status"],
+            graphic=driver_attrs["graphic"],
+            cocktailmode=driver_attrs["cocktailmode"],
+            savestate=driver_attrs["savestate"],
+            protection=driver_attrs["protection"],
+            emulation=driver_attrs["emulation"],
+            cocktail=driver_attrs["cocktail"],
+            color=driver_attrs["color"],
+            nosoundhardware=driver_attrs["nosoundhardware"],
+            sound=driver_attrs["sound"],
+            incomplete=driver_attrs["incomplete"],
+        )
+        dat_data["drivers"][driver_hash] = driver
         game_emulator_attrs["driver_id"] = driver_hash
 
 
@@ -302,6 +332,37 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
                     runnable=attrs.runnable,
                     ismechanical=attrs.ismechanical,
                 )
+            elif table == "drivers" and isinstance(attrs, tuples.Driver):
+                # Create new Driver tuple with updated id
+                dat_data[table][hash_key] = tuples.Driver(
+                    id=new_id,
+                    hash=attrs.hash,
+                    palettesize=attrs.palettesize,
+                    hiscoresave=attrs.hiscoresave,
+                    requiresartwork=attrs.requiresartwork,
+                    unofficial=attrs.unofficial,
+                    good=attrs.good,
+                    status=attrs.status,
+                    graphic=attrs.graphic,
+                    cocktailmode=attrs.cocktailmode,
+                    savestate=attrs.savestate,
+                    protection=attrs.protection,
+                    emulation=attrs.emulation,
+                    cocktail=attrs.cocktail,
+                    color=attrs.color,
+                    nosoundhardware=attrs.nosoundhardware,
+                    sound=attrs.sound,
+                    incomplete=attrs.incomplete,
+                )
+            elif table == "features" and isinstance(attrs, tuples.Feature):
+                # Create new Feature tuple with updated id
+                dat_data[table][hash_key] = tuples.Feature(
+                    id=new_id,
+                    hash=attrs.hash,
+                    overall=attrs.overall,
+                    type=attrs.type,
+                    status=attrs.status,
+                )
             elif isinstance(attrs, dict):
                 attrs["id"] = new_id
             next_id[table] += 1
@@ -358,23 +419,22 @@ def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:
     for key in strip_keys(dat_data):
         print(f"Creating {key} dataframe...")
 
-        # Convert tuples to dicts for DataFrame creation if needed
         values_raw = list(dat_data[key].values())
         values: list[dict[str, Any]] = []
 
         for item in values_raw:
             if isinstance(item, tuples.Rom):
-                # Named tuples have ._asdict() method
                 values.append(item._asdict())
             elif isinstance(item, tuples.Game):
-                # Named tuples have ._asdict() method
+                values.append(item._asdict())
+            elif isinstance(item, tuples.Driver):
+                values.append(item._asdict())
+            elif isinstance(item, tuples.Feature):
                 values.append(item._asdict())
             elif isinstance(item, dict):
                 values.append(item)
 
         df = pd.DataFrame(values)
-
-        # Skip empty dataframes - they would create invalid SQL
         if df.empty:
             print(f"  Skipping empty {key} dataframe...")
             continue
