@@ -7,6 +7,7 @@ import click
 
 from arcade_db import create_db
 from arcade_db.shared import db, indexing, sources
+from arcade_db.shared.utils import RomSpec
 
 
 DB_PATH = Path("./arcade-out/arcade.db")
@@ -27,7 +28,7 @@ def to_hex(value) -> str:
 def get_arcade_game_index(file_path: str) -> str:
     archive = ZipFile(file_path)
     file_specs = [
-        {"name": file.filename, "size": int(file.file_size), "crc": to_hex(file.CRC)} for file in archive.infolist()
+        RomSpec(name=file.filename, size=int(file.file_size), crc=to_hex(file.CRC)) for file in archive.infolist()
     ]
     signature = indexing.get_roms_signature(file_specs)
     return signature
