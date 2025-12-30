@@ -26,6 +26,7 @@ from pathlib import Path
 import multiprocessing
 import shutil
 from copy import deepcopy
+from dataclasses import asdict
 
 from lxml import etree as ET
 import pandas as pd
@@ -296,7 +297,7 @@ def get_empty_dat_data() -> DatData:
     }
 
 
-def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
+def convert_hashes_to_ids(dat_data: DatData) -> DatData:
     """
     Convert hash-based keys to numeric auto-increment IDs before writing to database.
     This is done at write time to minimize memory usage during processing.
@@ -305,119 +306,44 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
     hash_to_id: dict[str, dict[str, int]] = {}
     next_id: dict[str, int] = {}
 
+    # Assign numeric IDs to all entity tables
     entity_tables = ["games", "roms", "emulators", "disks", "features", "drivers"]
     for table in entity_tables:
         hash_to_id[table] = {}
         next_id[table] = 1
-        for hash_key, attrs in dat_data[table].items():
+        for hash_key, entity in dat_data[table].items():
             new_id = next_id[table]
             hash_to_id[table][hash_key] = new_id
-
-            # Create new tuple with updated id
-            if table == "roms":
-                dat_data[table][hash_key] = types.Rom(
-                    id=new_id, hash=attrs.hash, name=attrs.name, size=attrs.size, crc=attrs.crc, sha1=attrs.sha1
-                )
-            elif table == "games":
-                dat_data[table][hash_key] = types.Game(
-                    id=new_id,
-                    hash=attrs.hash,
-                    name=attrs.name,
-                    description=attrs.description,
-                    year=attrs.year,
-                    manufacturer=attrs.manufacturer,
-                    romof=attrs.romof,
-                    cloneof=attrs.cloneof,
-                    isbios=attrs.isbios,
-                    isdevice=attrs.isdevice,
-                    runnable=attrs.runnable,
-                    ismechanical=attrs.ismechanical,
-                )
-            elif table == "drivers":
-                dat_data[table][hash_key] = types.Driver(
-                    id=new_id,
-                    hash=attrs.hash,
-                    palettesize=attrs.palettesize,
-                    hiscoresave=attrs.hiscoresave,
-                    requiresartwork=attrs.requiresartwork,
-                    unofficial=attrs.unofficial,
-                    good=attrs.good,
-                    status=attrs.status,
-                    graphic=attrs.graphic,
-                    cocktailmode=attrs.cocktailmode,
-                    savestate=attrs.savestate,
-                    protection=attrs.protection,
-                    emulation=attrs.emulation,
-                    cocktail=attrs.cocktail,
-                    color=attrs.color,
-                    nosoundhardware=attrs.nosoundhardware,
-                    sound=attrs.sound,
-                    incomplete=attrs.incomplete,
-                )
-            elif table == "features":
-                dat_data[table][hash_key] = types.Feature(
-                    id=new_id,
-                    hash=attrs.hash,
-                    overall=attrs.overall,
-                    type=attrs.type,
-                    status=attrs.status,
-                )
-            elif table == "disks":
-                dat_data[table][hash_key] = types.Disk(
-                    id=new_id,
-                    hash=attrs.hash,
-                    name=attrs.name,
-                    sha1=attrs.sha1,
-                    md5=attrs.md5,
-                )
-            elif table == "emulators":
-                dat_data[table][hash_key] = types.Emulator(
-                    id=new_id,
-                    hash=attrs.hash,
-                    name=attrs.name,
-                    version=attrs.version,
-                )
+            entity.id = new_id  # Mutate dataclass in place
             next_id[table] += 1
 
+    # Process game_emulator with foreign key updates
     hash_to_id["game_emulator"] = {}
     next_id["game_emulator"] = 1
-    for hash_key, attrs in dat_data["game_emulator"].items():
+    for hash_key, game_emulator in dat_data["game_emulator"].items():
         new_id = next_id["game_emulator"]
         hash_to_id["game_emulator"][hash_key] = new_id
 
-        # Create new GameEmulator tuple with updated ids
-        new_driver_id = hash_to_id["drivers"].get(attrs.driver_id) if attrs.driver_id else None
-        dat_data["game_emulator"][hash_key] = types.GameEmulator(
-            id=new_id,
-            game_id=hash_to_id["games"][attrs.game_id],
-            emulator_id=hash_to_id["emulators"][attrs.emulator_id],
-            driver_id=new_driver_id,
-        )
+        # Update all IDs in place
+        game_emulator.id = new_id
+        game_emulator.game_id = hash_to_id["games"][game_emulator.game_id]
+        game_emulator.emulator_id = hash_to_id["emulators"][game_emulator.emulator_id]
+        if game_emulator.driver_id:
+            game_emulator.driver_id = hash_to_id["drivers"][game_emulator.driver_id]
         next_id["game_emulator"] += 1
 
-    for hash_key, attrs in dat_data["game_rom"].items():
-        # Create new GameRom tuple with updated ids
-        dat_data["game_rom"][hash_key] = types.GameRom(
-            id=attrs.id,
-            game_id=hash_to_id["games"][attrs.game_id],
-            rom_id=hash_to_id["roms"][attrs.rom_id],
-        )
+    # Update foreign keys in join tables
+    for game_rom in dat_data["game_rom"].values():
+        game_rom.game_id = hash_to_id["games"][game_rom.game_id]
+        game_rom.rom_id = hash_to_id["roms"][game_rom.rom_id]
 
-    for hash_key, attrs in dat_data["game_emulator_feature"].items():
-        # Create new GameEmulatorFeature tuple with updated ids
-        dat_data["game_emulator_feature"][hash_key] = types.GameEmulatorFeature(
-            id=attrs.id,
-            game_emulator_id=hash_to_id["game_emulator"][attrs.game_emulator_id],
-            feature_id=hash_to_id["features"][attrs.feature_id],
-        )
+    for game_emulator_feature in dat_data["game_emulator_feature"].values():
+        game_emulator_feature.game_emulator_id = hash_to_id["game_emulator"][game_emulator_feature.game_emulator_id]
+        game_emulator_feature.feature_id = hash_to_id["features"][game_emulator_feature.feature_id]
 
-    for hash_key, attrs in dat_data["game_emulator_disk"].items():
-        # Create new GameEmulatorDisk tuple with updated ids
-        dat_data["game_emulator_disk"][hash_key] = types.GameEmulatorDisk(
-            id=attrs.id,
-            game_emulator_id=hash_to_id["game_emulator"][attrs.game_emulator_id],
-            disk_id=hash_to_id["disks"][attrs.disk_id],
-        )
+    for game_emulator_disk in dat_data["game_emulator_disk"].values():
+        game_emulator_disk.game_emulator_id = hash_to_id["game_emulator"][game_emulator_disk.game_emulator_id]
+        game_emulator_disk.disk_id = hash_to_id["disks"][game_emulator_disk.disk_id]
 
     print("Conversion complete.")
     return dat_data
@@ -433,8 +359,8 @@ def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:
     for key in strip_keys(dat_data):
         print(f"Creating {key} dataframe...")
 
-        # All values are now NamedTuples, so just convert them all
-        values = [item._asdict() for item in dat_data[key].values()]
+        # All values are now dataclasses, so just convert them all
+        values = [asdict(item) for item in dat_data[key].values()]
 
         df = pd.DataFrame(values)
         if df.empty:

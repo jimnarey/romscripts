@@ -1,5 +1,6 @@
 # from typing import NamedTuple, Optional, get_type_hints
-from typing import NamedTuple, Optional
+from typing import Optional, Any
+from dataclasses import dataclass
 from sqlalchemy import inspect
 
 # from sqlalchemy.types import Integer, String, Boolean
@@ -30,28 +31,50 @@ def _sqlalchemy_to_python_type(column_type):
     return str
 
 
-def get_typed_tuple_from_model(model_class: type[db.Base], tuple_name: str, fields: list[str] | None = None):
+def get_typed_dataclass_from_model(model_class: type[db.Base], class_name: str, fields_list: list[str] | None = None):
+    """
+    Generate a dataclass from a SQLAlchemy model.
+
+    This programmatically creates mutable dataclasses that mirror the SQLAlchemy models,
+    ensuring type consistency between in-memory operations and database schema.
+    """
     mapper = inspect(model_class)
-    field_definitions = []
+    annotations: dict[str, type] = {}
+    defaults: dict[str, None] = {}
+
     for column in mapper.columns:
-        if fields is None or column.name in fields:
+        if fields_list is None or column.name in fields_list:
             python_type = _sqlalchemy_to_python_type(column.type)
+
+            # Make fields optional (nullable) except for id which is always int
             if column.nullable and column.name != "id":
                 python_type = Optional[python_type]
-            field_definitions.append((column.name, python_type))
-    return NamedTuple(tuple_name, field_definitions)
+                defaults[column.name] = None
+
+            annotations[column.name] = python_type
+
+    # Create the dataclass dynamically
+    namespace: dict[str, Any] = {"__annotations__": annotations}
+
+    # Add default values for nullable fields
+    for field_name, default_value in defaults.items():
+        namespace[field_name] = default_value
+
+    # Create the class and apply the dataclass decorator
+    cls = type(class_name, (), namespace)
+    return dataclass(cls)
 
 
-Game = get_typed_tuple_from_model(db.Game, "Game")
-Rom = get_typed_tuple_from_model(db.Rom, "Rom")
-Emulator = get_typed_tuple_from_model(db.Emulator, "Emulator")
-Feature = get_typed_tuple_from_model(db.Feature, "Feature")
-Disk = get_typed_tuple_from_model(db.Disk, "Disk")
-Driver = get_typed_tuple_from_model(db.Driver, "Driver")
-GameEmulator = get_typed_tuple_from_model(db.GameEmulator, "GameEmulator")
-GameRom = get_typed_tuple_from_model(db.GameRom, "GameRom")
-GameEmulatorFeature = get_typed_tuple_from_model(db.GameEmulatorFeature, "GameEmulatorFeature")
-GameEmulatorDisk = get_typed_tuple_from_model(db.GameEmulatorDisk, "GameEmulatorDisk")
+Game = get_typed_dataclass_from_model(db.Game, "Game")
+Rom = get_typed_dataclass_from_model(db.Rom, "Rom")
+Emulator = get_typed_dataclass_from_model(db.Emulator, "Emulator")
+Feature = get_typed_dataclass_from_model(db.Feature, "Feature")
+Disk = get_typed_dataclass_from_model(db.Disk, "Disk")
+Driver = get_typed_dataclass_from_model(db.Driver, "Driver")
+GameEmulator = get_typed_dataclass_from_model(db.GameEmulator, "GameEmulator")
+GameRom = get_typed_dataclass_from_model(db.GameRom, "GameRom")
+GameEmulatorFeature = get_typed_dataclass_from_model(db.GameEmulatorFeature, "GameEmulatorFeature")
+GameEmulatorDisk = get_typed_dataclass_from_model(db.GameEmulatorDisk, "GameEmulatorDisk")
 
-# RomSpecTuple = get_typed_tuple_from_model(db.Rom, 'RomSpecTuple', fields=['name', 'size', 'crc'])
-# GameSpecTuple = get_typed_tuple_from_model(db.Game, 'GameSpecTuple', fields=['name', 'hash', 'description'])
+# RomSpecTuple = get_typed_dataclass_from_model(db.Rom, 'RomSpecTuple', fields=['name', 'size', 'crc'])
+# GameSpecTuple = get_typed_dataclass_from_model(db.Game, 'GameSpecTuple', fields=['name', 'hash', 'description'])
