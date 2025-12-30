@@ -23,8 +23,6 @@ types.
 from typing import Optional, Any, Union, TypeAlias
 import os
 from pathlib import Path
-
-# from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
 import shutil
 from copy import deepcopy
@@ -33,15 +31,10 @@ from lxml import etree as ET
 import pandas as pd
 from sqlalchemy import create_engine
 
-# from sqlalchemy.sql.schema import Table
-
 from .shared import sources, types, utils, indexing
 
-# SqlAlchemyTable = Union[Table, Any]
-
-# Type alias for entity data - either dict or specific tuple types
+# Type alias for entity data - all entity types are now NamedTuples
 EntityData: TypeAlias = Union[
-    dict[str, Any],
     types.Rom,
     types.Game,
     types.Driver,
@@ -54,16 +47,7 @@ EntityData: TypeAlias = Union[
     types.GameEmulatorDisk,
 ]
 
-# Updated to support both dict and tuple values for gradual migration
 DatData = dict[str, dict[str, EntityData]]
-
-
-# def create_dataframe_from_table(table: SqlAlchemyTable) -> pd.DataFrame:
-#     if isinstance(table, Table):
-#         column_names = [column.name for column in table.columns]
-#     else:
-#         column_names = [column.name for column in table.__table__.columns]
-#     return pd.DataFrame(columns=column_names)
 
 
 def strip_keys(dict_: dict[str, Any]) -> list[str]:
@@ -143,26 +127,22 @@ def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[types
     return None
 
 
-def get_feature_element_attributes(feature_element: ET._Element) -> dict[str, str]:
-    return {
-        "overall": feature_element.get("overall", ""),
-        "type": feature_element.get("type", ""),
-        "status": feature_element.get("status", ""),
-    }
-
-
 def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData) -> None:
     for feature_element in game_element.findall("feature"):
-        feature_attrs = get_feature_element_attributes(feature_element)
+        feature_attrs = {
+            "overall": feature_element.get("overall", ""),
+            "type": feature_element.get("type", ""),
+            "status": feature_element.get("status", ""),
+        }
         feature_hash = indexing.get_attributes_md5(feature_attrs)
 
         # Create and store Feature tuple directly
         feature = types.Feature(
             id=0,  # Will be assigned during convert_hashes_to_ids
             hash=feature_hash,
-            overall=feature_attrs["overall"],
-            type=feature_attrs["type"],
-            status=feature_attrs["status"],
+            overall=feature_element.get("overall", ""),
+            type=feature_element.get("type", ""),
+            status=feature_element.get("status", ""),
         )
         dat_data["features"][feature_hash] = feature
 
@@ -177,64 +157,52 @@ def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element,
         dat_data["game_emulator_feature"][composite_key] = game_emulator_feature
 
 
-def get_driver_element_attributes(driver_element: ET._Element) -> dict[str, str]:
-    return {
-        "palettesize": driver_element.get("palettesize", ""),
-        "hiscoresave": driver_element.get("hiscoresave", ""),
-        "requiresartwork": driver_element.get("requiresartwork", ""),
-        "unofficial": driver_element.get("unofficial", ""),
-        "good": driver_element.get("good", ""),
-        "status": driver_element.get("status", ""),
-        "graphic": driver_element.get("graphic", ""),
-        "cocktailmode": driver_element.get("cocktailmode", ""),
-        "savestate": driver_element.get("savestate", ""),
-        "protection": driver_element.get("protection", ""),
-        "emulation": driver_element.get("emulation", ""),
-        "cocktail": driver_element.get("cocktail", ""),
-        "color": driver_element.get("color", ""),
-        "nosoundhardware": driver_element.get("nosoundhardware", ""),
-        "sound": driver_element.get("sound", ""),
-        "incomplete": driver_element.get("incomplete", ""),
-    }
-
-
 # TODO: Check for orphaned drivers after db build.
 def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData) -> None:
     if (driver_element := game_element.find("driver")) is not None:
-        driver_attrs = get_driver_element_attributes(driver_element)
+        driver_attrs = {
+            "palettesize": driver_element.get("palettesize", ""),
+            "hiscoresave": driver_element.get("hiscoresave", ""),
+            "requiresartwork": driver_element.get("requiresartwork", ""),
+            "unofficial": driver_element.get("unofficial", ""),
+            "good": driver_element.get("good", ""),
+            "status": driver_element.get("status", ""),
+            "graphic": driver_element.get("graphic", ""),
+            "cocktailmode": driver_element.get("cocktailmode", ""),
+            "savestate": driver_element.get("savestate", ""),
+            "protection": driver_element.get("protection", ""),
+            "emulation": driver_element.get("emulation", ""),
+            "cocktail": driver_element.get("cocktail", ""),
+            "color": driver_element.get("color", ""),
+            "nosoundhardware": driver_element.get("nosoundhardware", ""),
+            "sound": driver_element.get("sound", ""),
+            "incomplete": driver_element.get("incomplete", ""),
+        }
         driver_hash = indexing.get_attributes_md5(driver_attrs)
 
         # Create and store Driver tuple directly
         driver = types.Driver(
             id=0,  # Will be assigned during convert_hashes_to_ids
             hash=driver_hash,
-            palettesize=driver_attrs["palettesize"],
-            hiscoresave=driver_attrs["hiscoresave"],
-            requiresartwork=driver_attrs["requiresartwork"],
-            unofficial=driver_attrs["unofficial"],
-            good=driver_attrs["good"],
-            status=driver_attrs["status"],
-            graphic=driver_attrs["graphic"],
-            cocktailmode=driver_attrs["cocktailmode"],
-            savestate=driver_attrs["savestate"],
-            protection=driver_attrs["protection"],
-            emulation=driver_attrs["emulation"],
-            cocktail=driver_attrs["cocktail"],
-            color=driver_attrs["color"],
-            nosoundhardware=driver_attrs["nosoundhardware"],
-            sound=driver_attrs["sound"],
-            incomplete=driver_attrs["incomplete"],
+            palettesize=driver_element.get("palettesize", ""),
+            hiscoresave=driver_element.get("hiscoresave", ""),
+            requiresartwork=driver_element.get("requiresartwork", ""),
+            unofficial=driver_element.get("unofficial", ""),
+            good=driver_element.get("good", ""),
+            status=driver_element.get("status", ""),
+            graphic=driver_element.get("graphic", ""),
+            cocktailmode=driver_element.get("cocktailmode", ""),
+            savestate=driver_element.get("savestate", ""),
+            protection=driver_element.get("protection", ""),
+            emulation=driver_element.get("emulation", ""),
+            cocktail=driver_element.get("cocktail", ""),
+            color=driver_element.get("color", ""),
+            nosoundhardware=driver_element.get("nosoundhardware", ""),
+            sound=driver_element.get("sound", ""),
+            incomplete=driver_element.get("incomplete", ""),
         )
         dat_data["drivers"][driver_hash] = driver
         game_emulator_attrs["driver_id"] = driver_hash
-
-
-def get_disk_attributes(disk_element: ET._Element) -> dict[str, str]:
-    return {
-        "name": disk_element.get("name", ""),
-        "sha1": disk_element.get("sha1", ""),
-        "md5": disk_element.get("md5", ""),
-    }
 
 
 # TODO: Can probably avoid using get_sub_elements.
@@ -242,16 +210,20 @@ def get_disk_attributes(disk_element: ET._Element) -> dict[str, str]:
 def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData):
     if disk_elements := utils.get_sub_elements(game_element, "disk"):
         for disk_element in disk_elements:
-            disk_attrs = get_disk_attributes(disk_element)
+            disk_attrs = {
+                "name": disk_element.get("name", ""),
+                "sha1": disk_element.get("sha1", ""),
+                "md5": disk_element.get("md5", ""),
+            }
             disk_hash = indexing.get_attributes_md5(disk_attrs)
 
             # Create and store Disk tuple directly
             disk = types.Disk(
                 id=0,  # Will be assigned during convert_hashes_to_ids
                 hash=disk_hash,
-                name=disk_attrs["name"],
-                sha1=disk_attrs["sha1"],
-                md5=disk_attrs["md5"],
+                name=disk_element.get("name", ""),
+                sha1=disk_element.get("sha1", ""),
+                md5=disk_element.get("md5", ""),
             )
             dat_data["disks"][disk_hash] = disk
 
@@ -356,14 +328,12 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
             new_id = next_id[table]
             hash_to_id[table][hash_key] = new_id
 
-            # Handle tuples separately from dicts
-            if table == "roms" and isinstance(attrs, types.Rom):
-                # Create new Rom tuple with updated id
+            # Create new tuple with updated id
+            if table == "roms":
                 dat_data[table][hash_key] = types.Rom(
                     id=new_id, hash=attrs.hash, name=attrs.name, size=attrs.size, crc=attrs.crc, sha1=attrs.sha1
                 )
-            elif table == "games" and isinstance(attrs, types.Game):
-                # Create new Game tuple with updated id
+            elif table == "games":
                 dat_data[table][hash_key] = types.Game(
                     id=new_id,
                     hash=attrs.hash,
@@ -378,8 +348,7 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
                     runnable=attrs.runnable,
                     ismechanical=attrs.ismechanical,
                 )
-            elif table == "drivers" and isinstance(attrs, types.Driver):
-                # Create new Driver tuple with updated id
+            elif table == "drivers":
                 dat_data[table][hash_key] = types.Driver(
                     id=new_id,
                     hash=attrs.hash,
@@ -400,8 +369,7 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
                     sound=attrs.sound,
                     incomplete=attrs.incomplete,
                 )
-            elif table == "features" and isinstance(attrs, types.Feature):
-                # Create new Feature tuple with updated id
+            elif table == "features":
                 dat_data[table][hash_key] = types.Feature(
                     id=new_id,
                     hash=attrs.hash,
@@ -409,8 +377,7 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
                     type=attrs.type,
                     status=attrs.status,
                 )
-            elif table == "disks" and isinstance(attrs, types.Disk):
-                # Create new Disk tuple with updated id
+            elif table == "disks":
                 dat_data[table][hash_key] = types.Disk(
                     id=new_id,
                     hash=attrs.hash,
@@ -418,16 +385,13 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
                     sha1=attrs.sha1,
                     md5=attrs.md5,
                 )
-            elif table == "emulators" and isinstance(attrs, types.Emulator):
-                # Create new Emulator tuple with updated id
+            elif table == "emulators":
                 dat_data[table][hash_key] = types.Emulator(
                     id=new_id,
                     hash=attrs.hash,
                     name=attrs.name,
                     version=attrs.version,
                 )
-            elif isinstance(attrs, dict):
-                attrs["id"] = new_id
             next_id[table] += 1
 
     hash_to_id["game_emulator"] = {}
@@ -436,109 +400,56 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
         new_id = next_id["game_emulator"]
         hash_to_id["game_emulator"][hash_key] = new_id
 
-        if isinstance(attrs, types.GameEmulator):
-            # Create new GameEmulator tuple with updated ids
-            new_driver_id = hash_to_id["drivers"].get(attrs.driver_id) if attrs.driver_id else None
-            dat_data["game_emulator"][hash_key] = types.GameEmulator(
-                id=new_id,
-                game_id=hash_to_id["games"][attrs.game_id],
-                emulator_id=hash_to_id["emulators"][attrs.emulator_id],
-                driver_id=new_driver_id,
-            )
-        elif isinstance(attrs, dict):
-            attrs["id"] = new_id
-            attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
-            attrs["emulator_id"] = hash_to_id["emulators"][attrs["emulator_id"]]
-            if "driver_id" in attrs:
-                attrs["driver_id"] = hash_to_id["drivers"][attrs["driver_id"]]
-            if "hash" in attrs:
-                del attrs["hash"]
+        # Create new GameEmulator tuple with updated ids
+        new_driver_id = hash_to_id["drivers"].get(attrs.driver_id) if attrs.driver_id else None
+        dat_data["game_emulator"][hash_key] = types.GameEmulator(
+            id=new_id,
+            game_id=hash_to_id["games"][attrs.game_id],
+            emulator_id=hash_to_id["emulators"][attrs.emulator_id],
+            driver_id=new_driver_id,
+        )
         next_id["game_emulator"] += 1
 
     for hash_key, attrs in dat_data["game_rom"].items():
-        if isinstance(attrs, types.GameRom):
-            # Create new GameRom tuple with updated ids
-            dat_data["game_rom"][hash_key] = types.GameRom(
-                id=attrs.id,  # ID will be assigned later if needed
-                game_id=hash_to_id["games"][attrs.game_id],
-                rom_id=hash_to_id["roms"][attrs.rom_id],
-            )
-        elif isinstance(attrs, dict):
-            attrs["game_id"] = hash_to_id["games"][attrs["game_id"]]
-            attrs["rom_id"] = hash_to_id["roms"][attrs["rom_id"]]
+        # Create new GameRom tuple with updated ids
+        dat_data["game_rom"][hash_key] = types.GameRom(
+            id=attrs.id,
+            game_id=hash_to_id["games"][attrs.game_id],
+            rom_id=hash_to_id["roms"][attrs.rom_id],
+        )
 
     for hash_key, attrs in dat_data["game_emulator_feature"].items():
-        if isinstance(attrs, types.GameEmulatorFeature):
-            # Create new GameEmulatorFeature tuple with updated ids
-            dat_data["game_emulator_feature"][hash_key] = types.GameEmulatorFeature(
-                id=attrs.id,  # ID will be assigned later if needed
-                game_emulator_id=hash_to_id["game_emulator"][attrs.game_emulator_id],
-                feature_id=hash_to_id["features"][attrs.feature_id],
-            )
-        elif isinstance(attrs, dict):
-            attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
-            attrs["feature_id"] = hash_to_id["features"][attrs["feature_id"]]
+        # Create new GameEmulatorFeature tuple with updated ids
+        dat_data["game_emulator_feature"][hash_key] = types.GameEmulatorFeature(
+            id=attrs.id,
+            game_emulator_id=hash_to_id["game_emulator"][attrs.game_emulator_id],
+            feature_id=hash_to_id["features"][attrs.feature_id],
+        )
 
     for hash_key, attrs in dat_data["game_emulator_disk"].items():
-        if isinstance(attrs, types.GameEmulatorDisk):
-            # Create new GameEmulatorDisk tuple with updated ids
-            dat_data["game_emulator_disk"][hash_key] = types.GameEmulatorDisk(
-                id=attrs.id,  # ID will be assigned later if needed
-                game_emulator_id=hash_to_id["game_emulator"][attrs.game_emulator_id],
-                disk_id=hash_to_id["disks"][attrs.disk_id],
-            )
-        elif isinstance(attrs, dict):
-            attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
-            attrs["disk_id"] = hash_to_id["disks"][attrs["disk_id"]]
-
-    for hash_key, game_attrs in dat_data["games"].items():
-        # Game tuples don't have cloneof_id/romof_id fields - those only exist in dict-based approach
-        # The Game model stores cloneof and romof as strings, not foreign key IDs
-        if isinstance(game_attrs, dict):
-            if "cloneof_id" in game_attrs and game_attrs["cloneof_id"]:
-                game_attrs["cloneof_id"] = hash_to_id["games"].get(game_attrs["cloneof_id"])
-            if "romof_id" in game_attrs and game_attrs["romof_id"]:
-                game_attrs["romof_id"] = hash_to_id["games"].get(game_attrs["romof_id"])
+        # Create new GameEmulatorDisk tuple with updated ids
+        dat_data["game_emulator_disk"][hash_key] = types.GameEmulatorDisk(
+            id=attrs.id,
+            game_emulator_id=hash_to_id["game_emulator"][attrs.game_emulator_id],
+            disk_id=hash_to_id["disks"][attrs.disk_id],
+        )
 
     print("Conversion complete.")
     return dat_data
 
 
-def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:  # noqa: C901
+def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:
     dat_data = convert_hashes_to_ids(dat_data)
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
     os.mkdir(out_dir)
     engine = create_engine(f"sqlite:///{Path(out_dir, 'arcade.db')}")  # noqa: E231
+
     for key in strip_keys(dat_data):
         print(f"Creating {key} dataframe...")
 
-        values_raw = list(dat_data[key].values())
-        values: list[dict[str, Any]] = []
-
-        for item in values_raw:
-            if isinstance(item, types.Rom):
-                values.append(item._asdict())
-            elif isinstance(item, types.Game):
-                values.append(item._asdict())
-            elif isinstance(item, types.Driver):
-                values.append(item._asdict())
-            elif isinstance(item, types.Feature):
-                values.append(item._asdict())
-            elif isinstance(item, types.Disk):
-                values.append(item._asdict())
-            elif isinstance(item, types.Emulator):
-                values.append(item._asdict())
-            elif isinstance(item, types.GameEmulator):
-                values.append(item._asdict())
-            elif isinstance(item, types.GameRom):
-                values.append(item._asdict())
-            elif isinstance(item, types.GameEmulatorFeature):
-                values.append(item._asdict())
-            elif isinstance(item, types.GameEmulatorDisk):
-                values.append(item._asdict())
-            elif isinstance(item, dict):
-                values.append(item)
+        # All values are now NamedTuples, so just convert them all
+        values = [item._asdict() for item in dat_data[key].values()]
 
         df = pd.DataFrame(values)
         if df.empty:
