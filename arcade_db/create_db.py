@@ -33,7 +33,6 @@ from sqlalchemy import create_engine
 
 from .shared import sources, types, utils, indexing
 
-# Type alias for entity data - all entity types are now NamedTuples
 EntityData: TypeAlias = Union[
     types.Rom,
     types.Game,
@@ -77,7 +76,6 @@ def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_id: str) -
         sha1 = rom_element.get("sha1", None)
         rom_hash = indexing.get_rom_index_hash(name, size, crc)
 
-        # Create and store Rom tuple directly
         rom = types.Rom(
             id=0,  # Will be assigned during convert_hashes_to_ids
             hash=rom_hash,
@@ -90,7 +88,7 @@ def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_id: str) -
 
         composite_key = indexing.get_attributes_md5({"game_id": game_id, "rom_id": rom_hash})
         game_rom = types.GameRom(
-            id=0,  # Will be assigned during convert_hashes_to_ids
+            id=0,
             game_id=game_id,
             rom_id=rom_hash,
         )
@@ -101,14 +99,10 @@ def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[types
     if rom_elements := utils.get_sub_elements(game_element, "rom"):
         name = game_element.get("name", "")
         game_hash = indexing.get_game_index_from_elements(name, rom_elements)
-
-        # Get year as int or None
         year_text = get_inner_element_text(game_element, "year")
         year = int(year_text) if year_text and year_text.isdigit() else None
-
-        # Create Game tuple
         game = types.Game(
-            id=0,  # Will be assigned during convert_hashes_to_ids
+            id=0,
             hash=game_hash,
             name=name,
             description=get_inner_element_text(game_element, "description"),
@@ -135,10 +129,8 @@ def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element,
             "status": feature_element.get("status", ""),
         }
         feature_hash = indexing.get_attributes_md5(feature_attrs)
-
-        # Create and store Feature tuple directly
         feature = types.Feature(
-            id=0,  # Will be assigned during convert_hashes_to_ids
+            id=0,
             hash=feature_hash,
             overall=feature_element.get("overall", ""),
             type=feature_element.get("type", ""),
@@ -150,7 +142,7 @@ def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element,
             {"game_emulator_id": game_emulator_attrs["hash"], "feature_id": feature_hash}
         )
         game_emulator_feature = types.GameEmulatorFeature(
-            id=0,  # Will be assigned during convert_hashes_to_ids
+            id=0,
             game_emulator_id=game_emulator_attrs["hash"],
             feature_id=feature_hash,
         )
@@ -180,9 +172,8 @@ def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, d
         }
         driver_hash = indexing.get_attributes_md5(driver_attrs)
 
-        # Create and store Driver tuple directly
         driver = types.Driver(
-            id=0,  # Will be assigned during convert_hashes_to_ids
+            id=0,
             hash=driver_hash,
             palettesize=driver_element.get("palettesize", ""),
             hiscoresave=driver_element.get("hiscoresave", ""),
@@ -216,10 +207,8 @@ def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, da
                 "md5": disk_element.get("md5", ""),
             }
             disk_hash = indexing.get_attributes_md5(disk_attrs)
-
-            # Create and store Disk tuple directly
             disk = types.Disk(
-                id=0,  # Will be assigned during convert_hashes_to_ids
+                id=0,
                 hash=disk_hash,
                 name=disk_element.get("name", ""),
                 sha1=disk_element.get("sha1", ""),
@@ -231,7 +220,7 @@ def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, da
                 {"game_emulator_id": game_emulator_attrs["hash"], "disk_id": disk_hash}
             )
             game_emulator_disk = types.GameEmulatorDisk(
-                id=0,  # Will be assigned during convert_hashes_to_ids
+                id=0,
                 game_emulator_id=game_emulator_attrs["hash"],
                 disk_id=disk_hash,
             )
@@ -248,10 +237,8 @@ def add_game_emulator_relationship(game_element: ET._Element, game: types.Game, 
     add_features(game_emulator_attrs, game_element, dat_data)
     add_driver(game_emulator_attrs, game_element, dat_data)
     add_disks(game_emulator_attrs, game_element, dat_data)
-
-    # Create and store GameEmulator tuple directly
     game_emulator = types.GameEmulator(
-        id=0,  # Will be assigned during convert_hashes_to_ids
+        id=0,
         game_id=game.hash,
         emulator_id=emulator_hash,
         driver_id=game_emulator_attrs.get("driver_id"),
@@ -262,10 +249,8 @@ def add_game_emulator_relationship(game_element: ET._Element, game: types.Game, 
 def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> DatData:
     dat_data = get_empty_dat_data()
     emulator_hash = emulator_attrs["id"]
-
-    # Create and store Emulator tuple directly
     emulator = types.Emulator(
-        id=0,  # Will be assigned during convert_hashes_to_ids
+        id=0,
         hash=emulator_hash,
         name=emulator_attrs["name"],
         version=emulator_attrs["version"],
