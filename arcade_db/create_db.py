@@ -39,7 +39,7 @@ from .shared import sources, utils, indexing, tuples
 SqlAlchemyTable = Union[Table, Any]
 
 # Type alias for entity data - either dict or specific tuple types
-EntityData: TypeAlias = Union[dict[str, Any], tuples.Rom]
+EntityData: TypeAlias = Union[dict[str, Any], tuples.Rom, tuples.Game]
 
 # Updated to support both dict and tuple values for gradual migration
 DatData = dict[str, dict[str, EntityData]]
@@ -95,25 +95,33 @@ def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_id: str) -
         dat_data["game_rom"][composite_key] = {"game_id": game_id, "rom_id": rom_hash}
 
 
-def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[dict[str, str]]:
+def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[tuples.Game]:
     if rom_elements := utils.get_sub_elements(game_element, "rom"):
         name = game_element.get("name", "")
         game_hash = indexing.get_game_index_from_elements(name, rom_elements)
-        game_attrs = {
-            "hash": game_hash,
-            "name": name,
-            "description": get_inner_element_text(game_element, "description"),
-            "year": get_inner_element_text(game_element, "year"),
-            "manufacturer": get_inner_element_text(game_element, "manufacturer"),
-            "isbios": game_element.get("isbios"),
-            "isdevice": game_element.get("isdevice"),
-            "runnable": game_element.get("runnable"),
-            "ismechanical": game_element.get("ismechanical"),
-            "romof": game_element.get("romof"),
-            "cloneof": game_element.get("cloneof"),
-        }
+
+        # Get year as int or None
+        year_text = get_inner_element_text(game_element, "year")
+        year = int(year_text) if year_text and year_text.isdigit() else None
+
+        # Create Game tuple
+        game = tuples.Game(
+            id=0,  # Will be assigned during convert_hashes_to_ids
+            hash=game_hash,
+            name=name,
+            description=get_inner_element_text(game_element, "description"),
+            year=year,
+            manufacturer=get_inner_element_text(game_element, "manufacturer"),
+            romof=game_element.get("romof"),
+            cloneof=game_element.get("cloneof"),
+            isbios=game_element.get("isbios"),
+            isdevice=game_element.get("isdevice"),
+            runnable=game_element.get("runnable"),
+            ismechanical=game_element.get("ismechanical"),
+        )
+
         add_roms(rom_elements, dat_data, game_hash)
-        return game_attrs
+        return game
     return None
 
 
@@ -197,10 +205,8 @@ def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, da
             }
 
 
-def add_game_emulator_relationship(
-    game_element: ET._Element, game_attrs: dict[str, str], emulator_hash: str, dat_data: DatData
-):
-    game_emulator_attrs = {"game_id": game_attrs["hash"], "emulator_id": emulator_hash}
+def add_game_emulator_relationship(game_element: ET._Element, game: tuples.Game, emulator_hash: str, dat_data: DatData):
+    game_emulator_attrs = {"game_id": game.hash, "emulator_id": emulator_hash}
     # We don't use the driver id as part of the primary key because we only want one game_emulator record per game/emulator
     # relationship. There is a risk here of orphaning driver records, which we need to check for elsewhere.
     game_emulator_attrs["hash"] = indexing.get_attributes_md5(
@@ -221,10 +227,10 @@ def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> DatData:
     for game_element in root:
         rom_elements = utils.get_sub_elements(game_element, "rom")
         if rom_elements:
-            game_attrs = process_game(game_element, dat_data)
-            if game_attrs is not None:
-                add_game_emulator_relationship(game_element, game_attrs, emulator_hash, dat_data)
-                dat_data["games"][game_attrs["hash"]] = game_attrs
+            game = process_game(game_element, dat_data)
+            if game is not None:
+                add_game_emulator_relationship(game_element, game, emulator_hash, dat_data)
+                dat_data["games"][game.hash] = game
     return dat_data
 
 
@@ -280,6 +286,22 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
                 dat_data[table][hash_key] = tuples.Rom(
                     id=new_id, hash=attrs.hash, name=attrs.name, size=attrs.size, crc=attrs.crc, sha1=attrs.sha1
                 )
+            elif table == "games" and isinstance(attrs, tuples.Game):
+                # Create new Game tuple with updated id
+                dat_data[table][hash_key] = tuples.Game(
+                    id=new_id,
+                    hash=attrs.hash,
+                    name=attrs.name,
+                    description=attrs.description,
+                    year=attrs.year,
+                    manufacturer=attrs.manufacturer,
+                    romof=attrs.romof,
+                    cloneof=attrs.cloneof,
+                    isbios=attrs.isbios,
+                    isdevice=attrs.isdevice,
+                    runnable=attrs.runnable,
+                    ismechanical=attrs.ismechanical,
+                )
             elif isinstance(attrs, dict):
                 attrs["id"] = new_id
             next_id[table] += 1
@@ -314,7 +336,9 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:  # noqa: C901
             attrs["game_emulator_id"] = hash_to_id["game_emulator"][attrs["game_emulator_id"]]
             attrs["disk_id"] = hash_to_id["disks"][attrs["disk_id"]]
 
-    for game_attrs in dat_data["games"].values():
+    for hash_key, game_attrs in dat_data["games"].items():
+        # Game tuples don't have cloneof_id/romof_id fields - those only exist in dict-based approach
+        # The Game model stores cloneof and romof as strings, not foreign key IDs
         if isinstance(game_attrs, dict):
             if "cloneof_id" in game_attrs and game_attrs["cloneof_id"]:
                 game_attrs["cloneof_id"] = hash_to_id["games"].get(game_attrs["cloneof_id"])
@@ -340,6 +364,9 @@ def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:
 
         for item in values_raw:
             if isinstance(item, tuples.Rom):
+                # Named tuples have ._asdict() method
+                values.append(item._asdict())
+            elif isinstance(item, tuples.Game):
                 # Named tuples have ._asdict() method
                 values.append(item._asdict())
             elif isinstance(item, dict):
