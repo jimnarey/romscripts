@@ -45,22 +45,17 @@ def get_typed_dataclass_from_model(model_class: type[db.Base], class_name: str, 
     for column in mapper.columns:
         if fields_list is None or column.name in fields_list:
             python_type = _sqlalchemy_to_python_type(column.type)
-
-            # Make fields optional (nullable) except for id which is always int
             if column.nullable and column.name != "id":
                 python_type = Optional[python_type]
                 defaults[column.name] = None
 
             annotations[column.name] = python_type
 
-    # Create the dataclass dynamically
     namespace: dict[str, Any] = {"__annotations__": annotations}
 
-    # Add default values for nullable fields
     for field_name, default_value in defaults.items():
         namespace[field_name] = default_value
 
-    # Create the class and apply the dataclass decorator
     cls = type(class_name, (), namespace)
     return dataclass(cls)
 
@@ -75,6 +70,9 @@ GameEmulator = get_typed_dataclass_from_model(db.GameEmulator, "GameEmulator")
 GameRom = get_typed_dataclass_from_model(db.GameRom, "GameRom")
 GameEmulatorFeature = get_typed_dataclass_from_model(db.GameEmulatorFeature, "GameEmulatorFeature")
 GameEmulatorDisk = get_typed_dataclass_from_model(db.GameEmulatorDisk, "GameEmulatorDisk")
+
+# Specialized types with subset of fields
+RomSpec = get_typed_dataclass_from_model(db.Rom, "RomSpec", fields_list=["name", "size", "crc"])
 
 # RomSpecTuple = get_typed_dataclass_from_model(db.Rom, 'RomSpecTuple', fields=['name', 'size', 'crc'])
 # GameSpecTuple = get_typed_dataclass_from_model(db.Game, 'GameSpecTuple', fields=['name', 'hash', 'description'])

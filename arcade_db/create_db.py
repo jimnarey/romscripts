@@ -124,28 +124,26 @@ def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[types
 
 def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData) -> None:
     for feature_element in game_element.findall("feature"):
-        feature_attrs = {
-            "overall": feature_element.get("overall", ""),
-            "type": feature_element.get("type", ""),
-            "status": feature_element.get("status", ""),
-        }
-        feature_hash = indexing.get_attributes_md5(feature_attrs)
+        # Create feature dataclass directly from XML
         feature = types.Feature(
             id=0,
-            hash=feature_hash,
+            hash="",  # Will be computed and set below
             overall=feature_element.get("overall", ""),
             type=feature_element.get("type", ""),
             status=feature_element.get("status", ""),
         )
-        dat_data["features"][feature_hash] = feature
+
+        # Compute hash from the dataclass and mutate the hash field
+        feature.hash = indexing.get_entity_hash(feature)
+        dat_data["features"][feature.hash] = feature
 
         composite_key = indexing.get_attributes_md5(
-            {"game_emulator_id": game_emulator_attrs["hash"], "feature_id": feature_hash}
+            {"game_emulator_id": game_emulator_attrs["hash"], "feature_id": feature.hash}
         )
         game_emulator_feature = types.GameEmulatorFeature(
             id=0,
             game_emulator_id=game_emulator_attrs["hash"],
-            feature_id=feature_hash,
+            feature_id=feature.hash,
         )
         dat_data["game_emulator_feature"][composite_key] = game_emulator_feature
 
@@ -153,29 +151,10 @@ def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element,
 # TODO: Check for orphaned drivers after db build.
 def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData) -> None:
     if (driver_element := game_element.find("driver")) is not None:
-        driver_attrs = {
-            "palettesize": driver_element.get("palettesize", ""),
-            "hiscoresave": driver_element.get("hiscoresave", ""),
-            "requiresartwork": driver_element.get("requiresartwork", ""),
-            "unofficial": driver_element.get("unofficial", ""),
-            "good": driver_element.get("good", ""),
-            "status": driver_element.get("status", ""),
-            "graphic": driver_element.get("graphic", ""),
-            "cocktailmode": driver_element.get("cocktailmode", ""),
-            "savestate": driver_element.get("savestate", ""),
-            "protection": driver_element.get("protection", ""),
-            "emulation": driver_element.get("emulation", ""),
-            "cocktail": driver_element.get("cocktail", ""),
-            "color": driver_element.get("color", ""),
-            "nosoundhardware": driver_element.get("nosoundhardware", ""),
-            "sound": driver_element.get("sound", ""),
-            "incomplete": driver_element.get("incomplete", ""),
-        }
-        driver_hash = indexing.get_attributes_md5(driver_attrs)
-
+        # Create driver dataclass directly from XML
         driver = types.Driver(
             id=0,
-            hash=driver_hash,
+            hash="",  # Will be computed and set below
             palettesize=driver_element.get("palettesize", ""),
             hiscoresave=driver_element.get("hiscoresave", ""),
             requiresartwork=driver_element.get("requiresartwork", ""),
@@ -193,8 +172,11 @@ def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, d
             sound=driver_element.get("sound", ""),
             incomplete=driver_element.get("incomplete", ""),
         )
-        dat_data["drivers"][driver_hash] = driver
-        game_emulator_attrs["driver_id"] = driver_hash
+
+        # Compute hash from the dataclass and mutate the hash field
+        driver.hash = indexing.get_entity_hash(driver)
+        dat_data["drivers"][driver.hash] = driver
+        game_emulator_attrs["driver_id"] = driver.hash
 
 
 # TODO: Can probably avoid using get_sub_elements.
@@ -202,28 +184,26 @@ def add_driver(game_emulator_attrs: dict[str, str], game_element: ET._Element, d
 def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, dat_data: DatData):
     if disk_elements := utils.get_sub_elements(game_element, "disk"):
         for disk_element in disk_elements:
-            disk_attrs = {
-                "name": disk_element.get("name", ""),
-                "sha1": disk_element.get("sha1", ""),
-                "md5": disk_element.get("md5", ""),
-            }
-            disk_hash = indexing.get_attributes_md5(disk_attrs)
+            # Create disk dataclass directly from XML
             disk = types.Disk(
                 id=0,
-                hash=disk_hash,
+                hash="",  # Will be computed and set below
                 name=disk_element.get("name", ""),
                 sha1=disk_element.get("sha1", ""),
                 md5=disk_element.get("md5", ""),
             )
-            dat_data["disks"][disk_hash] = disk
+
+            # Compute hash from the dataclass and mutate the hash field
+            disk.hash = indexing.get_entity_hash(disk)
+            dat_data["disks"][disk.hash] = disk
 
             composite_key = indexing.get_attributes_md5(
-                {"game_emulator_id": game_emulator_attrs["hash"], "disk_id": disk_hash}
+                {"game_emulator_id": game_emulator_attrs["hash"], "disk_id": disk.hash}
             )
             game_emulator_disk = types.GameEmulatorDisk(
                 id=0,
                 game_emulator_id=game_emulator_attrs["hash"],
-                disk_id=disk_hash,
+                disk_id=disk.hash,
             )
             dat_data["game_emulator_disk"][composite_key] = game_emulator_disk
 

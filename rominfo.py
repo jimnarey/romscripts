@@ -7,7 +7,7 @@ import click
 
 from arcade_db import create_db
 from arcade_db.shared import db, indexing, sources
-from arcade_db.shared.utils import RomSpec
+from arcade_db.shared.types import RomSpec
 
 
 DB_PATH = Path("./arcade-out/arcade.db")

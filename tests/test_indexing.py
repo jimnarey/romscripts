@@ -1,6 +1,6 @@
 import unittest
 from lxml.etree import Element
-from arcade_db.shared import indexing, db, utils
+from arcade_db.shared import indexing, db, types
 
 # TODO: Test for cases where (some of) the XML attributes are empty.
 # Test that e.g. when size is absent in an XML it produces the same hash as when it is absent in a Rom record
@@ -44,7 +44,7 @@ class TestIndexing(unittest.TestCase):
     def test_get_roms_signature(self):
         result = indexing.get_roms_signature(
             # [{"name": "rom1", "size": 100, "crc": "crchash"}, {"name": "rom2", "size": 200, "crc": "crchash2"}]
-            [utils.RomSpec(name="rom1", size=100, crc="crchash"), utils.RomSpec(name="rom2", size=200, crc="crchash2")]
+            [types.RomSpec(name="rom1", size=100, crc="crchash"), types.RomSpec(name="rom2", size=200, crc="crchash2")]
         )
         self.assertEqual(result, "rom1/100/crchash,rom2/200/crchash2")
 

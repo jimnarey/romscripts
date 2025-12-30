@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 
 import hashlib
+from dataclasses import asdict
+from typing import TYPE_CHECKING
 from lxml import etree as ET
 
-from arcade_db.shared.utils import RomSpec
+if TYPE_CHECKING:
+    from arcade_db.shared import types
+
+
+from arcade_db.shared.types import RomSpec
 
 
 def roms_signature_from_elements(roms_elements: list[ET._Element]):
@@ -49,6 +55,22 @@ def get_rom_index_hash(rom_name: str, size: int, crc: str):
 def get_attributes_md5(attributes: dict[str, str]):
     ordered_attrs = [attributes[key] for key in sorted(attributes.keys())]
     return hashlib.md5("".join(ordered_attrs).encode()).hexdigest()
+
+
+def get_entity_hash(entity: "types.Driver | types.Feature | types.Disk") -> str:
+    """
+    Compute hash from any entity dataclass, excluding id and hash fields.
+
+    This allows us to create dataclasses directly from XML, then compute
+    and set the hash afterwards, eliminating duplicate field extraction.
+    """
+    entity_dict = asdict(entity)
+    # Remove fields that shouldn't be part of the hash
+    entity_dict.pop("id", None)
+    entity_dict.pop("hash", None)
+    # Convert all values to strings for consistent hashing
+    string_dict = {k: str(v) if v is not None else "" for k, v in entity_dict.items()}
+    return get_attributes_md5(string_dict)
 
 
 # In earlier versions it was necessary to match roms/games from SQLAlchemy records.

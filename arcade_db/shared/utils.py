@@ -6,14 +6,11 @@ import warnings
 import functools
 import time
 from typing import Type
-from collections import namedtuple
 
 from lxml import etree as ET
 import psutil
 from sqlalchemy.ext.declarative import DeclarativeMeta as DeclarativeBase
 from sqlalchemy.inspection import inspect
-
-RomSpec = namedtuple("RomSpec", ["name", "size", "crc"])
 
 
 @functools.lru_cache(maxsize=10)
