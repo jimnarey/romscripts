@@ -2,7 +2,7 @@ import unittest
 import os
 
 import romfile.romcodes as romcodes
-from .fixtures.romfile import region_codes
+from tests.fixtures.romfile import region_codes
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 FIXTURES_PATH = os.path.join(SCRIPT_PATH, "fixtures", "romfile")
