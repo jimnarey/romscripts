@@ -31,13 +31,9 @@ def _sqlalchemy_to_python_type(column_type):
     return str
 
 
-def get_typed_dataclass_from_model(model_class: type[db.Base], class_name: str, fields_list: list[str] | None = None):
-    """
-    Generate a dataclass from a SQLAlchemy model.
-
-    This programmatically creates mutable dataclasses that mirror the SQLAlchemy models,
-    ensuring type consistency between in-memory operations and database schema.
-    """
+def get_typed_dataclass_from_model(
+    model_class: type[db.Base], class_name: str, fields_list: list[str] | None = None, frozen: bool = False
+):
     mapper = inspect(model_class)
     annotations: dict[str, type] = {}
     defaults: dict[str, None] = {}
@@ -57,7 +53,9 @@ def get_typed_dataclass_from_model(model_class: type[db.Base], class_name: str, 
         namespace[field_name] = default_value
 
     cls = type(class_name, (), namespace)
-    return dataclass(cls)
+    # Apply dataclass decorator with frozen parameter
+    decorator = dataclass(frozen=frozen)
+    return decorator(cls)
 
 
 Game = get_typed_dataclass_from_model(db.Game, "Game")
@@ -71,8 +69,4 @@ GameRom = get_typed_dataclass_from_model(db.GameRom, "GameRom")
 GameEmulatorFeature = get_typed_dataclass_from_model(db.GameEmulatorFeature, "GameEmulatorFeature")
 GameEmulatorDisk = get_typed_dataclass_from_model(db.GameEmulatorDisk, "GameEmulatorDisk")
 
-# Specialized types with subset of fields
-RomSpec = get_typed_dataclass_from_model(db.Rom, "RomSpec", fields_list=["name", "size", "crc"])
-
-# RomSpecTuple = get_typed_dataclass_from_model(db.Rom, 'RomSpecTuple', fields=['name', 'size', 'crc'])
-# GameSpecTuple = get_typed_dataclass_from_model(db.Game, 'GameSpecTuple', fields=['name', 'hash', 'description'])
+RomSpec = get_typed_dataclass_from_model(db.Rom, "RomSpec", fields_list=["name", "size", "crc"], frozen=True)
