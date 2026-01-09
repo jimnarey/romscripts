@@ -32,8 +32,23 @@ def _sqlalchemy_to_python_type(column_type):
 
 
 def get_typed_dataclass_from_model(
-    model_class: type[db.Base], class_name: str, fields_list: list[str] | None = None, frozen: bool = False
+    model_class: type[db.Base],
+    class_name: str,
+    fields_list: list[str] | None = None,
+    frozen: bool = False,
+    temp_fields: dict[str, tuple[type, Any]] | None = None,
 ):
+    """
+    Generate a dataclass from a SQLAlchemy model.
+
+    Args:
+        model_class: SQLAlchemy model to derive fields from
+        class_name: Name for the generated dataclass
+        fields_list: Optional list of field names to include (None = all fields)
+        frozen: Whether to make the dataclass frozen/immutable
+        temp_fields: Optional dict of temporary field definitions {name: (type, default_value)}
+                    Temporary fields are prefixed with _ and not written to database
+    """
     mapper = inspect(model_class)
     annotations: dict[str, type] = {}
     defaults: dict[str, None] = {}
@@ -47,6 +62,12 @@ def get_typed_dataclass_from_model(
 
             annotations[column.name] = python_type
 
+    # Add temporary fields if provided
+    if temp_fields:
+        for field_name, (field_type, default_value) in temp_fields.items():
+            annotations[field_name] = field_type
+            defaults[field_name] = default_value
+
     namespace: dict[str, Any] = {"__annotations__": annotations}
 
     for field_name, default_value in defaults.items():
@@ -58,7 +79,28 @@ def get_typed_dataclass_from_model(
     return decorator(cls)
 
 
-Game = get_typed_dataclass_from_model(db.Game, "Game")
+@dataclass
+class GameRelationships:
+    """Relationship data extracted from processed games.
+
+    Note: device_rom_ids contains hash strings, not numeric IDs.
+    This is because relationships are built before convert_hashes_to_ids() runs.
+    """
+
+    parent_to_children: dict[str, set[str]]  # parent name -> set of child names
+    child_to_parent: dict[str, str]  # child name -> parent name
+    name_to_hash: dict[str, str]  # game name -> game hash
+    device_rom_ids: dict[str, list[str]]  # device name -> list of ROM hashes (not numeric IDs)
+
+
+@dataclass
+class DeviceRef:
+    """Represents a device reference extracted from XML."""
+
+    name: str
+
+
+Game = get_typed_dataclass_from_model(db.Game, "Game", temp_fields={"_device_refs": (list[DeviceRef], None)})
 Rom = get_typed_dataclass_from_model(db.Rom, "Rom")
 Emulator = get_typed_dataclass_from_model(db.Emulator, "Emulator")
 Feature = get_typed_dataclass_from_model(db.Feature, "Feature")
@@ -69,4 +111,6 @@ GameRom = get_typed_dataclass_from_model(db.GameRom, "GameRom")
 GameEmulatorFeature = get_typed_dataclass_from_model(db.GameEmulatorFeature, "GameEmulatorFeature")
 GameEmulatorDisk = get_typed_dataclass_from_model(db.GameEmulatorDisk, "GameEmulatorDisk")
 
+# This is so groups of roms can be compared using set arithmetic. Some later MAME XMLs have a sha1 for
+# for roms which don't have one in earlier XMLs. So this is left out for the purpose of comparison.
 RomSpec = get_typed_dataclass_from_model(db.Rom, "RomSpec", fields_list=["name", "size", "crc"], frozen=True)

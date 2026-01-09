@@ -69,7 +69,7 @@ def get_inner_element_text(outer_element: ET._Element, inner_element_name: str) 
     return None
 
 
-def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_id: str) -> None:
+def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_hash: str) -> None:
     for rom_element in rom_elements:
         name = rom_element.get("name", "")
         size = get_rom_size(rom_element)
@@ -87,10 +87,10 @@ def add_roms(rom_elements: list[ET._Element], dat_data: DatData, game_id: str) -
         )
         dat_data["roms"][rom_hash] = rom
 
-        composite_key = indexing.get_attributes_md5({"game_id": game_id, "rom_id": rom_hash})
+        composite_key = indexing.get_attributes_md5({"game_hash": game_hash, "rom_hash": rom_hash})
         game_rom = types.GameRom(
             id=0,
-            game_id=game_id,
+            game_id=game_hash,  # Contains hash until convert_hashes_to_ids()
             rom_id=rom_hash,
         )
         dat_data["game_rom"][composite_key] = game_rom
@@ -102,6 +102,11 @@ def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[types
         game_hash = indexing.get_game_index_from_elements(name, rom_elements)
         year_text = get_inner_element_text(game_element, "year")
         year = int(year_text) if year_text and year_text.isdigit() else None
+
+        # Collect device_ref elements
+        device_ref_elements = game_element.findall(".//device_ref")
+        device_refs_list = [types.DeviceRef(name=ref.get("name", "")) for ref in device_ref_elements]
+
         game = types.Game(
             id=0,
             hash=game_hash,
@@ -115,6 +120,8 @@ def process_game(game_element: ET._Element, dat_data: DatData) -> Optional[types
             isdevice=game_element.get("isdevice"),
             runnable=game_element.get("runnable"),
             ismechanical=game_element.get("ismechanical"),
+            device_refs=None,  # Will be populated during conversion
+            _device_refs=device_refs_list,  # Temporary field for processing
         )
 
         add_roms(rom_elements, dat_data, game_hash)
@@ -138,11 +145,11 @@ def add_features(game_emulator_attrs: dict[str, str], game_element: ET._Element,
         dat_data["features"][feature.hash] = feature
 
         composite_key = indexing.get_attributes_md5(
-            {"game_emulator_id": game_emulator_attrs["hash"], "feature_id": feature.hash}
+            {"game_emulator_hash": game_emulator_attrs["hash"], "feature_hash": feature.hash}
         )
         game_emulator_feature = types.GameEmulatorFeature(
             id=0,
-            game_emulator_id=game_emulator_attrs["hash"],
+            game_emulator_id=game_emulator_attrs["hash"],  # Contains hash until convert_hashes_to_ids()
             feature_id=feature.hash,
         )
         dat_data["game_emulator_feature"][composite_key] = game_emulator_feature
@@ -198,22 +205,22 @@ def add_disks(game_emulator_attrs: dict[str, str], game_element: ET._Element, da
             dat_data["disks"][disk.hash] = disk
 
             composite_key = indexing.get_attributes_md5(
-                {"game_emulator_id": game_emulator_attrs["hash"], "disk_id": disk.hash}
+                {"game_emulator_hash": game_emulator_attrs["hash"], "disk_hash": disk.hash}
             )
             game_emulator_disk = types.GameEmulatorDisk(
                 id=0,
-                game_emulator_id=game_emulator_attrs["hash"],
+                game_emulator_id=game_emulator_attrs["hash"],  # Contains hash until convert_hashes_to_ids()
                 disk_id=disk.hash,
             )
             dat_data["game_emulator_disk"][composite_key] = game_emulator_disk
 
 
 def add_game_emulator_relationship(game_element: ET._Element, game: types.Game, emulator_hash: str, dat_data: DatData):
-    game_emulator_attrs = {"game_id": game.hash, "emulator_id": emulator_hash}
+    game_emulator_attrs = {"game_hash": game.hash, "emulator_hash": emulator_hash}
     # We don't use the driver id as part of the primary key because we only want one game_emulator record per game/emulator
     # relationship. There is a risk here of orphaning driver records, which we need to check for elsewhere.
     game_emulator_attrs["hash"] = indexing.get_attributes_md5(
-        {key: game_emulator_attrs[key] for key in ("game_id", "emulator_id")}
+        {key: game_emulator_attrs[key] for key in ("game_hash", "emulator_hash")}
     )
     add_features(game_emulator_attrs, game_element, dat_data)
     add_driver(game_emulator_attrs, game_element, dat_data)
@@ -225,6 +232,36 @@ def add_game_emulator_relationship(game_element: ET._Element, game: types.Game, 
         driver_id=game_emulator_attrs.get("driver_id"),
     )
     dat_data["game_emulator"][game_emulator_attrs["hash"]] = game_emulator
+
+
+def build_game_relationships(dat_data: DatData) -> types.GameRelationships:
+    # Note: At this stage, foreign key fields still contain hash strings, not numeric IDs
+    parent_to_children: dict[str, set[str]] = {}
+    child_to_parent: dict[str, str] = {}
+    name_to_hash: dict[str, str] = {}
+    device_rom_hashes: dict[str, list[str]] = {}
+
+    for game_hash, game in dat_data["games"].items():
+        name_to_hash[game.name] = game_hash
+
+        parent_name = game.romof or game.cloneof
+        if parent_name:
+            child_to_parent[game.name] = parent_name
+            if parent_name not in parent_to_children:
+                parent_to_children[parent_name] = set()
+            parent_to_children[parent_name].add(game.name)
+
+        if game.isdevice == "yes":
+            rom_hashes = [gr.rom_id for gr in dat_data["game_rom"].values() if gr.game_id == game_hash]
+            if rom_hashes:
+                device_rom_hashes[game.name] = rom_hashes
+
+    return types.GameRelationships(
+        parent_to_children=parent_to_children,
+        child_to_parent=child_to_parent,
+        name_to_hash=name_to_hash,
+        device_rom_ids=device_rom_hashes,
+    )
 
 
 def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> DatData:
@@ -245,6 +282,7 @@ def process_games(root: ET._Element, emulator_attrs: dict[str, str]) -> DatData:
             if game is not None:
                 add_game_emulator_relationship(game_element, game, emulator_hash, dat_data)
                 dat_data["games"][game.hash] = game
+    relationships = build_game_relationships(dat_data)  # noqa: F841
     return dat_data
 
 
@@ -286,7 +324,6 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
     hash_to_id: dict[str, dict[str, int]] = {}
     next_id: dict[str, int] = {}
 
-    # Assign numeric IDs to all entity tables
     entity_tables = ["games", "roms", "emulators", "disks", "features", "drivers"]
     for table in entity_tables:
         hash_to_id[table] = {}
@@ -297,14 +334,11 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
             entity.id = new_id  # Mutate dataclass in place
             next_id[table] += 1
 
-    # Process game_emulator with foreign key updates
     hash_to_id["game_emulator"] = {}
     next_id["game_emulator"] = 1
     for hash_key, game_emulator in dat_data["game_emulator"].items():
         new_id = next_id["game_emulator"]
         hash_to_id["game_emulator"][hash_key] = new_id
-
-        # Update all IDs in place
         game_emulator.id = new_id
         game_emulator.game_id = hash_to_id["games"][game_emulator.game_id]
         game_emulator.emulator_id = hash_to_id["emulators"][game_emulator.emulator_id]
@@ -312,7 +346,6 @@ def convert_hashes_to_ids(dat_data: DatData) -> DatData:
             game_emulator.driver_id = hash_to_id["drivers"][game_emulator.driver_id]
         next_id["game_emulator"] += 1
 
-    # Update foreign keys in join tables
     for game_rom in dat_data["game_rom"].values():
         game_rom.game_id = hash_to_id["games"][game_rom.game_id]
         game_rom.rom_id = hash_to_id["roms"][game_rom.rom_id]
@@ -339,8 +372,13 @@ def write(dat_data: DatData, out_dir: str, csv: bool = False) -> None:
     for key in strip_keys(dat_data):
         print(f"Creating {key} dataframe...")
 
-        # All values are now dataclasses, so just convert them all
-        values = [asdict(item) for item in dat_data[key].values()]
+        # Convert dataclasses to dicts, excluding temporary fields (those starting with _)
+        values = []
+        for item in dat_data[key].values():
+            item_dict = asdict(item)
+            # Remove temporary fields
+            filtered_dict = {k: v for k, v in item_dict.items() if not k.startswith("_")}
+            values.append(filtered_dict)
 
         df = pd.DataFrame(values)
         if df.empty:

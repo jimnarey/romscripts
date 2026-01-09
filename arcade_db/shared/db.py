@@ -95,6 +95,7 @@ class Game(Base):
     # Move this to GameEmulator
     runnable = Column(String)
     ismechanical = Column(String)
+    device_refs = Column(String)  # Comma-separated device names referenced by this game
     game_emulators = relationship("GameEmulator", back_populates="game")
     roms = relationship("Rom", secondary="game_rom", back_populates="games")
 
